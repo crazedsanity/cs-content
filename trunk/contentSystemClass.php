@@ -479,13 +479,13 @@ class contentSystem {
 		
 		//attempt to load the shared includes file.
 		if(isset($lsData['shared.inc']) && $lsData['shared.inc']['type'] == 'file') {
-			$this->includesList[] = $this->fileSystemObj->cwd .'/shared.inc';
+			$this->includesList[] = $this->fileSystemObj->realcwd .'/shared.inc';
 		}
 		
 		//attempt to load the section's includes file.
 		$myFile = $section .'.inc';
 		if(isset($lsData[$myFile]) && $lsData[$myFile]['type'] == 'file') {
-			$this->includesList[] = $this->fileSystemObj->cwd .'/'. $myFile;
+			$this->includesList[] = $this->fileSystemObj->realcwd .'/'. $myFile;
 		}
 	}//end load_dir_includes()
 	//------------------------------------------------------------------------
@@ -528,7 +528,7 @@ class contentSystem {
 		//now include the includes scripts, if there are any.
 		if(is_array($this->includesList) && count($this->includesList)) {
 			foreach($this->includesList as $myInternalIndex=>$myInternalScriptName) {
-				$this->myLastInclude = $GLOBALS['SITE_ROOT'] . $myInternalScriptName;
+				$this->myLastInclude = $myInternalScriptName;
 				include_once($this->myLastInclude);
 			}
 			unset($myInternalIndex);
