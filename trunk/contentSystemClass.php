@@ -61,7 +61,13 @@
  * 													|--> /includes/content/members/shared.inc
  * 													|--> /includes/content/members/test.inc
  */
-require_once("fileSystemClass.php");
+//
+if(!isset($GLOBALS['SITE_ROOT'])) {
+	//define where our scripts are located.
+	$GLOBALS['SITE_ROOT'] = $_SERVER['DOCUMENT_ROOT'];
+	$GLOBALS['SITE_ROOT'] = str_replace("/public_html", "", $GLOBALS['SITE_ROOT']);
+}
+require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/fileSystemClass.php");
 
 class contentSystem {
 	
