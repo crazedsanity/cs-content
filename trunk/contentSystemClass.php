@@ -68,6 +68,8 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 	$GLOBALS['SITE_ROOT'] = str_replace("/public_html", "", $GLOBALS['SITE_ROOT']);
 }
 require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/fileSystemClass.php");
+require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/sessionClass.php");
+require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/genericPageClass.php");
 
 class contentSystem {
 	
