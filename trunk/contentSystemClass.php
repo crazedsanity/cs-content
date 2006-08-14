@@ -111,7 +111,7 @@ class contentSystem {
 	 */
 	private function initialize_locals() {
 		//create a fileSystem object.
-		$this->fileSystemObj = new fileSystemClass();
+		$this->fileSystemObj = new content__fileSystemClass();
 		
 		//split apart the section so we can do stuff with it later.
 		$this->parse_section();

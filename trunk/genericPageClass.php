@@ -1,20 +1,17 @@
 <?php
 require_once("template.inc");
-class GenericPage {
-	var $session;		//session_class object to manage our sessin variables
-	var $db;		//db object to provide access to the database
-	var $template;		//template object to parse the pages
+class content__GenericPage {
+	var $sess0ionObj;					//session_class object to manage our sessin variables
+	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
-	var $templateFiles	= array();	//our copy of the global templateFiles
-	var $mainTemplate;	//the default layout of the site
-	var $tabList;		//list of tabs to display on this page
+	var $mainTemplate;				//the default layout of the site
 	
 	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
 	 */
-	function __construct($restrictedAccess=TRUE, $logPageView=TRUE, $mainTemplateFile=NULL) {
+	public function __construct($restrictedAccess=TRUE, $logPageView=TRUE, $mainTemplateFile=NULL) {
 		//initialize some internal stuff.
 		$this->initialize_locals($mainTemplateFile, $logPageView);
 		
@@ -41,24 +38,24 @@ class GenericPage {
 		//if there have been some global template vars (or files) set, read 'em in here.
 		if(is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
 			foreach($GLOBALS['templateVars'] as $key=>$value) {
-				$this->templateVars[$key] = $value;
+				$this->add_template_file($key, $value);
 			}
 		}
 		if(is_array($GLOBALS['templateFiles'])) {
-			foreach($GLOBALS['templateFiles'] as $key => $value) $this->templateFiles[$key] = $value;
+			foreach($GLOBALS['templateFiles'] as $key => $value) {
+				$this->templateFiles[$key] = $value;
+			}
 		}
 		
 		//build a new instance of the template library (from PHPLib).
-		$this->template=new template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
-		$this->db= new phpDB;  				 //initialize a new database connection
-		#$connID = $this->db->connect();
+		$this->templateObj=new template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
 		//Create a new Session{} object: need the session primarily for set_message() functionality.
-		$this->session=new Session($this->db);		//initialize a new session object
-		$this->uid = $this->session->uid;
+		$this->sessionObj = new content__Session($this->db);		//initialize a new session object
+		$this->uid = $this->sessionObj->uid;
 		
 		$this->mainTemplate=$mainTemplateFile; //load the default layout
-		$this->add_template_var("PHPSESSID", $this->session->sid);
+		$this->add_template_var("PHPSESSID", $this->sessionObj->sid);
 	}//end initialize_locals()
 	//---------------------------------------------------------------------------------------------
 	
@@ -137,7 +134,7 @@ class GenericPage {
 	 * TODO: check if $fileName exists before blindly trying to parse it.
 	 */
 	public function add_template_file($handleName, $fileName){
-		$this->add_template_var($handleName, html_file_to_string($fileName));
+		$this->add_template_var($handleName, $this->file_to_string($fileName));
 	}//end add_template_file()
 	//---------------------------------------------------------------------------------------------
 
@@ -206,7 +203,7 @@ class GenericPage {
 	 * @param $b			(str,optional) beginning delimiter.
 	 * @param $e			(str,optional) ending delimiter.
 	 */
-	function mini_parser($template, $repArr, $b='%%', $e='%%') {
+	public function mini_parser($template, $repArr, $b='%%', $e='%%') {
 		if(!isset($b) OR !isset($e)){
 			$b="{";
 			$e="}";
@@ -233,40 +230,40 @@ class GenericPage {
 	 * 
 	 * @return (str)				Final, parsed page.
 	 */
-	function print_page($stripUndefVars=1) {
+	public function print_page($stripUndefVars=1) {
 		//Show any available messages.
 		$this->process_set_message();
 		
 		//Load the default page layout.
-		$this->template->set_file("main", $this->mainTemplate);
+		$this->templateObj->set_file("main", $this->mainTemplate);
 
 		if(is_array($this->templateFiles)) {
 			//do we have additional template files to load?
-			$this->template->set_file($this->templateFiles);
+			$this->templateObj->set_file($this->templateFiles);
 		}
 		
 		//load the placeholder names and thier values
-		$this->template->set_var($this->templateVars);
+		$this->templateObj->set_var($this->templateVars);
 		if(is_array($this->templateFiles)) {
    			//do we have additional template files to parse?
 			foreach($this->templateFiles as $name=>$value) {
-				$this->template->parse($name,$name);
+				$this->templateObj->parse($name,$name);
 			}
 		}
-		$this->template->parse("out","main"); //parse the sub-files into the main page
+		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
 		if($stripUndefVars) {
-			preg_match_all('/\{.*?\}/', $this->template->varvals[out], $tags);
+			preg_match_all('/\{.*?\}/', $this->templateObj->varvals[out], $tags);
 			$tags = $tags[0];
 			foreach($tags as $key=>$str) {
 				$str2 = str_replace("{", "", $str);
 				$str2 = str_replace("}", "", $str2);
 				if(!$this->templateVars[$str2]) {
 					//$debug = "<!-- ***** killed $str ***** -->";
-					$this->template->varvals[out] = str_replace($str, "$debug", $this->template->varvals[out]);
+					$this->templateObj->varvals[out] = str_replace($str, "$debug", $this->templateObj->varvals[out]);
 				}
 			}
 		}
-		$this->template->pparse("out","out"); //parse the main page 
+		$this->templateObj->pparse("out","out"); //parse the main page 
 		$this->db->close();
 		
 	}//end of print_page()
@@ -278,10 +275,10 @@ class GenericPage {
 	/**
 	 * Handles a message that was set into the session.
 	 */
-	function process_set_message() {
+	public function process_set_message() {
 		//if there's not a message set, skip.
-		$errorBox = html_file_to_string("system/message_box.tmpl");
-		if($this->session->sid_check == "-1") {
+		$errorBox = $this->file_to_string("system/message_box.tmpl");
+		if($this->sessionObj->sid_check == "-1") {
 			//need to set a message saying the session has expired.  No session is 
 			//	available anymore, so we have to do this manually... GRAB THE ASTROGLIDE!!!
 			$this->change_content($errorBox);
@@ -316,6 +313,160 @@ class GenericPage {
 		//	they'll never get past this point).
 		unset($_SESSION['message']);
 	}//end of process_set_message()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Takes a template file, whose root must be within $GLOBALS['TMPLDIR'], pulls it's 
+	 * content & returns it.
+	 */
+	private function file_to_string($templateFileName) {
+		$templateFileName = preg_replace('/\/\//', '\/', $templateFileName);
+		if($this->template_file_exists($templateFileName)) {
+			$retval = file_get_contents($GLOBALS['TMPLDIR'] .'/'. $templateFileName);
+		} else {
+			$this->set_message_wrapper(array(
+				"title"		=> 'Template File Error',
+				"message"	=> 'Not all templates could be found for this page.',
+				"type"		=> 'error'
+			));
+		}
+	}//end file_to_string()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Checks to see if the given filename exists within the template directory.
+	 */
+	protected function template_file_exists($file) {
+		$retval = 0;
+		//If the string doesn't start with a /, add one
+		if (strncmp("/",$file,1)) {
+			//strncmp returns 0 if they match, so we're putting a / on if they don't
+			$file="/".$file;
+		}
+		$filename=$GLOBALS['TMPLDIR'].$file;
+		
+		if(file_exists($filename)) {
+			$retval = $filename;
+		} 
+		return($retval);
+	}//end template_file_exists()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Creates an array in the session, used by the templating system as a way to
+	 * get messages generated by the code into the page, without having to add 
+	 * special templates & such each time.
+	 * 
+	 * @param $title			(str) the title of the message.
+	 * @param $message			(str) text beneath the title.
+	 * @param $linkURL			(str,optional) URL for the link below the message.
+	 * @param $type				(str) notice/status/error/fatal message, indicating
+	 * 								it's importance.  Generally, fatal messages 
+	 * 								cause only the message to be shown.
+	 * @param $linkText			(str,optional) text that the link wraps.
+	 * @param $overwriteSame	(bool,optional) whether setting a message which has
+	 * 								the same type as an already set message will
+	 * 								overwite the previous.  More important messages 
+	 * 								always overwrite lesser ones.
+	 * @param $priority			(int,optional) specify the message's priority.
+	 * 
+	 * @return (bool)			Indicates pass (true)/fail (false)
+	 */
+	function set_message($title=NULL, $message=NULL, $linkURL=NULL, $type=NULL, $linkText=NULL, $overwriteSame=NULL, $priority=NULL) {
+		if(!isset($overwriteSame)) {
+			$overwriteSame = 1;
+		}
+	
+		//defines the importance level of each type of message: the higher the value, the more important it is.
+		$priorityArr = array(
+			'notice' => 10,
+			'status' => 20,
+			'error'  => 30,
+			'fatal'  => 100
+		);
+		if(!isset($type) || !isset($priorityArr[$type])) {
+			//set a default type.
+			$arrayKeys = array_keys();
+			$type = $arrayKeys[0];
+		}
+		
+		$retval = FALSE;
+		//make sure the message type is IN the priority array...
+		if(!in_array($type, array_keys($priorityArr))) {
+			//invalid type.
+			$retval = FALSE;
+		} elseif($_SESSION['message']) {
+			//there's already a message... check if the new one should overwrite the existing.
+			if((!$overwriteSame) AND ($priorityArr[$_SESSION['message']['type']] == $priorityArr[$type])) {
+				//no overwriting.
+				$retval = 0;
+			} elseif($priorityArr[$_SESSION['message']['type']] <= $priorityArr[$type]) {
+				// the existing message is less important.  Overwrite it.
+				unset($_SESSION['message']);
+			}
+		}
+	
+		//Create the array.
+		$_SESSION["message"] = array(
+			"title"		=> $title,
+			"message"	=> $message,
+			"linkURL"	=> $linkURL,
+			"linkText"	=> $linkText,
+			"type"		=> $type,
+			"priority"	=> $priority
+			
+		);
+	
+	} // end of set_message()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function set_message_wrapper($array) {
+		@$this->set_message(
+			$array['title'], 
+			$array['message'], 
+			$array['linkURL'], 
+			$array['type'], 
+			$array['linkText'], 
+			$array['overwriteSame'],
+			$array['priority']
+		);
+	}//end set_message_wrapper()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	function conditional_header($url) {
+		//checks to see if headers were sent; if yes: use a meta redirect.
+		//	if no: send header("location") info...
+		if(headers_sent()) {
+			//headers sent.  Use the meta redirect.
+			print "
+			<HTML>
+			<HEAD>
+			<TITLE>Redirect Page</TITLE>
+			<META HTTP-EQUIV='refresh' content='0; URL=$url'>
+			</HEAD>
+			<a href=\"$url\"></a>
+			</HTML>
+			";
+		}
+		else {
+			header("location:$url");
+		}
+	}//end conditional_header()
 	//---------------------------------------------------------------------------------------------
 
 }

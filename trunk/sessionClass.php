@@ -1,6 +1,6 @@
 <?
 
-class Session{
+class content__Session{
 
 	protected $db;
 	public $uid;
@@ -35,5 +35,5 @@ class Session{
 	//---------------------------------------------------------------------------------------------
 
 
-}//end Session{}
+}//end content__Session{}
 ?>
