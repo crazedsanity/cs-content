@@ -60,9 +60,10 @@
  *
  * Note: If you think that this is like FastTemplates, read carefully. It isn't.
  *
+ * NOTE: class name changed from "Template" to "content__Template" for cs-content.
  */
 
-class Template
+class content__Template
 {
  /**
   * Serialization helper, the name of this class.

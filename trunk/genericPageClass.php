@@ -48,7 +48,7 @@ class content__GenericPage {
 		}
 		
 		//build a new instance of the template library (from PHPLib).
-		$this->templateObj=new template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
+		$this->templateObj=new content__template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
 		//Create a new Session{} object: need the session primarily for set_message() functionality.
 		$this->sessionObj = new content__Session($this->db);		//initialize a new session object
