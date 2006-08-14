@@ -1,6 +1,6 @@
 <?
 
-class content__fileSystemClass {
+class fileSystemClass {
 
 	var $root;		//actual root directory.
 	var $cwd;		//current directory; relative to $this->root

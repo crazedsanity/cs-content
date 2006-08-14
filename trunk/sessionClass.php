@@ -1,6 +1,6 @@
 <?
 
-class content__Session{
+class Session{
 
 	protected $db;
 	public $uid;

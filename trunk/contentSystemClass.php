@@ -90,8 +90,7 @@ class contentSystem {
 	/**
 	 * The CONSTRUCTOR.  Duh.
 	 */
-	public function __construct($templateObj) {
-		$this->templateObj = $templateObj;
+	public function __construct() {
 		//setup the section stuff...
 		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
 		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
@@ -111,7 +110,7 @@ class contentSystem {
 	 */
 	private function initialize_locals() {
 		//create a fileSystem object.
-		$this->fileSystemObj = new content__fileSystemClass();
+		$this->fileSystemObj = new fileSystemClass();
 		
 		//split apart the section so we can do stuff with it later.
 		$this->parse_section();
@@ -523,6 +522,13 @@ class contentSystem {
 	 * AWESOME.
 	 */
 	function finish() {
+		//Avoid problems when REGISTER_GLOBALS is on...
+		$badUrlVars = array('page', 'this');
+		foreach($badUrlVars as $badVarName) {
+			unset($_GET[$badVarName], $_POST[$badVarName]);
+		}
+		
+		$this->templateObj = new GenericPage(NULL, $this->templateList['main']);
 		$page =& $this->templateObj;
 		foreach($this->templateList as $mySection => $myTmpl) {
 			$page->add_template_var($mySection, html_file_to_string($myTmpl));

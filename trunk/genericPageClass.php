@@ -1,6 +1,6 @@
 <?php
 require_once("template.inc");
-class content__GenericPage {
+class GenericPage {
 	var $sess0ionObj;					//session_class object to manage our sessin variables
 	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
@@ -11,15 +11,12 @@ class content__GenericPage {
 	/**
 	 * The constructor.
 	 */
-	public function __construct($restrictedAccess=TRUE, $logPageView=TRUE, $mainTemplateFile=NULL) {
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL) {
 		//initialize some internal stuff.
-		$this->initialize_locals($mainTemplateFile, $logPageView);
+		$this->initialize_locals($mainTemplateFile);
 		
 		//if they need to be logged-in... 
 		$this->check_login($restrictedAccess);
-		
-		//check if they're in an administrative area, and if they *should* be in that area.
-		$this->check_admin_access();
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
 	
@@ -29,7 +26,7 @@ class content__GenericPage {
 	/**
 	 * Initializes some internal objects, variables, and so on.
 	 */
-	protected function initialize_locals($mainTemplateFile, $logPageView) {
+	protected function initialize_locals($mainTemplateFile) {
 		
 		//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
 		$GLOBAL['TMPLDIR'] = $GLOBALS['SITE_ROOT'] .'/templates';
@@ -48,12 +45,15 @@ class content__GenericPage {
 		}
 		
 		//build a new instance of the template library (from PHPLib).
-		$this->templateObj=new content__template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
+		$this->templateObj=new Template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
 		//Create a new Session{} object: need the session primarily for set_message() functionality.
-		$this->sessionObj = new content__Session($this->db);		//initialize a new session object
+		$this->sessionObj = new Session($this->db);		//initialize a new session object
 		$this->uid = $this->sessionObj->uid;
 		
+		if(preg_match('/^\//', $mainTemplateFile)) {
+			$mainTemplateFile = $GLOBALS['TMPLDIR'] ."/". $mainTemplateFile;
+		}
 		$this->mainTemplate=$mainTemplateFile; //load the default layout
 		$this->add_template_var("PHPSESSID", $this->sessionObj->sid);
 	}//end initialize_locals()

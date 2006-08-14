@@ -59,11 +59,9 @@
  * with arbitrary strings. These strings can become very large, e.g. entire tables.
  *
  * Note: If you think that this is like FastTemplates, read carefully. It isn't.
- *
- * NOTE: class name changed from "Template" to "content__Template" for cs-content.
  */
 
-class content__Template
+class Template
 {
  /**
   * Serialization helper, the name of this class.
