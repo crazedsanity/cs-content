@@ -1,5 +1,13 @@
 <?
 
+/*
+ * FILE INFORMATION:
+ * $HeadURL$
+ * $Id$
+ * $LastChangedDate$
+ * $LastChangedBy$
+ * $LastChangedRevision$
+ */
 class fileSystemClass {
 
 	var $root;		//actual root directory.

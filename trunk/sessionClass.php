@@ -1,5 +1,12 @@
 <?
-
+/*
+ * FILE INFORMATION:
+ * $HeadURL$
+ * $Id$
+ * $LastChangedDate$
+ * $LastChangedBy$
+ * $LastChangedRevision$
+ */
 class Session{
 
 	protected $db;

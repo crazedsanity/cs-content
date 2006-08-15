@@ -1,10 +1,11 @@
 <?
 /*
  * FILE INFORMATION: 
- * $HeadURL%
- * $LastChangedDate: 2006-08-02 04:34:15Z $
- * $LastChangedRevision: 181 $
- * $LastChangedBy: danf $
+ * $HeadURL$
+ * $Id$
+ * $LastChangedDate$
+ * $LastChangedRevision$
+ * $LastChangedBy$
  * 
  * HOW THE SYSTEM WORKS:::
  * 	TEMPLATE FILES:
@@ -67,9 +68,13 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 	$GLOBALS['SITE_ROOT'] = $_SERVER['DOCUMENT_ROOT'];
 	$GLOBALS['SITE_ROOT'] = str_replace("/public_html", "", $GLOBALS['SITE_ROOT']);
 }
-require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/fileSystemClass.php");
-require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/sessionClass.php");
-require_once($GLOBALS['SITE_ROOT'] ."/lib/externals/cs-content/genericPageClass.php");
+
+//automatically determine where this file is, & use that directory to include the other files.
+$thisFile = __FILE__;
+$myIncludesDir = preg_replace('/\/contentSystemClass.php/', '', $thisFile);
+require_once($myIncludesDir ."/fileSystemClass.php");
+require_once($myIncludesDir ."/sessionClass.php");
+require_once($myIncludesDir ."/genericPageClass.php");
 
 class contentSystem {
 	

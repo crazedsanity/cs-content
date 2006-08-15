@@ -1,4 +1,12 @@
 <?php
+/*
+ * FILE INFORMATION:
+ * $HeadURL$
+ * $Id$
+ * $LastChangedDate$
+ * $LastChangedBy$
+ * $LastChangedRevision$
+ */
 require_once("template.inc");
 class GenericPage {
 	var $sess0ionObj;					//session_class object to manage our sessin variables
