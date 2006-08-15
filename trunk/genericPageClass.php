@@ -77,16 +77,19 @@ class GenericPage {
 			$doNotRedirectArr = array('/login.php', '/admin/login.php', '/index.php', '/admin.php',
 				'/content', '/content/index.php'
 			);
+			$myUrlString="";
 			$myGetArr = $_GET;
 			if(is_array($myGetArr) && count($myGetArr) > 0) {
 				unset($myGetArr['PHPSESSID']);
 				$myUrlString = string_from_array($myGetArr, NULL, 'url');
-				$redirectHere = '/login.php?destination='. $myUrlString;
-				
-				//Not exitting after conditional_header() is... bad, m'kay?
-				conditional_header($redirectHere);
-				exit;
 			}
+			
+			//TODO: make the redirectHere variable dynamic--an argument, methinks.
+			$redirectHere = '/login.php?destination='. $myUrlString;
+				
+			//Not exitting after conditional_header() is... bad, m'kay?
+			conditional_header($redirectHere);
+			exit;
 		}
 	}//end check_login()
 	//---------------------------------------------------------------------------------------------

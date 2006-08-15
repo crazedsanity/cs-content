@@ -114,6 +114,11 @@ class contentSystem {
 	 * Creates internal objects & prepares for later usage.
 	 */
 	private function initialize_locals() {
+		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
+		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
+		//	run during the "finish" stage... probably using GenericPage{}->check_login().
+		$this->templateObj = new GenericPage(FALSE, "main.shared.tmpl");
+		
 		//create a fileSystem object.
 		$this->fileSystemObj = new fileSystemClass();
 		
@@ -533,7 +538,6 @@ class contentSystem {
 			unset($_GET[$badVarName], $_POST[$badVarName]);
 		}
 		
-		$this->templateObj = new GenericPage(NULL, $this->templateList['main']);
 		$page =& $this->templateObj;
 		foreach($this->templateList as $mySection => $myTmpl) {
 			$page->add_template_var($mySection, html_file_to_string($myTmpl));
