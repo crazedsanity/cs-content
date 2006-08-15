@@ -43,7 +43,7 @@ class GenericPage {
 		//if there have been some global template vars (or files) set, read 'em in here.
 		if(is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
 			foreach($GLOBALS['templateVars'] as $key=>$value) {
-				$this->add_template_file($key, $value);
+				$this->add_template_var($key, $value);
 			}
 		}
 		if(is_array($GLOBALS['templateFiles'])) {
@@ -51,12 +51,13 @@ class GenericPage {
 				$this->templateFiles[$key] = $value;
 			}
 		}
+		unset($GLOBALS['templateVars'], $GLOBALS['templateFiles']);
 		
 		//build a new instance of the template library (from PHPLib).
 		$this->templateObj=new Template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
 		//Create a new Session{} object: need the session primarily for set_message() functionality.
-		$this->sessionObj = new Session($this->db);		//initialize a new session object
+		$this->sessionObj = new Session(1);		//initialize a new session object
 		$this->uid = $this->sessionObj->uid;
 		
 		if(preg_match('/^\//', $mainTemplateFile)) {
@@ -119,19 +120,6 @@ class GenericPage {
 		$this->templateVars[$section] = $htmlString;
 	}//end change_content()
 	//---------------------------------------------------------------------------------------------
-
-
-
-		
-	//---------------------------------------------------------------------------------------------
-	/**
-	 * Appends data to the given section.
-	 */
-	public function add_content($htmlString,$section="content"){
-		$this->templateVars[$section] .= $htmlString;
-	}//end add_content()
-	//---------------------------------------------------------------------------------------------
-
 
 
 
@@ -245,19 +233,8 @@ class GenericPage {
 		//Load the default page layout.
 		$this->templateObj->set_file("main", $this->mainTemplate);
 
-		if(is_array($this->templateFiles)) {
-			//do we have additional template files to load?
-			$this->templateObj->set_file($this->templateFiles);
-		}
-		
 		//load the placeholder names and thier values
 		$this->templateObj->set_var($this->templateVars);
-		if(is_array($this->templateFiles)) {
-   			//do we have additional template files to parse?
-			foreach($this->templateFiles as $name=>$value) {
-				$this->templateObj->parse($name,$name);
-			}
-		}
 		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
 		if($stripUndefVars) {
 			preg_match_all('/\{.*?\}/', $this->templateObj->varvals[out], $tags);
@@ -266,13 +243,11 @@ class GenericPage {
 				$str2 = str_replace("{", "", $str);
 				$str2 = str_replace("}", "", $str2);
 				if(!$this->templateVars[$str2]) {
-					//$debug = "<!-- ***** killed $str ***** -->";
 					$this->templateObj->varvals[out] = str_replace($str, "$debug", $this->templateObj->varvals[out]);
 				}
 			}
 		}
 		$this->templateObj->pparse("out","out"); //parse the main page 
-		$this->db->close();
 		
 	}//end of print_page()
 	//---------------------------------------------------------------------------------------------
