@@ -72,6 +72,7 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 //automatically determine where this file is, & use that directory to include the other files.
 $thisFile = __FILE__;
 $myIncludesDir = preg_replace('/\/contentSystemClass.php/', '', $thisFile);
+require_once($myIncludesDir ."/globalFunctions.php");
 require_once($myIncludesDir ."/fileSystemClass.php");
 require_once($myIncludesDir ."/sessionClass.php");
 require_once($myIncludesDir ."/genericPageClass.php");
@@ -540,7 +541,7 @@ class contentSystem {
 		
 		$page =& $this->templateObj;
 		foreach($this->templateList as $mySection => $myTmpl) {
-			$page->add_template_var($mySection, html_file_to_string($myTmpl));
+			$page->add_template_var($mySection, $page->file_to_string($myTmpl));
 		}
 		unset($mySection);
 		unset($myTmpl);

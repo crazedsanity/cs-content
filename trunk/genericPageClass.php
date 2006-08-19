@@ -308,7 +308,7 @@ class GenericPage {
 	 * Takes a template file, whose root must be within $GLOBALS['TMPLDIR'], pulls it's 
 	 * content & returns it.
 	 */
-	private function file_to_string($templateFileName) {
+	public function file_to_string($templateFileName) {
 		$templateFileName = preg_replace('/\/\//', '\/', $templateFileName);
 		if($this->template_file_exists($templateFileName)) {
 			$retval = file_get_contents($GLOBALS['TMPLDIR'] .'/'. $templateFileName);
@@ -319,6 +319,7 @@ class GenericPage {
 				"type"		=> 'error'
 			));
 		}
+		return($retval);
 	}//end file_to_string()
 	//---------------------------------------------------------------------------------------------
 	
