@@ -547,6 +547,7 @@ class contentSystem {
 		
 		$page =& $this->templateObj;
 		foreach($this->templateList as $mySection => $myTmpl) {
+			$myTmpl = preg_replace("/\/\//", "/", $myTmpl);
 			$page->add_template_var($mySection, $page->file_to_string($myTmpl));
 		}
 		unset($mySection);
