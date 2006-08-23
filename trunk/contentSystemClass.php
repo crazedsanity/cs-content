@@ -278,6 +278,12 @@ class contentSystem {
 				$myIndex = NULL;
 			}
 			
+			//check the index file for validity... this is kind of a dirty hack... but it works.
+			$checkMe = $this->fileSystemObj->ls($myIndex);
+			if(!is_array($checkMe[$myIndex])) {
+				unset($myIndex);
+			}
+			
 			if(isset($myIndex)) {
 				$valid = TRUE;
 				$this->fileSystemObj->cd('/templates');
