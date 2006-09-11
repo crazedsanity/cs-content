@@ -71,11 +71,11 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 
 //automatically determine where this file is, & use that directory to include the other files.
 $thisFile = __FILE__;
-$myIncludesDir = preg_replace('/\/contentSystemClass.php/', '', $thisFile);
-require_once($myIncludesDir ."/globalFunctions.php");
-require_once($myIncludesDir ."/fileSystemClass.php");
-require_once($myIncludesDir ."/sessionClass.php");
-require_once($myIncludesDir ."/genericPageClass.php");
+$myIncludesDir = preg_replace('/contentSystemClass.php/', '', $thisFile);
+require_once($myIncludesDir ."globalFunctions.php");
+require_once($myIncludesDir ."fileSystemClass.php");
+require_once($myIncludesDir ."sessionClass.php");
+require_once($myIncludesDir ."genericPageClass.php");
 
 class contentSystem {
 	
