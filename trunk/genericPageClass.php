@@ -9,7 +9,7 @@
  */
 require_once("template.inc");
 class GenericPage {
-	var $sess0ionObj;					//session_class object to manage our sessin variables
+	var $sessionObj;					//session_class object to manage our sessin variables
 	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
 	var $mainTemplate;				//the default layout of the site
@@ -57,7 +57,7 @@ class GenericPage {
 		$this->templateObj=new Template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
 		//Create a new Session{} object: need the session primarily for set_message() functionality.
-		$this->sessionObj = new Session(1);		//initialize a new session object
+		$this->sessionObj = new Session();		//initialize a new session object
 		$this->uid = $this->sessionObj->uid;
 		
 		if(preg_match('/^\//', $mainTemplateFile)) {
@@ -454,6 +454,99 @@ class GenericPage {
 			header("location:$url");
 		}
 	}//end conditional_header()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Given the name of a templateVar (defaults to "content"), this method will retrieve all block
+	 * row definitions in the order that they can safely be ripped-out/set by set_block_row().
+	 * 
+	 * @parm $templateVar	(str,optional) templateVar to parse.
+	 * 
+	 * @return (array)		Contains all rows, complete & incomplete.
+	 * 
+	 * NOTE: Layout of array:::
+	 * 	array(
+	 * 		incomplete => array(
+	 * 			begin	=> array(),
+	 * 			end		=> array()
+	 * 		),
+	 * 		ordered	=> array()
+	 * NOTE2: each "array()" above is a list of block row names.
+	 * NOTE3: failure to parse the template will return a blank array.
+	 * 
+	 * 
+	 */
+	function get_block_row_defs($templateVar="content") {
+		//cast $retArr as an array, so it's clean.
+		$retArr = array();
+		
+		//NOTE: the value 31 isn't just a randomly chosen length; it's the minimum
+		// number of characters to have a block row.  EG: "<!-- BEGIN x -->o<!-- END x -->"
+		$templateContents = $this->templateVars[$templateVar];
+		if(strlen($templateContents) >= 31) {
+			//looks good to me.  Run the regex...
+			$flags = PREG_PATTERN_ORDER;
+			$reg = "/<!-- BEGIN (.+) -->/";
+			preg_match_all($reg, $templateContents, $beginArr, $flags);
+			$beginArr = $beginArr[1];
+			
+			$endReg = "/<!-- END (.+) -->/";
+			preg_match_all($endReg, $templateContents, $endArr, $flags);
+			$endArr = $endArr[1];
+	
+			//create a part of the array that shows any orphaned "BEGIN" statements (no matching "END"
+			// statement), and orphaned "END" statements (no matching "BEGIN" statements)
+			// NOTE::: by doing this, should easily be able to tell if the block rows were defined
+			// properly or not.
+			if(count($retArr['incomplete']['begin'] = array_diff($beginArr, $endArr)) > 0) {
+				//I'm sure there's an easier way to do this, but my head hurts too much when 
+				// I try to do the magic.  Maybe I need to put another level in CodeMancer...
+				foreach($retArr['incomplete']['begin'] as $num=>$val) {
+					unset($beginArr[$num]);
+				}
+			}
+			if(count($retArr['incomplete']['end'] = array_diff($endArr, $beginArr)) > 0) {
+				//both of the below foreach's simply pulls undefined vars out of the
+				// proper arrays, so I don't have to deal with them later.
+				foreach($retArr['incomplete']['end'] as $num=>$val) {
+					unset($endArr[$num]);
+				}
+			}
+			
+			//YAY!!! we've got valid data!!!
+			//reverse the order of the array, so when the ordered array
+			// is looped through, all block rows can be pulled.
+			$retArr['ordered'] = array_reverse($beginArr);
+		} else {
+			//nothin' doin'.  Return a blank array.
+			$retArr = array();
+		}
+		
+		return($retArr);
+	}//end get_block_row_defs()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	function rip_all_block_rows($templateVar="content", $exceptionArr=array()) {
+		$rowDefs = $this->get_block_row_defs($templateVar);
+		if(count($exceptionArr) > 0) {
+			$tmpArr = array_flip($rowDefs['ordered']);
+			foreach($exceptionArr as $removeThis) {
+				unset($tmpArr[$removeThis]);
+			}
+			foreach($tmpArr as $removeThis) {
+				unset($rowDefs['ordered'][$removeThis]);
+			}
+		}
+		
+		foreach($rowDefs['ordered'] as $defName) {
+			$this->set_block_row($templateVar, $defName);
+		}
+	}//end rip_all_block_rows()
 	//---------------------------------------------------------------------------------------------
 
 }
