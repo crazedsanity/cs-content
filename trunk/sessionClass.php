@@ -74,11 +74,11 @@ class Session{
 	
 	//---------------------------------------------------------------------------------------------
 	function check_session() {
-		$retval = FALSE;
+		$retval = 0;
 		if($this->useDatabase) {
 			
 			$result = $this->db_exec("SELECT * FROM cs_session WHERE session_id='". $this->sid ."'");
-			if($result) {
+			if($result > 0) {
 				$data = $this->db->farray_fieldnames();
 				$this->uid = $data['uid'];
 				$this->sid_check = 1;
@@ -137,6 +137,7 @@ class Session{
 						$this->uid = $data['uid'];
 						$this->sid_check = 1;
 						$retval = $this->sid_check;
+						$_SESSION['uid'] = $this->uid;
 					}
 				}
 			}
@@ -144,6 +145,18 @@ class Session{
 		
 		return($retval);
 	}//end login()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function logout($sid=NULL) {
+		if(is_null($sid)) {
+			$sid = $this->sid;
+		}
+		$this->db_exec("DELETE from cs_session WHERE session_id='$sid'");
+		unset($_SESSION['uid']);
+	}//end logout()
 	//---------------------------------------------------------------------------------------------
 
 

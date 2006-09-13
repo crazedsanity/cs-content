@@ -539,12 +539,8 @@ class GenericPage {
 				unset($tmpArr[$removeThis]);
 			}
 			foreach($tmpArr as $removeThis) {
-				unset($rowDefs['ordered'][$removeThis]);
+				$this->set_block_row($templateVar, $rowDefs['ordered'][$removeThis]);
 			}
-		}
-		
-		foreach($rowDefs['ordered'] as $defName) {
-			$this->set_block_row($templateVar, $defName);
 		}
 	}//end rip_all_block_rows()
 	//---------------------------------------------------------------------------------------------
