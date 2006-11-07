@@ -511,6 +511,14 @@ class contentSystem {
 		if(isset($lsData[$myFile]) && $lsData[$myFile]['type'] == 'file') {
 			$this->includesList[] = $this->fileSystemObj->realcwd .'/'. $myFile;
 		}
+		
+		if(isset($lsData[$section]) && !count($this->sectionArr)) {
+			$this->fileSystemObj->cd($section);
+			$lsData = $this->fileSystemObj->ls();
+			if(isset($lsData['index.inc'])) {
+				$this->includesList[] = $this->fileSystemObj->realcwd .'/index.inc';
+			}
+		}
 	}//end load_dir_includes()
 	//------------------------------------------------------------------------
 	
