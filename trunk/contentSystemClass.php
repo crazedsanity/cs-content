@@ -71,11 +71,11 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 
 //automatically determine where this file is, & use that directory to include the other files.
 $thisFile = __FILE__;
-$myIncludesDir = preg_replace('/contentSystemClass.php/', '', $thisFile);
-require_once($myIncludesDir ."globalFunctions.php");
-require_once($myIncludesDir ."fileSystemClass.php");
-require_once($myIncludesDir ."sessionClass.php");
-require_once($myIncludesDir ."genericPageClass.php");
+$myIncludesDir = dirname(__FILE__);
+#require_once($myIncludesDir ."/globalFunctions.php");
+require_once($myIncludesDir ."/cs_fileSystemClass.php");
+require_once($myIncludesDir ."/cs_sessionClass.php");
+require_once($myIncludesDir ."/cs_genericPageClass.php");
 
 class contentSystem {
 	
@@ -353,16 +353,18 @@ class contentSystem {
 	
 	//------------------------------------------------------------------------
 	/**
-	 * loads templates for the main sectin they're on.
+	 * loads templates for the main section they're on.
 	 */
 	private function load_main_templates() {
 		//check to see if the present section is valid.
 		$myFile = $this->baseDir .'/index.content.tmpl';
 		$this->fileSystemObj->cd($this->baseDir);
 		$dirContents = $this->arrange_directory_contents('name', 'section');
-		if(is_array($dirContents['index'])) {
-			foreach($dirContents['index'] as $mySection => $templateFilename) {
-				$this->templateList[$mySection] = $templateFilename;
+		if(is_array($dirContents)) {
+			foreach($dirContents as $mySection => $subArr) {#$templateFilename) {
+				foreach($subArr as $subIndex=>$templateFilename) {
+					$this->templateList[$mySection] = $templateFilename;
+				}
 			}
 		}
 	}//end load_main_templates()
@@ -414,7 +416,10 @@ class contentSystem {
 				$pieces = $this->parse_filename($index);
 				$myPriIndex = $pieces[$primaryIndex];
 				$mySecIndex = $pieces[$secondaryIndex];
-				$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
+				if(strlen($myPriIndex) && strlen($mySecIndex)) {
+					//only load if it's got BOTH parts of the filename.
+					$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
+				}
 			}
 		}
 		
