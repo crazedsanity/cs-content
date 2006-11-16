@@ -7,7 +7,7 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-class Session{
+class cs_session{
 
 	protected $db;
 	public $uid;
@@ -42,5 +42,5 @@ class Session{
 	//---------------------------------------------------------------------------------------------
 
 
-}//end content__Session{}
+}//end cs_session{}
 ?>

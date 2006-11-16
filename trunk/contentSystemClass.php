@@ -118,10 +118,10 @@ class contentSystem {
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$this->templateObj = new GenericPage(FALSE, "main.shared.tmpl");
+		$this->templateObj = new cs_genericPage(FALSE, "main.shared.tmpl");
 		
 		//create a fileSystem object.
-		$this->fileSystemObj = new fileSystemClass();
+		$this->fileSystemObj = new cs_fileSystemClass();
 		
 		//split apart the section so we can do stuff with it later.
 		$this->parse_section();

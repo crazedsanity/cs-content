@@ -8,7 +8,7 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-class fileSystemClass {
+class cs_fileSystemClass {
 
 	var $root;		//actual root directory.
 	var $cwd;		//current directory; relative to $this->root
@@ -402,5 +402,5 @@ class fileSystemClass {
 	//========================================================================================
 	
 	
-}//end filesystemClass{}
+}//end cs_filesystemClass{}
 ?>

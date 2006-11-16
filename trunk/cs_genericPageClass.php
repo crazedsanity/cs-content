@@ -8,7 +8,8 @@
  * $LastChangedRevision$
  */
 require_once("template.inc");
-class GenericPage {
+
+class cs_genericPage {
 	var $sessionObj;					//session_class object to manage our sessin variables
 	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
@@ -56,8 +57,8 @@ class GenericPage {
 		//build a new instance of the template library (from PHPLib).
 		$this->templateObj=new Template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
-		//Create a new Session{} object: need the session primarily for set_message() functionality.
-		$this->sessionObj = new Session();		//initialize a new session object
+		//Create a new cs_session{} object: need the session primarily for set_message() functionality.
+		$this->sessionObj = new cs_session();		//initialize a new session object
 		$this->uid = $this->sessionObj->uid;
 		
 		if(preg_match('/^\//', $mainTemplateFile)) {
@@ -545,5 +546,5 @@ class GenericPage {
 	}//end rip_all_block_rows()
 	//---------------------------------------------------------------------------------------------
 
-}
+}//end cs_genericPage{}
 ?>
