@@ -91,12 +91,16 @@ class contentSystem {
 	protected $templateList		= array();
 	protected $includesList		= array();
 	protected $templateObj		= NULL;
+	protected $gfObj			= NULL;
 	
 	//------------------------------------------------------------------------
 	/**
 	 * The CONSTRUCTOR.  Duh.
 	 */
 	public function __construct() {
+		//make a cs_globalFunctions{} object.
+		$this->gfObj = new cs_globalFunctions();
+		
 		//setup the section stuff...
 		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
 		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
@@ -189,7 +193,7 @@ class contentSystem {
 					if(strlen($temp[0]) > 1) {
 						$tSecName = $temp[0];
 					}
-					$tSection = create_list($tSection, $tSecName, '/');
+					$tSection = $this->gfObj->create_list($tSection, $tSecName, '/');
 				}
 				$section = $tSection;
 			}
@@ -213,7 +217,9 @@ class contentSystem {
 	 */
 	private function prepare() {
 		//cd() in to the templates directory.
-		if($this->fileSystemObj->cd('templates') && $this->validate_page()) {
+		$cdResult = $this->fileSystemObj->cd('templates');
+		$validatePageRes = $this->validate_page();
+		if($cdResult && $validatePageRes) {
 			//load shared templates.
 			$this->load_shared_templates();
 			
@@ -251,7 +257,7 @@ class contentSystem {
 		//	if there are templates that make it good... or just check the base template.
 		if((count($this->sectionArr) > 0) && !((count($this->sectionArr) == 1) && ($this->sectionArr[0] == 'index'))) {
 			//got more than just a baseDir url... see if the template is good.
-			$finalLink = string_from_array($this->sectionArr, NULL, '/');
+			$finalLink = $this->gfObj->string_from_array($this->sectionArr, NULL, '/');
 			$this->fileSystemObj->cd($this->baseDir);
 			$mySectionArr = $this->sectionArr;
 			$finalSection = array_pop($mySectionArr);
@@ -288,7 +294,7 @@ class contentSystem {
 				$valid = TRUE;
 				$this->fileSystemObj->cd('/templates');
 			} else {
-				$this->reason = "validate_page() couldn't find page template for [". $this->section .", final=[$finalSection]...";
+				$this->reason = "validate_page() couldn't find page template for (". $this->section .", final=[$finalSection])...";
 			}
 		} else {
 			//just the base template.  Make sure it's good.
@@ -326,7 +332,7 @@ class contentSystem {
 				}
 			}
 			if(!$this->fileSystemObj->cd($value)) {
-				debug_print("load_page_templates(): wasn't able to change dir to $value");
+				$this->gfObj->debug_print("load_page_templates(): wasn't able to change dir to $value");
 				break;
 			}
 		}
@@ -410,7 +416,7 @@ class contentSystem {
 		foreach($directoryInfo as $index=>$data) {
 			$myType = $data['type'];
 			if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
-				$filename = create_list($this->fileSystemObj->cwd, $index, '/');
+				$filename = $this->gfObj->create_list($this->fileSystemObj->cwd, $index, '/');
 				$filename = preg_replace('/^\/templates/', '', $filename);
 				//call another method to rip the filename apart properly, then arrange things as needed.
 				$pieces = $this->parse_filename($index);
@@ -535,7 +541,7 @@ class contentSystem {
 	 */
 	private function die_gracefully($details=NULL) {
 		//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
-		debug_print("something broke. \nDETAILS::: $details" .
+		$this->gfObj->debug_print("something broke. \nDETAILS::: $details" .
 				"\nREASON::: ". $this->reason);
 		exit;
 	}//end die_gracefully()

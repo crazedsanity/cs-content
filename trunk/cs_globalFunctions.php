@@ -1,14 +1,13 @@
 <?php
 
-class globalFunctions {
+class cs_globalFunctions {
 
-	//##########################################################################
+	//================================================================================================================
+	/**
+	 * Automatically selects either the header() function, or printing meta-refresh data for redirecting a browser.
+	 */
 	public function conditional_header($url)
 	{
-		//checks to see if headers were sent; if yes: use a meta redirect.
-		//	if no: send header("location") info...
-	
-	
 		if(headers_sent())
 		{
 			//headers sent.  Use the meta redirect.
@@ -22,31 +21,32 @@ class globalFunctions {
 			</HTML>
 			";
 		}
-		else header("location:$url");
+		else 
+		{
+			header("location:$url");
+		}
 	}//end conditional_header()
-	//##########################################################################
+	//================================================================================================================
 	
 	
-	//##########################################################################
+	
+	//================================================================================================================
+	/**
+	 * Basically, just a wrapper for create_list(), which returns a list or 
+	 * an array of lists, depending upon what was requested.
+	 * 
+	 * @param $array		<array> list for the array...
+	 * @param $style		<str,optional> what "style" it should be returned 
+	 *                         as (select, update, etc).
+	 * @param $separator	<str,optional> what separattes key from value: see each
+	 * 							style for more information.
+	 * @param $cleanString	<mixed,optional> clean the values in $array by sending it
+	 * 							to cleanString(), with this as the second argument.
+	 * @param $removeEmptyVals	<bool,optional> If $cleanString is an ARRAY and this
+	 * 							evaluates as TRUE, indexes of $array whose values have
+	 *							a length of 0 will be removed.
+	 */
 	public function string_from_array($array,$style=NULL,$separator=NULL, $cleanString=NULL, $removeEmptyVals=FALSE) {
-		/**
-		 * Basically, just a wrapper for create_list(), which returns a list or 
-		 * an array of lists, depending upon what was requested.
-		 * 
-		 * @param $array		<array> list for the array...
-		 * @param $style		<str,optional> what "style" it should be returned 
-		 *                         as (select, update, etc).
-		 * @param $separator	<str,optional> what separattes key from value: see each
-		 * 							style for more information.
-		 * @param $cleanString	<mixed,optional> clean the values in $array by sending it
-		 * 							to cleanString(), with this as the second argument.
-		 * @param $removeEmptyVals	<bool,optional> If $cleanString is an ARRAY and this
-		 * 							evaluates as TRUE, indexes of $array whose values have
-		 *							a length of 0 will be removed.
-		 *
-		 * TODO: explain return values
-		 * TODO: look into a better way of implementing the $removeEmptyVals thing.
-		 */
 		
 		//precheck... if it's not an array, kill it.
 		if(!is_array($array)) {
@@ -69,7 +69,7 @@ class globalFunctions {
 							unset($array[$myIndex]);
 						} else {
 							//now format it properly.
-							$array[$myIndex] = cleanString($array[$myIndex], $myCleanStringArg);
+							$array[$myIndex] = $this->cleanString($array[$myIndex], $myCleanStringArg);
 						}
 					}
 				}
@@ -82,17 +82,17 @@ class globalFunctions {
 				}
 				//build temporary data...
 				foreach($array as $key=>$value) {
-					$tmp[0] = create_list($tmp[0], $key);
+					$tmp[0] = $this->create_list($tmp[0], $key);
 					//clean the string, if required.
 					if($cleanString) {
 						//make sure it's not full of poo...
-						$value = cleanString($value, "sql");
+						$value = $this->cleanString($value, "sql");
 						$value = "'". $value ."'";
 					}
 					if((is_null($value)) OR ($value == "")) {
 						$value = "NULL";
 					}
-					$tmp[1] = create_list($tmp[1], $value);
+					$tmp[1] = $this->create_list($tmp[1], $value);
 				}
 				
 				//make the final product.
@@ -109,10 +109,10 @@ class globalFunctions {
 				foreach($array as $field=>$value) {
 					if($cleanString && !preg_match('/^\'/',$value)) {
 						//make sure it doesn't have crap in it...
-						$value = cleanString($value, "sql");
+						$value = $this->cleanString($value, "sql");
 						$value = "'". $value ."'";
 					}
-					$retval = create_list($retval, $field . $separator . $value);
+					$retval = $this->create_list($retval, $field . $separator . $value);
 				}
 				break;
 				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -126,10 +126,10 @@ class globalFunctions {
 				foreach($array as $field=>$value) {
 					if($cleanString) {
 						//make sure it doesn't have crap in it...
-						$value = cleanString($value, "sql");
+						$value = $this->cleanString($value, "sql");
 						$value = "'". $value ."'";
 					}
-					$retval = create_list($retval, $field . $separator . $value, " ");
+					$retval = $this->create_list($retval, $field . $separator . $value, " ");
 				}
 				if($style == "order" && !preg_match('/order by/', strtolower($retval))) {
 					$retval = "ORDER BY ". $retval;
@@ -153,7 +153,7 @@ class globalFunctions {
 					$delimiter = "AND";
 					if(is_array($value)) {
 						//doing tricksie things!!!
-						$retval = create_list($retval, $field ." IN (". string_from_array($value) .")", " $delimiter ");
+						$retval = $this->create_list($retval, $field ." IN (". string_from_array($value) .")", " $delimiter ");
 					} else {
 						//if there's already an operator ($separator), don't specify one.
 						if(preg_match('/^[\(<=>]/', $value)) {
@@ -161,13 +161,13 @@ class globalFunctions {
 						}
 						if($cleanString) {
 							//make sure it doesn't have crap in it...
-							$value = cleanString($value, "sql");	
+							$value = $this->cleanString($value, "sql");	
 						}
 						if(!is_numeric($value) && isset($separator))
 						{
 							$value = "'". $value ."'";	
 						}
-						$retval = create_list($retval, $field . $separator . $value, " $delimiter ");
+						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ");
 					}
 				}
 				break;
@@ -182,9 +182,9 @@ class globalFunctions {
 					}
 					foreach($array as $field=>$value) {
 						if($cleanString && !is_array($cleanString)) {
-							$value = cleanString($value, $cleanString);
+							$value = $this->cleanString($value, $cleanString);
 						}
-						$retval = create_list($retval, "$field=$value", $separator);
+						$retval = $this->create_list($retval, "$field=$value", $separator);
 					}
 				}
 				break;
@@ -197,7 +197,7 @@ class globalFunctions {
 						$separator = '=';
 					}
 					foreach($array as $field=>$value) {
-						$retval = create_list($retval, $field . $separator . $value, "\n");
+						$retval = $this->create_list($retval, $field . $separator . $value, "\n");
 					}
 				}
 				break;
@@ -210,7 +210,7 @@ class globalFunctions {
 						$separator = '=';
 					}
 					foreach($array as $field=>$value) {
-						$retval = create_list($retval, $field . $separator . $value, "<BR>\n");
+						$retval = $this->create_list($retval, $field . $separator . $value, "<BR>\n");
 					}
 				}
 				break;
@@ -224,9 +224,9 @@ class globalFunctions {
 				}
 				foreach($array as $field=>$value) {
 					if($cleanString) {
-						$value = cleanString($value, $cleanString);
+						$value = $this->cleanString($value, $cleanString);
 					}
-					$retval = create_list($retval, $value, $separator);
+					$retval = $this->create_list($retval, $value, $separator);
 				}
 				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 			}
@@ -237,25 +237,203 @@ class globalFunctions {
 		
 		return($retval);
 	}//end string_from_array()
-	//##########################################################################
+	//================================================================================================================
+	
+	
+	
+	//================================================================================================================
+	/**
+	 * Easy way of cleaning data using types/styles of cleaning, with optional quoting.
+	 * 
+	 * @param $cleanThis		(str) data to be cleaned
+	 * @param $cleanType		(str,optional) how to clean the data.
+	 * @param $sqlQuotes		(bool,optional) quote the string for SQL
+	 * 
+	 * @return (string)			Cleaned data.
+	 */
+	function cleanString($cleanThis=NULL, $cleanType="all",$sqlQuotes=0)
+	{
+		$cleanType = strtolower($cleanType);
+		switch ($cleanType)
+		{
+			case "none":
+				//nothing to see here (no cleaning wanted/needed).  Move along.
+				$sqlQuotes = 0;
+			break;
+			
+			case "query":
+				/*
+					replace \' with '
+					gets rid of evil characters that might lead to SQL injection attacks.
+					replace line-break characters
+				*/
+				$evilChars = array("\$", "%", "~", "*",">", "<", "-", "{", "}", "[", "]", ")", "(", "&", "#", "?", ".", "\,","\/","\\","\"","\|","!","^","+","`","\n","\r");
+				$cleanThis = preg_replace("/\|/","",$cleanThis);
+				$cleanThis = str_replace($evilChars,"", $cleanThis);
+				$cleanThis = stripslashes(addslashes($cleanThis));
+			break;
+			
+			case "sql":
+				$cleanThis = addslashes(stripslashes($cleanThis));
+			break;
+	
+			case "double_quote":
+				//This will remove all double quotes from a string.
+				$cleanThis = str_replace('"',"",$cleanThis);
+			break;
+	
+			case "htmlspecial":
+				/*
+				This function is useful in preventing user-supplied text from containing HTML markup, such as in a message board or guest book application. 
+					The translations performed are:
+				      '&' (ampersand) becomes '&amp;'
+				      '"' (double quote) becomes '&quot;'.
+				      '<' (less than) becomes '&lt;'
+				      '>' (greater than) becomes '&gt;' 
+				*/
+	
+				$cleanThis = htmlspecialchars($cleanThis);
+			break;
+	
+			case "htmlspecial_q":
+			/*
+				'&' (ampersand) becomes '&amp;'
+				'"' (double quote) becomes '&quot;'.
+				''' (single quote) becomes '&#039;'.
+				'<' (less than) becomes '&lt;'
+				'>' (greater than) becomes '&gt;
+			*/
+				$cleanThis = htmlspecialchars($cleanThis,ENT_QUOTES);
+			break;
+	
+			case "htmlspecial_nq":
+			/*
+				'&' (ampersand) becomes '&amp;'
+				'<' (less than) becomes '&lt;'
+				'>' (greater than) becomes '&gt;
+			*/
+				$cleanThis = htmlspecialchars($cleanThis,ENT_NOQUOTES);
+			break;
+	
+			case "htmlentity":
+				/*	
+					Convert all applicable text to its html entity
+					Will convert double-quotes and leave single-quotes alone
+				*/
+				$cleanThis = htmlentities(html_entity_decode($cleanThis));
+			break;
+	
+			case "htmlentity_plus_brackets":
+				/*	
+					Just like htmlentity, but also converts "{" and "}" (prevents template 
+					from being incorrectly parse).
+					Also converts "{" and "}" to their html entity.
+				*/
+				$cleanThis = htmlentities(html_entity_decode($cleanThis));
+				$cleanThis = str_replace('$', '&#36;', $cleanThis);
+				$cleanThis = str_replace('{', '&#123;', $cleanThis);
+				$cleanThis = str_replace('}', '&#125;', $cleanThis);
+			break;
+	
+			case "double_entity":
+				//Removed double quotes, then calls html_entities on it.
+				$cleanThis = str_replace('"',"",$cleanThis);
+				$cleanThis = htmlentities(html_entity_decode($cleanThis));
+			break;
+		
+			case "meta":
+				// Returns a version of str with a backslash character (\) before every character that is among these:
+				// . \\ + * ? [ ^ ] ( $ )
+				$cleanThis = quotemeta($cleanThis);
+			break;
+	
+			case "email":
+				//Remove all characters that aren't allowed in an email address.
+				$cleanThis = preg_replace("/[^A-Za-z0-9\._@-]/","",$cleanThis);
+			break;
+	
+			case "email_plus_spaces":
+				//Remove all characters that aren't allowed in an email address.
+				$cleanThis = preg_replace("/[^A-Za-z0-9\ \._@-]/","",$cleanThis);
+			break;
+	
+			case "phone_fax":
+				//Remove everything that's not numeric or +()-   example: +1 (555)-555-2020 is valid
+				$cleanThis = preg_replace("/[^0-9-+() ]/","",$cleanThis);
+			break;
+			
+			case "integer":
+			case "numeric":
+				//Remove everything that's not numeric.
+				$cleanThis = preg_replace("/[^0-9]/","",$cleanThis);
+			break;
+			
+			case "decimal":
+			case "float":
+				//same as integer only the decimal point is allowed
+				$cleanThis = preg_replace("/[^0-9\.]/","",$cleanThis);
+			break;
+			
+			case "name":
+			case "names":
+				//removes everything in the "alpha" case, but allows "'".
+				$cleanThis = preg_replace("/[^a-zA-Z']/", "", $cleanThis);
+			break;
+	
+			case "alpha":
+				//Removes anything that's not English a-zA-Z
+				$cleanThis = preg_replace("/[^a-zA-Z]/","",$cleanThis);
+			break;
+			
+			case "bool":
+			case "boolean":
+				//makes it either T or F (gotta lower the string & only check the first char to ensure accurate results).
+				$cleanThis = interpret_bool($cleanThis, array('f', 't'));
+			break;
+			
+			case "varchar":
+				$cleanThis=$this->cleanString($cleanThis,"query");
+				$cleanThis="'" . $cleanThis . "'";
+				if($cleanThis == "''")
+				{
+					$cleanThis="NULL";	
+				}
+			break;
+			
+			case "date":
+				$cleanThis = preg_replace("/[^0-9\-]/","",$cleanThis);
+				break;
+				
+			case "datetime":
+				$cleanThis=preg_replace("/[^A-Za-z0-9\/: \-\'\.]/","",$cleanThis);
+				if(!preg_match('/\'/', $cleanThis)) {
+					$cleanThis="'" . $cleanThis . "'";
+				}
+			break;
+				
+			case "all":
+			default:
+				// 1. Remove all naughty characters we can think of except alphanumeric.
+				$cleanThis = preg_replace("/[^A-Za-z0-9]/","",$cleanThis);
+			break;
+	
+		}
+		if($sqlQuotes) {
+			$cleanThis = "'". $cleanThis ."'";
+		}
+		return $cleanThis;
+	}//end cleanString()
+	//================================================================================================================
 	
 	
 	
 	
-	//##########################################################################
+	//================================================================================================================
+	/**
+	 * Returns a list delimited by the given delimiter.  Does the work of checking if the given variable has data
+	 * in it already, that needs to be added to, vs. setting the variable with the new content.
+	 */
 	public function create_list($string=NULL, $addThis=NULL, $delimiter=", ") {
-		//////////////////////////////////////////////////////////////////
-		//RETURNS A COMMA-DELIMITED LIST OF ITEMS... IF	WE		//
-		//	WANTED TO GET A LIST OF THINGS W/COMMAS, WE'D 		//
-		//	NORMALLY HAVE TO RUN ALL THIS CODE IN THE SCRIPT...	//
-		//	$list = array("x", "y");				//
-		//								//
-		//	NOW IT WOULD LOOK SOMETHING LIKE:			//
-		//	foreach ($list as $item) {				//
-		//		$newList = this_function($newList,$item);	//
-		//	}							//
-		//////////////////////////////////////////////////////////////////
-	
 		if($string) {
 			$retVal = $string . $delimiter . $addThis;
 		} else {
@@ -263,27 +441,22 @@ class globalFunctions {
 		}
 	
 		return($retVal);
-	} //end create_comma_delimited_list()
-	//##########################################################################
+	} //end create_list()
+	//================================================================================================================
 	
 	
 	
-	
-	
-	
-	//##########################################################################
+	//================================================================================================================
+	/**
+	 * A way of printing out human-readable information, especially arrays & objects, either to a web browser or via
+	 * the command line.
+	 * 
+	 * @param $input		(mixed,optional) data to print/return
+	 * @param $printItForMe	(bool,optional) whether it should be printed or just returned.
+	 * 
+	 * @return (string)		printed data.
+	 */
 	public function debug_print($input=NULL, $printItForMe=NULL) {
-		//////////////////////////////////////////////////////////////////
-		// WRAPS GIVEN $input IN <pre> TAGS: WORKS NICELY WHEN PRINTING	//
-		//	AN ARRAY TO THE SCREEN.					//
-		//								//
-		// INPUTS:::							//
-		//	$input		Information to print/return.		//
-		//	$printItForMe	Print it.				//
-		// OUTPUTS:::							//
-		//	<string>	Returns "<pre>\n$input\n<pre>\n"	//
-		//////////////////////////////////////////////////////////////////
-	
 		if(!is_numeric($printItForMe)) {
 			$printItForMe = $GLOBALS['DEBUGPRINTOPT'];
 		}
@@ -309,10 +482,8 @@ class globalFunctions {
 	
 		return($output);
 	} //end debug_print()
-	//##########################################################################
-	
-	
+	//================================================================================================================
 
-}
+}//end cs_globalFunctions{}
 
 ?>

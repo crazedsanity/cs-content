@@ -8,14 +8,18 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
+
+require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
+
 class cs_fileSystemClass {
 
 	var $root;		//actual root directory.
 	var $cwd;		//current directory; relative to $this->root
-	var $realcwd;		//$this->root .'/'. $this->cwd
+	var $realcwd;	//$this->root .'/'. $this->cwd
 	var $dh;		//directory handle.
 	var $fh;		//file handle.
-	var $filename;		//filename currently being used.
+	var $filename;	//filename currently being used.
+	var $gf;		//cs_globalFunctions{} object.
 
 	
 	//========================================================================================
@@ -35,6 +39,8 @@ class cs_fileSystemClass {
 			//nothing useable... die.
 			exit("UNUSEABLE ROOT: $rootDir");
 		}
+		
+		$this->gf = new cs_globalFunctions();
 		
 		//set the CURRENT working directory... this should be a RELATIVE path to $this->root.
 		if(($cwd) AND (is_dir($rootDir .'/'. $cwd)) AND (!ereg($this->root, $cwd))) {
@@ -74,8 +80,8 @@ class cs_fileSystemClass {
 			}
 			$myParts = explode('/', $myCwd);
 			array_pop($myParts);
-			$myCwd = string_from_array($myParts, NULL, '/');
-			$realCwd = create_list($this->root, $myCwd, '/');
+			$myCwd = $this->gf->string_from_array($myParts, NULL, '/');
+			$realCwd = $this->gf->create_list($this->root, $myCwd, '/');
 			if(file_exists($realCwd)) {
 				$retval = TRUE;
 				$this->realcwd = $realCwd;
@@ -109,7 +115,7 @@ class cs_fileSystemClass {
 			$retval = 1;
 		} elseif(is_dir($this->realcwd .'/'. $newDir)) {
 			//relative path...
-			$this->cwd = create_list($this->cwd, $newDir, '/');
+			$this->cwd = $this->gf->create_list($this->cwd, $newDir, '/');
 			$this->realcwd .= '/'. $newDir;
 			$retval = 1;
 		} else {
