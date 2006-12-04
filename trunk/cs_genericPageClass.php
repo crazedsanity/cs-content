@@ -54,7 +54,7 @@ class cs_genericPage {
 		}
 		unset($GLOBALS['templateVars'], $GLOBALS['templateFiles']);
 		
-		//build a new instance of the template library (from PHPLib).
+		//build a new instance of the template library (from PHPLib)
 		$this->templateObj=new Template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
 
 		//Create a new cs_session{} object: need the session primarily for set_message() functionality.
