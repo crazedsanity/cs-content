@@ -534,15 +534,20 @@ class cs_genericPage {
 	//---------------------------------------------------------------------------------------------
 	function rip_all_block_rows($templateVar="content", $exceptionArr=array()) {
 		$rowDefs = $this->get_block_row_defs($templateVar);
-		if(count($exceptionArr) > 0) {
-			$tmpArr = array_flip($rowDefs['ordered']);
-			foreach($exceptionArr as $removeThis) {
-				unset($tmpArr[$removeThis]);
-			}
-			foreach($tmpArr as $removeThis) {
-				$this->set_block_row($templateVar, $rowDefs['ordered'][$removeThis]);
+		
+		$useTheseBlockRows = $rowDefs['ordered'];
+		$retval = array();
+		foreach($useTheseBlockRows as $blockRowName)
+		{
+			if(!in_array($blockRowName, $exceptionArr))
+			{
+				//remove the block row.
+				$rowData = $this->set_block_row($templateVar, $blockRowName);
+				$retval[$blockRowName] = $rowData;
 			}
 		}
+		
+		return($retval);
 	}//end rip_all_block_rows()
 	//---------------------------------------------------------------------------------------------
 
