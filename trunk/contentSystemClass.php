@@ -623,6 +623,18 @@ class contentSystem {
 	
 	//------------------------------------------------------------------------
 	/**
+	 * Method for accessing "baseDir", only referenced as the base section.
+	 */
+	public function get_baseSection()
+	{
+		return($this->baseDir);
+	}//end get_baseSection()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
 	 * The destructor... does nothing, right now.
 	 */
 	public function __destruct() {
