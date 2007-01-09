@@ -93,6 +93,8 @@ class contentSystem {
 	protected $templateObj		= NULL;
 	protected $gfObj			= NULL;
 	
+	protected $finalSection;
+	
 	//------------------------------------------------------------------------
 	/**
 	 * The CONSTRUCTOR.  Duh.
@@ -587,6 +589,32 @@ class contentSystem {
 		
 		$page->print_page();
 	}//end finish()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
+	 * Method for accessing the protected $this->sectionArr array.
+	 */
+	public function get_sectionArr()
+	{
+		//give 'em what they want.
+		return($this->sectionArr);
+	}//end get_sectionArr()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
+	 * Method for accessing the protected member $this->finalSection.
+	 */
+	public function get_finalSection()
+	{
+		//give 'em what they want.
+		return($this->finalSection);
+	}//end get_finalSection()
 	//------------------------------------------------------------------------
 	
 	
