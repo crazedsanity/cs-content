@@ -72,10 +72,12 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 //automatically determine where this file is, & use that directory to include the other files.
 $thisFile = __FILE__;
 $myIncludesDir = dirname(__FILE__);
-#require_once($myIncludesDir ."/globalFunctions.php");
+
+require_once($myIncludesDir ."/cs_globalFunctions.php");
 require_once($myIncludesDir ."/cs_fileSystemClass.php");
 require_once($myIncludesDir ."/cs_sessionClass.php");
 require_once($myIncludesDir ."/cs_genericPageClass.php");
+require_once($myIncludesDir ."/cs_tabsClass.php");
 
 class contentSystem {
 	
