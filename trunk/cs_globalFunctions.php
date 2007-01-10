@@ -153,7 +153,7 @@ class cs_globalFunctions {
 					$delimiter = "AND";
 					if(is_array($value)) {
 						//doing tricksie things!!!
-						$retval = $this->create_list($retval, $field ." IN (". string_from_array($value) .")", " $delimiter ");
+						$retval = $this->create_list($retval, $field ." IN (". $this->string_from_array($value) .")", " $delimiter ");
 					} else {
 						//if there's already an operator ($separator), don't specify one.
 						if(preg_match('/^[\(<=>]/', $value)) {
