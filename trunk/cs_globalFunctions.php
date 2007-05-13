@@ -456,26 +456,32 @@ class cs_globalFunctions {
 	 * 
 	 * @return (string)		printed data.
 	 */
-	public function debug_print($input=NULL, $printItForMe=NULL) {
+	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL) {
+		if(!is_numeric($removeHR)) {
+			$removeHR = $GLOBALS['DEBUGREMOVEHR'];
+		}
+
 		if(!is_numeric($printItForMe)) {
 			$printItForMe = $GLOBALS['DEBUGPRINTOPT'];
 		}
-		$printItForMe = 1;
-	
+		
 		ob_start();
 		print_r($input);
 		$output = ob_get_contents();
 		ob_end_clean();
 	
-		$output = "<pre>\n$output\n</pre>\n";
+		$output = "<pre>$output</pre>";
 	
 		if(!$_SERVER['SERVER_PROTOCOL']) {
 			$output = strip_tags($output);
-			$hrString = "***************************************************************\n";
+			$hrString = "\n***************************************************************\n";
 		} else {
 			$hrString = "<hr>";
 		}
-	
+		if($removeHR) {
+			unset($hrString);
+		}
+		
 		if($printItForMe) {
 			print "$output". $hrString ."\n";
 		}

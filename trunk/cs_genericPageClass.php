@@ -550,6 +550,16 @@ class cs_genericPage {
 		return($retval);
 	}//end rip_all_block_rows()
 	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function set_all_block_rows($templateVar="content", $exceptionArr=array())
+	{
+		$retval = $this->rip_all_block_rows($templateVar, $exceptionArr);
+		return($retval);
+	}//end set_all_block_rows()
+	//---------------------------------------------------------------------------------------------
 
 }//end cs_genericPage{}
 ?>
