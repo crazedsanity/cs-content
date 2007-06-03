@@ -15,6 +15,10 @@ class cs_genericPage {
 	var $templateVars	= array();	//our copy of the global templateVars
 	var $mainTemplate;				//the default layout of the site
 	
+	private $tmplDir;
+	private $libDir;
+	private $siteRoot;
+	
 	
 	//---------------------------------------------------------------------------------------------
 	/**
@@ -38,8 +42,9 @@ class cs_genericPage {
 	protected function initialize_locals($mainTemplateFile) {
 		
 		//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
-		$GLOBAL['TMPLDIR'] = $GLOBALS['SITE_ROOT'] .'/templates';
-		$GLOBAL['LIBDIR'] = $GLOBALS['SITE_ROOT'] .'/lib';
+		$this->siteRoot = preg_replace('/\/public_html/', '', $_SERVER['DOCUMENT_ROOT']);
+		$this->tmplDir = $this->siteRoot .'/templates';
+		$this->libDir = $this->siteRoot .'/lib';
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
 		if(is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
@@ -55,14 +60,14 @@ class cs_genericPage {
 		unset($GLOBALS['templateVars'], $GLOBALS['templateFiles']);
 		
 		//build a new instance of the template library (from PHPLib)
-		$this->templateObj=new Template($GLOBALS['TMPLDIR'],"keep"); //initialize a new template parser
+		$this->templateObj=new Template($this->tmplDir,"keep"); //initialize a new template parser
 
 		//Create a new cs_session{} object: need the session primarily for set_message() functionality.
 		$this->sessionObj = new cs_session();		//initialize a new session object
 		$this->uid = $this->sessionObj->uid;
 		
 		if(preg_match('/^\//', $mainTemplateFile)) {
-			$mainTemplateFile = $GLOBALS['TMPLDIR'] ."/". $mainTemplateFile;
+			$mainTemplateFile = $this->tmplDir ."/". $mainTemplateFile;
 		}
 		$this->mainTemplate=$mainTemplateFile; //load the default layout
 		$this->add_template_var("PHPSESSID", $this->sessionObj->sid);
@@ -312,7 +317,7 @@ class cs_genericPage {
 	public function file_to_string($templateFileName) {
 		$templateFileName = preg_replace('/\/\//', '\/', $templateFileName);
 		if($this->template_file_exists($templateFileName)) {
-			$retval = file_get_contents($GLOBALS['TMPLDIR'] .'/'. $templateFileName);
+			$retval = file_get_contents($this->tmplDir .'/'. $templateFileName);
 		} else {
 			$this->set_message_wrapper(array(
 				"title"		=> 'Template File Error',
@@ -330,14 +335,14 @@ class cs_genericPage {
 	/**
 	 * Checks to see if the given filename exists within the template directory.
 	 */
-	protected function template_file_exists($file) {
+	public function template_file_exists($file) {
 		$retval = 0;
 		//If the string doesn't start with a /, add one
 		if (strncmp("/",$file,1)) {
 			//strncmp returns 0 if they match, so we're putting a / on if they don't
 			$file="/".$file;
 		}
-		$filename=$GLOBALS['TMPLDIR'].$file;
+		$filename=$this->tmplDir.$file;
 		
 		if(file_exists($filename)) {
 			$retval = $filename;

@@ -103,6 +103,7 @@ class contentSystem {
 	 */
 	public function __construct() {
 		//make a cs_globalFunctions{} object.
+		$GLOBALS['DEBUGPRINTOPT'] = 1;
 		$this->gfObj = new cs_globalFunctions();
 		
 		//setup the section stuff...
@@ -544,10 +545,21 @@ class contentSystem {
 	 * Called when something is broken.
 	 */
 	private function die_gracefully($details=NULL) {
-		//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
-		$this->gfObj->debug_print("something broke. \nDETAILS::: $details" .
-				"\nREASON::: ". $this->reason);
-		exit;
+		header('HTTP/1.0 404 Not Found');
+		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+			//Simple "Page Not Found" error... show 'em.
+			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
+			$this->templateObj->add_template_var('details', $details);
+			$this->templateObj->add_template_var('datetime', date('m-d-Y H:m:s'));
+			$this->templateObj->print_page();
+			exit;
+		}
+		else {
+			//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
+			$this->gfObj->debug_print("something broke. \nDETAILS::: $details" .
+					"\nREASON::: ". $this->reason);
+			exit;
+		}
 	}//end die_gracefully()
 	//------------------------------------------------------------------------
 	
