@@ -401,10 +401,6 @@ class contentSystem {
 				$this->templateList[$section] = $template;
 			}
 		}
-		if($die) {
-			//no templates directory?  Oh, boy...
-			$this->die_gracefully("load_shared_templates() couldn't find the templates directory...?");
-		}
 	}//end load_shared_templates()
 	//------------------------------------------------------------------------
 	
