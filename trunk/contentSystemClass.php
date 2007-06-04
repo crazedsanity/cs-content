@@ -225,10 +225,16 @@ class contentSystem {
 	 * Retrieves the list of templates & includes in preparation for later work.
 	 */
 	private function prepare() {
+		//attempt to load any includes...
+		if($this->fileSystemObj->cd('/includes')) {
+			$this->load_includes();
+		}
+		$foundIncludes = count($this->includesList);
+		
 		//cd() in to the templates directory.
-		$cdResult = $this->fileSystemObj->cd('templates');
+		$cdResult = $this->fileSystemObj->cd('/templates');
 		$validatePageRes = $this->validate_page();
-		if($cdResult && $validatePageRes) {
+		if($foundIncludes || ($cdResult && $validatePageRes)) {
 			//load shared templates.
 			$this->load_shared_templates();
 			
@@ -240,12 +246,6 @@ class contentSystem {
 			
 			//now cd() all the way back.
 			$this->fileSystemObj->cd('/');
-			
-			//attempt to run any includes, as necessary.
-			if($this->fileSystemObj->cd("/includes")) {
-				//load the main includes, first.
-				$this->load_includes();
-			}
 		} else {
 			//couldn't find the templates directory... ick.
 			$this->die_gracefully("prepare() was unable to find the templates directory, or non-valid page [". $this->validate_page() ."]");
@@ -392,14 +392,10 @@ class contentSystem {
 	 * Loads any shared templates: these can be overwritten later.
 	 */
 	private function load_shared_templates() {
-		//fail by default.
-		$die = TRUE;
 		
 		//pull a list of the files.
 		$dirContents = $this->arrange_directory_contents();
 		if(count($dirContents['shared'])) {
-			//don't call die_gracefully() after we're done, since we found templates.
-			$die = FALSE;
 			
 			foreach($dirContents['shared'] as $section => $template) {
 				$this->templateList[$section] = $template;
