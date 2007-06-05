@@ -586,6 +586,7 @@ class contentSystem {
 		
 		//make the "final section" available to scripts.
 		$finalSection = $this->finalSection;
+		$sectionArr = $this->sectionArr;
 		
 		//now include the includes scripts, if there are any.
 		if(is_array($this->includesList) && count($this->includesList)) {
