@@ -402,7 +402,7 @@ class cs_fileSystemClass {
 	 * Reads-in the contents of an entire file.
 	 */
 	 function read($filename) {
-	 	$data = file($this->realcwd ."/$filename");
+	 	$data = file_get_contents($this->realcwd ."/$filename");
 	 	return($data);
 	 }//end read()
 	//========================================================================================
