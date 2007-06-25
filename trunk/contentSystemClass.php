@@ -331,7 +331,8 @@ class contentSystem {
 		//should already be in the proper directory, start looping through sectionArr,
 		//	looking for templates.
 		$mySectionArr = $this->sectionArr;
-		$finalSection = array_pop($mySectionArr);
+		
+		$finalSection = $this->sectionArr[(count($this->sectionArr) -1)];
 		foreach($mySectionArr as $index=>$value) {
 			$tmplList = $this->arrange_directory_contents('name', 'section');
 			if(isset($tmplList[$value])) {
@@ -345,11 +346,19 @@ class contentSystem {
 				break;
 			}
 		}
+		
 		//load the final template(s).
 		$finalTmplList = $this->arrange_directory_contents('name', 'section');
 		if(isset($finalTmplList[$finalSection])) {
 			foreach($finalTmplList[$finalSection] as $mySection => $myTmpl) {
 				$this->templateList[$mySection] = $myTmpl;
+			}
+		}
+		elseif(is_array($finalTmplList)) {
+			foreach($finalTmplList as $mySection => $subArr) {
+				foreach($subArr as $internalSection => $myTmpl) {
+					$this->templateList[$mySection] = $myTmpl;
+				}
 			}
 		}
 		if($this->fileSystemObj->cd($finalSection)) {
@@ -577,6 +586,14 @@ class contentSystem {
 		}
 		
 		$page =& $this->templateObj;
+		
+		
+		//if we loaded an index, but there is no "content", then move 'em around so we have content.
+		if(isset($this->templateList['index']) && !isset($this->templateList['content'])) {
+			$this->templateList['content'] = $this->templateList['index'];
+			unset($this->templateList['index']);
+		}
+		
 		foreach($this->templateList as $mySection => $myTmpl) {
 			$myTmpl = preg_replace("/\/\//", "/", $myTmpl);
 			$page->add_template_var($mySection, $page->file_to_string($myTmpl));
