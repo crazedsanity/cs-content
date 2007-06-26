@@ -245,9 +245,20 @@ class cs_genericPage {
 		//load the placeholder names and thier values
 		$this->templateObj->set_var($this->templateVars);
 		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
+		
+		//TODO: fix so setting $stripUndefVars to 0 puts all the template vars in & leaves the undefined ones alone (instead of not doing anything with vars).
 		if($stripUndefVars) {
 			preg_match_all('/\{.*?\}/', $this->templateObj->varvals[out], $tags);
 			$tags = $tags[0];
+			
+			//TODO: figure out why this works when running it twice.
+			foreach($tags as $key=>$str) {
+				$str2 = str_replace("{", "", $str);
+				$str2 = str_replace("}", "", $str2);
+				if(!$this->templateVars[$str2]) {
+					$this->templateObj->varvals[out] = str_replace($str, "$debug", $this->templateObj->varvals[out]);
+				}
+			}
 			foreach($tags as $key=>$str) {
 				$str2 = str_replace("{", "", $str);
 				$str2 = str_replace("}", "", $str2);
