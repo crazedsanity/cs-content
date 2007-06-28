@@ -103,7 +103,6 @@ class contentSystem {
 	 */
 	public function __construct() {
 		//make a cs_globalFunctions{} object.
-		$GLOBALS['DEBUGPRINTOPT'] = 1;
 		$this->gfObj = new cs_globalFunctions();
 		
 		//setup the section stuff...
