@@ -267,14 +267,14 @@ class cs_fileSystemClass {
 	 */
 	public function create_file($filename) {
 		
+		$retval = 0;
 		//check to see if the file exists...
 		if(!file_exists($filename)) {
 			//no file.  Create it.
-			touch($this->realcwd .'/'. $filename);
-			$retval = 1;
-		} else {
-			//file already exists.
-			$retval = 0;
+			$createFileRes = touch($this->realcwd .'/'. $filename);
+			if($createFileRes) {
+				$retval = 1;
+			}
 		}
 		return($retval);
 	}//end create_file()
