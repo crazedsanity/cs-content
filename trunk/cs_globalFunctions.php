@@ -511,6 +511,34 @@ class cs_globalFunctions {
 	}
 	//================================================================================================================
 
+
+
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Using the given template, it will replace each index (in $repArr) with it's value: each
+	 * var to be replaced must begin the given begin & end delimiters.
+	 * 
+	 * @param $template		(str) Data to perform the replacements on.
+	 * @param $repArr		(array) Array of name=>value pairs, where name is to be replaced with value.
+	 * @param $b			(str,optional) beginning delimiter.
+	 * @param $e			(str,optional) ending delimiter.
+	 */
+	public function mini_parser($template, $repArr, $b='%%', $e='%%') {
+		if(!isset($b) OR !isset($e)){
+			$b="{";
+			$e="}";
+		}
+
+		foreach($repArr as $key=>$value) {
+			//run the replacements.
+			$key = "$b" . $key . "$e";
+			$template = str_replace("$key", $value, $template);
+		}
+
+		return($template);
+	}//end mini_parser()
+	//---------------------------------------------------------------------------------------------
+
 }//end cs_globalFunctions{}
 
 ?>

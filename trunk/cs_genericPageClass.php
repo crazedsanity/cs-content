@@ -30,6 +30,7 @@ class cs_genericPage {
 		
 		//if they need to be logged-in... 
 		$this->check_login($restrictedAccess);
+		$this->gfObj = new cs_globalFunctions;
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
 	
@@ -209,18 +210,7 @@ class cs_genericPage {
 	 * @param $e			(str,optional) ending delimiter.
 	 */
 	public function mini_parser($template, $repArr, $b='%%', $e='%%') {
-		if(!isset($b) OR !isset($e)){
-			$b="{";
-			$e="}";
-		}
-
-		foreach($repArr as $key=>$value) {
-			//run the replacements.
-			$key = "$b" . $key . "$e";
-			$template = str_replace("$key", $value, $template);
-		}
-
-		return($template);
+		return($this->gfObj->mini_parser($template, $repArr, $b, $e));
 	}//end mini_parser()
 	//---------------------------------------------------------------------------------------------
 
@@ -301,7 +291,7 @@ class cs_genericPage {
 			//WARNING::: if you give it the wrong type, it'll STILL be parsed. Otherwise 
 			//	this has to match set_message() FAR too closely. And it's a pain.
 			foreach($_SESSION['message'] as $myVarName => $myVarVal) {
-				$errorBox = $this->mini_parser($errorBox, $_SESSION['message'], '{', '}');
+				$errorBox = $this->gfObj->mini_parser($errorBox, $_SESSION['message'], '{', '}');
 			}
 			if($_SESSION['message']['type'] == "fatal") {
 				//replace content of the page with our error.
