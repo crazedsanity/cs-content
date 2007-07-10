@@ -24,7 +24,10 @@ class cs_genericPage {
 	/**
 	 * The constructor.
 	 */
-	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL) {
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedir=TRUE) {
+		//handle some configuration.
+		define("CS-CONTENT_ALLOW_AUTO_REDIR", $allowRedir);
+		
 		//initialize some internal stuff.
 		$this->initialize_locals($mainTemplateFile);
 		
@@ -78,6 +81,11 @@ class cs_genericPage {
 	
 	
 	//---------------------------------------------------------------------------------------------
+	/**
+	 * Should just check to see if they've authenticated.  In reality, this 
+	 * just performs blind redirection if $restrictedAccess is set (and if 
+	 * redirecting is allowed).
+	 */
 	public function check_login($restrictedAccess) {
 		if($restrictedAccess) {
 			$myUri = $_SERVER['SCRIPT_NAME'];
@@ -95,7 +103,7 @@ class cs_genericPage {
 			$redirectHere = '/login.php?destination='. $myUrlString;
 				
 			//Not exitting after conditional_header() is... bad, m'kay?
-			conditional_header($redirectHere);
+			$this->conditional_header($redirectHere, TRUE);
 			exit;
 		}
 	}//end check_login()
@@ -442,23 +450,36 @@ class cs_genericPage {
 	
 	
 	//---------------------------------------------------------------------------------------------
-	function conditional_header($url) {
-		//checks to see if headers were sent; if yes: use a meta redirect.
-		//	if no: send header("location") info...
-		if(headers_sent()) {
-			//headers sent.  Use the meta redirect.
-			print "
-			<HTML>
-			<HEAD>
-			<TITLE>Redirect Page</TITLE>
-			<META HTTP-EQUIV='refresh' content='0; URL=$url'>
-			</HEAD>
-			<a href=\"$url\"></a>
-			</HTML>
-			";
+	/**
+	 * Performs redirection, provided it is allowed.
+	 */
+	function conditional_header($url, $exitAfter=TRUE) {
+		if(CS-CONTENT_ALLOW_AUTO_REDIR) {
+			//checks to see if headers were sent; if yes: use a meta redirect.
+			//	if no: send header("location") info...
+			if(headers_sent()) {
+				//headers sent.  Use the meta redirect.
+				print "
+				<HTML>
+				<HEAD>
+				<TITLE>Redirect Page</TITLE>
+				<META HTTP-EQUIV='refresh' content='0; URL=$url'>
+				</HEAD>
+				<a href=\"$url\"></a>
+				</HTML>
+				";
+			}
+			else {
+				header("location:$url");
+			}
+			
+			if($exitAfter) {
+				//redirecting without exitting is bad, m'kay?
+				exit;
+			}
 		}
 		else {
-			header("location:$url");
+			//TODO: should an exception be thrown, or maybe exit here anyway?
 		}
 	}//end conditional_header()
 	//---------------------------------------------------------------------------------------------
