@@ -17,12 +17,6 @@ class cs_session{
 	//---------------------------------------------------------------------------------------------
 	function __construct($createSession=1) {
 		if($createSession) {
-			//TODO: check what the name of the session_id really is...
-			//TODO: something that can say how long the session_id should be: this is too arbitrary.
-			if($_GET['PHPSESSID'] && strlen($_GET['PHPSESSID']) == 32) {
-				session_name($_GET['PHPSESSID']);
-			}
-			
 			//now actually create the session.
 			session_start();
 		}

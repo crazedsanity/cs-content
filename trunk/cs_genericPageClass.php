@@ -34,6 +34,8 @@ class cs_genericPage {
 		//if they need to be logged-in... 
 		$this->check_login($restrictedAccess);
 		$this->gfObj = new cs_globalFunctions;
+		
+		define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
 	
@@ -74,7 +76,7 @@ class cs_genericPage {
 			$mainTemplateFile = $this->tmplDir ."/". $mainTemplateFile;
 		}
 		$this->mainTemplate=$mainTemplateFile; //load the default layout
-		$this->add_template_var("PHPSESSID", $this->sessionObj->sid);
+		$this->add_template_var(CS-CONTENT_SESSION_NAME, $this->sessionObj->sid);
 	}//end initialize_locals()
 	//---------------------------------------------------------------------------------------------
 	
@@ -96,6 +98,7 @@ class cs_genericPage {
 			$myGetArr = $_GET;
 			if(is_array($myGetArr) && count($myGetArr) > 0) {
 				unset($myGetArr['PHPSESSID']);
+				unset($myGetArr[CS-CONTENT_SESSION_NAME]);
 				$myUrlString = string_from_array($myGetArr, NULL, 'url');
 			}
 			
