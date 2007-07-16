@@ -299,6 +299,10 @@ class cs_fileSystemClass {
 			$filename = $this->filename;
 		}
 		
+		if(!file_exists($this->filename)) {
+			throw new exception(__METHOD__ .': filename does not exist ('. $this->filename .')');
+		}
+		
 		//make sure the file exists...
 		$this->create_file($filename);
 		
