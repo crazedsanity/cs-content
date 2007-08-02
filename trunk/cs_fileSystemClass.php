@@ -136,6 +136,7 @@ class cs_fileSystemClass {
 	 */
 	public function ls($filename=NULL, $args=NULL) {
 		
+		clearstatcache();
 		//open the directory for reading.
 		$this->dh = opendir($this->realcwd);
 		clearstatcache();
@@ -188,7 +189,8 @@ class cs_fileSystemClass {
 			"uid"		=> fileowner($tFile),
 			"group"		=> $this->my_getuser_group(filegroup($tFile), 'gid'),
 			"gid"		=> filegroup($tFile),
-			"perms"		=> $this->translate_perms(fileperms($tFile))
+			"perms"		=> $this->translate_perms(fileperms($tFile)),
+			"perms_num"	=> substr(sprintf('%o', fileperms($tFile)), -4)
 		);
 		
 		return($retval);
@@ -265,7 +267,7 @@ class cs_fileSystemClass {
 	 * @return 0			(FAIL) unable to create file.
 	 * @return 1			(PASS) file created successfully.
 	 */
-	public function create_file($filename) {
+	public function create_file($filename, $truncateFile=FALSE) {
 		
 		$retval = 0;
 		//check to see if the file exists...
@@ -274,6 +276,15 @@ class cs_fileSystemClass {
 			$createFileRes = touch($this->realcwd .'/'. $filename);
 			if($createFileRes) {
 				$retval = 1;
+			}
+		}
+		elseif($truncateFile === TRUE) {
+			$this->filename = $filename;
+			if($this->openFile($filename)) {
+				ftruncate($this->fh,0);
+			}
+			else {
+				throw new exception(__METHOD__ .": unable to open specified file");
 			}
 		}
 		return($retval);
@@ -298,6 +309,7 @@ class cs_fileSystemClass {
 		if(!$filename) {
 			$filename = $this->filename;
 		}
+		$this->filename = $filename;
 		
 		if(!file_exists($this->filename)) {
 			throw new exception(__METHOD__ .': filename does not exist ('. $this->filename .')');
@@ -409,6 +421,15 @@ class cs_fileSystemClass {
 	 	$data = file_get_contents($this->realcwd ."/$filename");
 	 	return($data);
 	 }//end read()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function rm($filename) {
+		$filename = $this->filename2absolute($filename);
+		return(unlink($filename));
+	}//end rm()
 	//========================================================================================
 	
 	
