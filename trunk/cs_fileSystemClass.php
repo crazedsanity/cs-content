@@ -448,8 +448,8 @@ class cs_fileSystemClass {
 				$retval = FALSE;
 			}
 			else {
-				if(is_numeric($maxLength)) {
-					$retval = fgets($this->fh);
+				if(!is_numeric($maxLength)) {
+					$retval = @fgets($this->fh);
 				}
 				else {
 					$retval = fgets($this->fh, $maxLength);
