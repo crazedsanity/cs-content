@@ -152,7 +152,7 @@ class cs_fileSystemClass {
 			}
 		} else {
 			//array if file/directory names to ignore if matched exactly.
-			$ignoreArr = array("CVS", ".", "..");
+			$ignoreArr = array("CVS", ".svn", ".", "..");
 			while (($file = readdir($this->dh)) !== false) {
 				if(!in_array($file, $ignoreArr)) {
 					$tFile = $this->realcwd .'/'. $file;
@@ -238,21 +238,21 @@ class cs_fileSystemClass {
 	 * can enlighten me, I'd be glad to give them credit.
 	 */
 	private function translate_perms($in_Perms) {
-		$sP .= (($in_Perms & 0x0100) ? 'r' : '&minus;') .
-			(($in_Perms & 0x0080) ? 'w' : '&minus;') .
+		$sP .= (($in_Perms & 0x0100) ? 'r' : '-') .
+			(($in_Perms & 0x0080) ? 'w' : '-') .
 			(($in_Perms & 0x0040) ? (($in_Perms & 0x0800) ? 's' : 'x' ) :
-						(($in_Perms & 0x0800) ? 'S' : '&minus;'));
+						(($in_Perms & 0x0800) ? 'S' : '-'));
 		// group
-		$sP .= (($in_Perms & 0x0020) ? 'r' : '&minus;') .
-			(($in_Perms & 0x0010) ? 'w' : '&minus;') .
+		$sP .= (($in_Perms & 0x0020) ? 'r' : '-') .
+			(($in_Perms & 0x0010) ? 'w' : '-') .
 			 (($in_Perms & 0x0008) ? (($in_Perms & 0x0400) ? 's' : 'x' ) :
-						(($in_Perms & 0x0400) ? 'S' : '&minus;'));
+						(($in_Perms & 0x0400) ? 'S' : '-'));
 		
 		// world
-		$sP .= (($in_Perms & 0x0004) ? 'r' : '&minus;') .
-			(($in_Perms & 0x0002) ? 'w' : '&minus;') .
+		$sP .= (($in_Perms & 0x0004) ? 'r' : '-') .
+			(($in_Perms & 0x0002) ? 'w' : '-') .
 			(($in_Perms & 0x0001) ? (($in_Perms & 0x0200) ? 't' : 'x' ) :
-						(($in_Perms & 0x0200) ? 'T' : '&minus;'));
+						(($in_Perms & 0x0200) ? 'T' : '-'));
 		return($sP);
 	}//end translate_perms()
 	//========================================================================================
@@ -310,6 +310,7 @@ class cs_fileSystemClass {
 			$filename = $this->filename;
 		}
 		$this->filename = $filename;
+		$filename = $this->filename2absolute($filename);
 		
 		if(!file_exists($this->filename)) {
 			throw new exception(__METHOD__ .': filename does not exist ('. $this->filename .')');
@@ -430,6 +431,40 @@ class cs_fileSystemClass {
 		$filename = $this->filename2absolute($filename);
 		return(unlink($filename));
 	}//end rm()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Return the next line for a file.
+	 * 
+	 * When the end of the file is found, this method returns FALSE (returning NULL might be 
+	 * misconstrued as a blank line).
+	 */
+	public function get_next_line($maxLength=NULL, $trimLine=TRUE) {
+		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
+			if(feof($this->fh)) {
+				$retval = FALSE;
+			}
+			else {
+				if(is_numeric($maxLength)) {
+					$retval = fgets($this->fh);
+				}
+				else {
+					$retval = fgets($this->fh, $maxLength);
+				}
+				if($trimLine) {
+					$retval = trim($retval);
+				}
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid filehandle");
+		}
+		
+		return($retval);
+	}//end get_next_line()
 	//========================================================================================
 	
 	
