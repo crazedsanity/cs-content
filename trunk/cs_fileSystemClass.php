@@ -20,6 +20,7 @@ class cs_fileSystemClass {
 	var $fh;		//file handle.
 	var $filename;	//filename currently being used.
 	var $gf;		//cs_globalFunctions{} object.
+	public $lineNum = NULL;
 
 	
 	//========================================================================================
@@ -332,6 +333,7 @@ class cs_fileSystemClass {
 		if(is_resource($this->fh)) {
 			//looks like we opened successfully.
 			$retval = 1;
+			$this->lineNum = 0;
 		} else {
 			//something bad happened.
 			$retval = 0;
@@ -457,6 +459,11 @@ class cs_fileSystemClass {
 				if($trimLine) {
 					$retval = trim($retval);
 				}
+				
+				if(is_null($this->lineNum) || !is_numeric($this->lineNum) || $this->lineNum < 0) {
+					throw new exception(__METHOD__ .": invalid data for lineNum (". $this->lineNum .")");
+				}
+				$this->lineNum++;
 			}
 		}
 		else {
