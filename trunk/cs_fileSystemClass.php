@@ -13,13 +13,13 @@ require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
 
 class cs_fileSystemClass {
 
-	var $root;		//actual root directory.
-	var $cwd;		//current directory; relative to $this->root
-	var $realcwd;	//$this->root .'/'. $this->cwd
-	var $dh;		//directory handle.
-	var $fh;		//file handle.
-	var $filename;	//filename currently being used.
-	var $gf;		//cs_globalFunctions{} object.
+	public $root;		//actual root directory.
+	public $cwd;		//current directory; relative to $this->root
+	public $realcwd;	//$this->root .'/'. $this->cwd
+	public $dh;		//directory handle.
+	public $fh;		//file handle.
+	public $filename;	//filename currently being used.
+	public $gf;		//cs_globalFunctions{} object.
 	public $lineNum = NULL;
 
 	
@@ -283,6 +283,7 @@ class cs_fileSystemClass {
 			$this->filename = $filename;
 			if($this->openFile($filename)) {
 				ftruncate($this->fh,0);
+				$this->closeFile();
 			}
 			else {
 				throw new exception(__METHOD__ .": unable to open specified file");
@@ -381,7 +382,7 @@ class cs_fileSystemClass {
 	 */
 	private function filename2absolute($filename=NULL) {
 		
-		if(!$filename) {
+		if(!strlen($filename)) {
 			$filename = $this->filename;
 		}
 		
@@ -472,6 +473,123 @@ class cs_fileSystemClass {
 		
 		return($retval);
 	}//end get_next_line()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function append_to_file($data, $eolChar="\n") {
+		$retval = FALSE;
+		if(is_resource($this->fh)) {
+			$result = fwrite($this->fh, $data . $eolChar);
+			if($result === FALSE) {
+				throw new exception(__METHOD__ .": failed to write data to file");
+			}
+			else {
+				$this->lineNum++;
+				$retval = TRUE;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid filehandle");
+		}
+		
+		return($retval);
+	}//end append_to_file()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function closeFile() {
+		$retval = FALSE;
+		if(is_resource($this->fh)) {
+			fclose($this->fh);
+			$retval = TRUE;
+		}
+		
+		//reset internal pointers.
+		$this->filename = NULL;
+		$this->lineNum = NULL;
+		
+		return($retval);
+	}//end closeFile()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Compare the given filename to the open filename to see if they match (using this allows 
+	 * giving a filename instead of comparing the whole path).
+	 */
+	public function compare_open_filename($compareToFilename) {
+		if(!strlen($compareToFilename) || is_null($compareToFilename)) {
+			throw new exception(__METHOD__ .": invalid filename to compare");
+		}
+		elseif(!strlen($this->filename)) {
+			$retval = FALSE;
+		}
+		else {
+			$internalFilename = $this->filename2absolute($this->filename);
+			$compareToFilename = $this->filename2absolute($compareToFilename);
+			if($internalFilename == $compareToFilename) {
+				$retval = TRUE;
+			}
+			else {
+				$retval = FALSE;
+			}
+		}
+		
+		return($retval);
+	}//end compare_open_filename()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Give a file a new name.
+	 * 
+	 * TODO: check to make sure both files exist within our root.
+	 */
+	public function rename($currentFilename, $newFilename) {
+		if($newFilename == $currentFilename) {
+			$this->gf->debug_print(func_get_args());
+			throw new exception(__METHOD__ .": renaming file to same name");
+		}
+		
+		//TODO: figure out why this breaks... 
+		#$currentFilename = $this->filename2absolute($currentFilename);
+		#$newFilename = $this->filename2absolute($newFilename);
+		#if($newFilename == $currentFilename) {
+		#	$this->gf->debug_print(func_get_args());
+		#	throw new exception(__METHOD__ .": internally changed file to same name....????");
+		#}
+		
+		if($this->compare_open_filename($currentFilename)) {
+			$this->closeFile();
+		}
+		
+		if($this->compare_open_filename($newFilename)) {
+			//renaming a different file to our currently open file... 
+			$this->gf->debug_print(func_get_args());
+			throw new exception(__METHOD__ .": renaming another file (". $currentFilename .") to the currently open filename (". $newFilename .")");
+		}
+		else {
+			
+			$retval = rename($currentFilename, $newFilename);
+			if($retval !== TRUE) {
+				throw new exception(__METHOD__ .": failed to rename file");
+			}
+			else {
+				$this->gf->debug_print(__METHOD__ ."Renamed ($currentFilename) to ($newFilename)");
+			}
+		}
+		
+		return($retval);
+		
+	}//end rename()
 	//========================================================================================
 	
 	
