@@ -582,9 +582,6 @@ class cs_fileSystemClass {
 			if($retval !== TRUE) {
 				throw new exception(__METHOD__ .": failed to rename file");
 			}
-			else {
-				$this->gf->debug_print(__METHOD__ ."Renamed ($currentFilename) to ($newFilename)");
-			}
 		}
 		
 		return($retval);
