@@ -1,7 +1,28 @@
 <?php
 
 class cs_globalFunctions {
-
+	
+	
+	/* DEBUG PRINT OPTIONS */
+	/** Remove the separator below the output of each debug_print()? */
+	public $debugRemoveHr = 0;
+	public $debugPrintOpt = 1;
+	
+	//=========================================================================
+	public function __construct() {
+		//These checks have been implemented for pseudo backwards-compatibility 
+		//	(internal vars won't change if GLOBAL vars changed).
+		if(isset($GLOBALS['DEBUGREMOVEHR'])) {
+			$this->debugRemoveHr = $GLOBALS['DEBUGREMOVEHR'];
+		}
+		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
+			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
+		}
+	}//end __construct()
+	//=========================================================================
+	
+	
+	
 	//================================================================================================================
 	/**
 	 * Automatically selects either the header() function, or printing meta-refresh data for redirecting a browser.
@@ -458,11 +479,11 @@ class cs_globalFunctions {
 	 */
 	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL) {
 		if(!is_numeric($removeHR)) {
-			$removeHR = $GLOBALS['DEBUGREMOVEHR'];
+			$removeHR = $this->debugRemoveHr;
 		}
 
 		if(!is_numeric($printItForMe)) {
-			$printItForMe = $GLOBALS['DEBUGPRINTOPT'];
+			$printItForMe = $this->debugPrintOpt;
 		}
 		
 		ob_start();
