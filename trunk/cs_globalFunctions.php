@@ -559,6 +559,48 @@ class cs_globalFunctions {
 		return($template);
 	}//end mini_parser()
 	//---------------------------------------------------------------------------------------------
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Takes the given string & truncates it so the final string is the given 
+	 * maximum length.  Optionally adds a chunk of text to the end, and also 
+	 * optionally STRICTLY truncates (non-strict means the endString will be 
+	 * added blindly, while strict means the length of the endString will be 
+	 * subtracted from the total length, so the final string is EXACTLY the 
+	 * given length or shorter).
+	 * 
+	 * @param string		(str) the string to truncate
+	 * @param $maxLength	(int) maximum length for the result.
+	 * @param $endString	(str,optional) this is added to the end of the 
+	 * 							truncated string, if it exceeds $maxLength
+	 * @param $strict		(bool,optional) if non-strict, the length of 
+	 * 							the return would be $maxLength + length($endString)
+	 */
+	function truncate_string($string,$maxLength,$endString="...",$strict=FALSE) {
+	
+		//determine if it's even worth truncating.
+		$strLength = strlen($string);
+		if($strLength <= $maxLength) {
+			//no need to truncate.
+			$retval = $string;
+		} else {
+			//actually needs to be truncated...
+			if($strict) {
+				$trueMaxLength = $maxLength - strlen($endString);
+			} else {
+				$trueMaxLength = $maxLength;
+			}
+			
+			//rip the first ($trueMaxLength) characters from string, append $endString, and go.
+			$tmp = substr($string,0,$trueMaxLength -1);
+			$retval = $tmp . $endString;
+		}
+		
+		return($retval);
+		
+	}//end truncate_string()
+	//---------------------------------------------------------------------------------------------
 
 }//end cs_globalFunctions{}
 
