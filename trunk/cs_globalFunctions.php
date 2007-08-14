@@ -128,10 +128,13 @@ class cs_globalFunctions {
 				}
 				//build final product.
 				foreach($array as $field=>$value) {
+					$sqlQuotes = 1;
+					if($value === "NULL" || $value === NULL) {
+						$sqlQuotes = 0;
+					}
 					if($cleanString && !preg_match('/^\'/',$value)) {
 						//make sure it doesn't have crap in it...
-						$value = $this->cleanString($value, "sql");
-						$value = "'". $value ."'";
+						$value = $this->cleanString($value, "sql",$sqlQuotes);
 					}
 					$retval = $this->create_list($retval, $field . $separator . $value);
 				}
