@@ -271,22 +271,33 @@ class cs_fileSystemClass {
 	public function create_file($filename, $truncateFile=FALSE) {
 		
 		$retval = 0;
+		$this->filename = $filename;
+		
 		//check to see if the file exists...
 		if(!file_exists($filename)) {
-			//no file.  Create it.
-			$createFileRes = touch($this->realcwd .'/'. $filename);
-			if($createFileRes) {
-				$retval = 1;
+			if($this->is_writable(dirname($filename))) {
+				//no file.  Create it.
+				$createFileRes = touch($this->realcwd .'/'. $filename);
+				if($createFileRes) {
+					$retval = 1;
+				}
+			}
+			else {
+				throw new exception(__METHOD__ .": directory (". dirname($filename) .") is not writable");
 			}
 		}
 		elseif($truncateFile === TRUE) {
-			$this->filename = $filename;
-			if($this->openFile($filename)) {
-				ftruncate($this->fh,0);
-				$this->closeFile();
+			if($this->is_writable($filename)) {
+				if($this->openFile($filename)) {
+					ftruncate($this->fh,0);
+					$this->closeFile();
+				}
+				else {
+					throw new exception(__METHOD__ .": unable to open specified file");
+				}
 			}
 			else {
-				throw new exception(__METHOD__ .": unable to open specified file");
+				throw new exception(__METHOD__ .": file is not writable");
 			}
 		}
 		return($retval);
@@ -306,39 +317,38 @@ class cs_fileSystemClass {
 	 * @return 1			(PASS) file opened successfully.
 	 */
 	public function openFile($filename=NULL, $mode="r+") {
-	
-		//make sure we've got a mode to use.
+		$filename = $this->filename2absolute($filename);
 		if(!$filename) {
 			$filename = $this->filename;
 		}
 		$this->filename = $filename;
-		$filename = $this->filename2absolute($filename);
 		
-		if(!file_exists($this->filename)) {
-			throw new exception(__METHOD__ .': filename does not exist ('. $this->filename .')');
-		}
-		
-		//make sure the file exists...
-		$this->create_file($filename);
-		
-		//make sure $filename is absolute...
-		$filename = $this->filename2absolute($filename);
-		
-		if(!is_string($mode)) {
-			$mode = "r+";
-		}
-		$this->mode = $mode;
-	
-		//attempt to open a stream to a file...
-		$this->fh = fopen($this->filename, $this->mode);
-		if(is_resource($this->fh)) {
-			//looks like we opened successfully.
-			$retval = 1;
-			$this->lineNum = 0;
-		} else {
-			//something bad happened.
-			$retval = 0;
-		}
+		if($this->is_readable($filename)) {
+			//make sure we've got a mode to use.
+			
+			if(!is_string($mode)) {
+				$mode = "r+";
+			}
+			$this->mode = $mode;
+			
+			if(in_array($this->mode, array("r+", "w", "w+", "a", "a+", "x", "x+")) && !$this->is_writable($filename)) {
+				throw new exception(__METHOD__ .": file is not writable (". $filename .")");
+			}
+			
+			//attempt to open a stream to a file...
+			$this->fh = fopen($this->filename, $this->mode);
+			if(is_resource($this->fh)) {
+				//looks like we opened successfully.
+				$retval = 1;
+				$this->lineNum = 0;
+			} else {
+				//something bad happened.
+				$retval = 0;
+			}
+		} 
+		else {
+			throw new exception(__METHOD__ .": file is unreadable (". $filename .")");
+		} 
 		
 		return($retval);
 	}//end openFile()
@@ -389,24 +399,20 @@ class cs_fileSystemClass {
 		//see if it starts with a "/"...
 		if(preg_match("/^\//", $filename)) {
 			//it's an absolute path... see if it's one we can use.
-			#if() {
-			#
-			#} else {
-			#
-			#}
+			$myCwd = preg_replace('/\//', '\\\/', $this->realcwd);
+			if(preg_match('/^'. $myCwd .'/', $filename)) {
+				preg_replace('/^'. $myCwd .'/', '', $filename);
+			}
+			else {
+				throw new exception(__METHOD__ .": path is outside the allowed directory: ". $filename);
+			}
 		} else {
 			//not absolute... see if it's a valid file; if it is, return proper string.
 			if(file_exists($this->realcwd .'/'. $filename)) {
 				//looks good.
 				$this->filename=$this->realcwd .'/'. $filename;
 			} else {
-				/*/bad filename... die.
-				print "filename2absolute(): INVALID FILENAME: $filename<BR>\n
-				CURRENT CWD: ". $this->cwd ."<BR>\n
-				REAL CWD: ". $this->realcwd;
-				debug_print($this->ls(),1);
-				exit;
-				#*/
+				throw new exception(__METHOD__ .": Invalid filename (". $this->cwd . $filename .")");
 			}
 		}
 		
@@ -587,6 +593,57 @@ class cs_fileSystemClass {
 		return($retval);
 		
 	}//end rename()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Check if the given filename is executable.
+	 */
+	public function is_executable($filename) {
+		$filename = $this->filename2absolute();
+		$retval = FALSE;
+		if(strlen($filename)) {
+			$retval = is_executable($filename);
+		}
+		
+		return($retval);
+	}//end is_executable()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Check if the given filename is readable.
+	 */
+	public function is_readable($filename) {
+		$filename = $this->filename2absolute();
+		$retval = FALSE;
+		if(strlen($filename)) {
+			$retval = is_readable($filename);
+		}
+		
+		return($retval);
+	}//end is_readable()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Check if the given filename/path is writable
+	 */
+	public function is_writable($filenameOrPath) {
+		$filenameOrPath = $this->filename2absolute();
+		$retval = FALSE;
+		if(strlen($filenameOrPath)) {
+			$retval = is_writable($filenameOrPath);
+		}
+		
+		return($retval);
+	}//end is_writable()
 	//========================================================================================
 	
 	
