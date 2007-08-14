@@ -487,7 +487,7 @@ class cs_fileSystemClass {
 			}
 			else {
 				$this->lineNum++;
-				$retval = TRUE;
+				$retval = $result;
 			}
 		}
 		else {
