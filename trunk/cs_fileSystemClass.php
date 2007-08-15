@@ -390,18 +390,15 @@ class cs_fileSystemClass {
 	 * Takes the given filename & returns the ABSOLUTE pathname: checks to see if the given
 	 * 	string already has the absolute path in it.
 	 */
-	private function filename2absolute($filename=NULL) {
-		
-		if(!strlen($filename)) {
-			$filename = $this->filename;
-		}
+	private function filename2absolute($filename) {
 		
 		//see if it starts with a "/"...
 		if(preg_match("/^\//", $filename)) {
 			//it's an absolute path... see if it's one we can use.
 			$myCwd = preg_replace('/\//', '\\\/', $this->realcwd);
 			if(preg_match('/^'. $myCwd .'/', $filename)) {
-				preg_replace('/^'. $myCwd .'/', '', $filename);
+				$retval = $filename;
+				$this->filename = $retval;
 			}
 			else {
 				throw new exception(__METHOD__ .": path is outside the allowed directory: ". $filename);
@@ -410,13 +407,14 @@ class cs_fileSystemClass {
 			//not absolute... see if it's a valid file; if it is, return proper string.
 			if(file_exists($this->realcwd .'/'. $filename)) {
 				//looks good.
-				$this->filename=$this->realcwd .'/'. $filename;
+				$retval=$this->realcwd .'/'. $filename;
+				$this->filename = $retval;
 			} else {
-				throw new exception(__METHOD__ .": Invalid filename (". $this->cwd . $filename .")");
+				$retval = FALSE;
 			}
 		}
 		
-		return($this->filename);
+		return($retval);
 		
 	}//end filename2absolute()
 	//========================================================================================
@@ -602,7 +600,7 @@ class cs_fileSystemClass {
 	 * Check if the given filename is executable.
 	 */
 	public function is_executable($filename) {
-		$filename = $this->filename2absolute();
+		$filename = $this->filename2absolute($filename);
 		$retval = FALSE;
 		if(strlen($filename)) {
 			$retval = is_executable($filename);
@@ -619,7 +617,7 @@ class cs_fileSystemClass {
 	 * Check if the given filename is readable.
 	 */
 	public function is_readable($filename) {
-		$filename = $this->filename2absolute();
+		$filename = $this->filename2absolute($filename);
 		$retval = FALSE;
 		if(strlen($filename)) {
 			$retval = is_readable($filename);
@@ -636,7 +634,7 @@ class cs_fileSystemClass {
 	 * Check if the given filename/path is writable
 	 */
 	public function is_writable($filenameOrPath) {
-		$filenameOrPath = $this->filename2absolute();
+		$filenameOrPath = $this->filename2absolute($filenameOrPath);
 		$retval = FALSE;
 		if(strlen($filenameOrPath)) {
 			$retval = is_writable($filenameOrPath);
