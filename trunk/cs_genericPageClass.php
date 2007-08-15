@@ -25,9 +25,9 @@ class cs_genericPage {
 	/**
 	 * The constructor.
 	 */
-	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedir=TRUE) {
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedirect=TRUE) {
 		//handle some configuration.
-		$this->allowRedir = $allowRedirect;
+		$this->allowRedirect = $allowRedirect;
 		
 		//initialize some internal stuff.
 		$this->initialize_locals($mainTemplateFile);
