@@ -425,8 +425,23 @@ class cs_fileSystemClass {
 	/**
 	 * Reads-in the contents of an entire file.
 	 */
-	 function read($filename) {
-	 	$data = file_get_contents($this->realcwd ."/$filename");
+	 function read($filename, $returnArray=FALSE) {
+	 	$myFile = $this->filename2absolute($filename);
+	 	if($this->is_readable($filename)) {
+	 		if($returnArray) {
+	 			$data = file($myFile);
+	 		}
+	 		else {
+		 		$data = file_get_contents($myFile);
+	 		}
+	 		
+		 	if($data === FALSE) {
+		 		throw new exception(__METHOD__. ": file_get_contents() returned FALSE");
+		 	}
+	 	}
+	 	else {
+	 		throw new exception(__METHOD__. ": File isn't readable (". $filename .")");
+	 	}
 	 	return($data);
 	 }//end read()
 	//========================================================================================
