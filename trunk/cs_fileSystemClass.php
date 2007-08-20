@@ -317,10 +317,11 @@ class cs_fileSystemClass {
 	 * @return 1			(PASS) file opened successfully.
 	 */
 	public function openFile($filename=NULL, $mode="r+") {
-		$filename = $this->filename2absolute($filename);
-		if(!$filename) {
+		clearstatcache();
+		if(!strlen($filename) || is_null($filename)) {
 			$filename = $this->filename;
 		}
+		$filename = $this->filename2absolute($filename);
 		$this->filename = $filename;
 		
 		if($this->is_readable($filename)) {
@@ -392,6 +393,7 @@ class cs_fileSystemClass {
 	 */
 	private function filename2absolute($filename) {
 		
+		clearstatcache();
 		//see if it starts with a "/"...
 		if(preg_match("/^\//", $filename)) {
 			//it's an absolute path... see if it's one we can use.
@@ -404,14 +406,8 @@ class cs_fileSystemClass {
 				throw new exception(__METHOD__ .": path is outside the allowed directory: ". $filename);
 			}
 		} else {
-			//not absolute... see if it's a valid file; if it is, return proper string.
-			if(file_exists($this->realcwd .'/'. $filename)) {
-				//looks good.
-				$retval=$this->realcwd .'/'. $filename;
-				$this->filename = $retval;
-			} else {
-				$retval = FALSE;
-			}
+			$retval=$this->realcwd .'/'. $filename;
+			$this->filename = $retval;
 		}
 		
 		return($retval);
@@ -597,9 +593,15 @@ class cs_fileSystemClass {
 		}
 		else {
 			
+			$currentFilename = $this->filename2absolute($currentFilename);
+			$newFilename = $this->filename2absolute($newFilename);
+			
+			if(!$this->is_writable(dirname($newFilename))) {
+				throw new exception(__METHOD__ .": directory isn't writable... ");
+			}
 			$retval = rename($currentFilename, $newFilename);
 			if($retval !== TRUE) {
-				throw new exception(__METHOD__ .": failed to rename file");
+				throw new exception(__METHOD__ .": failed to rename file (". $retval .")");
 			}
 		}
 		
