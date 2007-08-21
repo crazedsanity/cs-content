@@ -662,5 +662,44 @@ class cs_fileSystemClass {
 	//========================================================================================
 	
 	
+	
+	//========================================================================================
+	/**
+	 * Determines how many lines are left in the current file.
+	 */
+	public function count_remaining_lines() {
+		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
+			$originalLineNum = $this->lineNum;
+			
+			$myFilename = $this->filename;
+			$myNextLine = $this->get_next_line();
+			$retval = 0;
+			while($myNextLine !== FALSE) {
+				$retval++;
+				$myNextLine = $this->get_next_line();
+			}
+			
+			$this->closeFile();
+			$this->openFile($myFilename);
+			
+			if($originalLineNum > 0) {
+				while($originalLineNum > $this->lineNum) {
+					$this->get_next_line();
+				}
+			}
+			
+			if($this->lineNum !== $originalLineNum) {
+				throw new exception(__METHOD__ .": failed to match-up old linenum (". $originalLineNum .") with the current one (". $this->lineNum .")");
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": Invalid filehandle, can't count remaining lines");
+		}
+		
+		return($retval);
+	}//end count_remaining_files()
+	//========================================================================================
+	
+	
 }//end cs_filesystemClass{}
 ?>
