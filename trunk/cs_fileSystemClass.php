@@ -400,14 +400,12 @@ class cs_fileSystemClass {
 			$myCwd = preg_replace('/\//', '\\\/', $this->realcwd);
 			if(preg_match('/^'. $myCwd .'/', $filename)) {
 				$retval = $filename;
-				$this->filename = $retval;
 			}
 			else {
 				throw new exception(__METHOD__ .": path is outside the allowed directory: ". $filename);
 			}
 		} else {
 			$retval=$this->realcwd .'/'. $filename;
-			$this->filename = $retval;
 		}
 		
 		return($retval);
@@ -573,14 +571,6 @@ class cs_fileSystemClass {
 			$this->gf->debug_print(func_get_args());
 			throw new exception(__METHOD__ .": renaming file to same name");
 		}
-		
-		//TODO: figure out why this breaks... 
-		#$currentFilename = $this->filename2absolute($currentFilename);
-		#$newFilename = $this->filename2absolute($newFilename);
-		#if($newFilename == $currentFilename) {
-		#	$this->gf->debug_print(func_get_args());
-		#	throw new exception(__METHOD__ .": internally changed file to same name....????");
-		#}
 		
 		if($this->compare_open_filename($currentFilename)) {
 			$this->closeFile();
