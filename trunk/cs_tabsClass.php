@@ -57,6 +57,25 @@ class cs_tabs
 	
 	//---------------------------------------------------------------------------------------------
 	/**
+	 * Returns a version string.
+	 */
+	public function get_version($asArray=FALSE) {
+		$version = array(
+			'major'	=> 0,
+			'minor'	=> 6
+		);
+		if($asArray) {
+			$version = $this->gfObj->string_from_array($version, NULL, '.');
+		}
+		
+		return($version);
+	}//end get_version()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
 	 * Loads & parses the given tabs template.  Requires that the given template has "selected_tab" 
 	 * and "unselected_tab" block row definitions.
 	 * 

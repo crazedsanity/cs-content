@@ -120,6 +120,17 @@ class contentSystem {
 	
 	//------------------------------------------------------------------------
 	/**
+	 * Returns a version string.
+	 */
+	public function get_version() {
+		return('0.6');
+	}//end get_version()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
 	 * Creates internal objects & prepares for later usage.
 	 */
 	private function initialize_locals() {
@@ -134,6 +145,18 @@ class contentSystem {
 		
 		//create a fileSystem object.
 		$this->fileSystemObj = new cs_fileSystemClass();
+		
+		//check versions, make sure they're all the same.
+		$myVersion = $this->get_version();
+		if($this->templateObj->get_version() !== $myVersion) {
+			throw new exception(__METHOD__ .": ". get_class($this->templateObj) ." has mismatched version (". $this->templateObj->get_version() ." does not equal ". $myVersion .")");
+		}
+		if($this->fileSystemObj->get_version() !== $myVersion) {
+			throw new exception(__METHOD__ .": ". get_class($this->fileSystemObj) ." has mismatched version (". $this->fileSystemObj->get_version() ." does not equal ". $myVersion .")");
+		}
+		if($this->gfObj->get_version() !== $myVersion) {
+			throw new exception(__METHOD__ .": ". get_class($this->gfObj) ." has mismatched version (". $this->gfObj->get_version() ." does not equal ". $myVersion .")");
+		}
 		
 		//split apart the section so we can do stuff with it later.
 		$this->parse_section();

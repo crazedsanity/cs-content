@@ -3,23 +3,15 @@
 class cs_globalFunctions {
 	
 	
-	/* DEBUG PRINT OPTIONS */
-	/** Remove the separator below the output of each debug_print()? */
-	public $debugRemoveHr = 0;
-	public $debugPrintOpt = 1;
+	//================================================================================================================
 	
-	//=========================================================================
-	public function __construct() {
-		//These checks have been implemented for pseudo backwards-compatibility 
-		//	(internal vars won't change if GLOBAL vars changed).
-		if(isset($GLOBALS['DEBUGREMOVEHR'])) {
-			$this->debugRemoveHr = $GLOBALS['DEBUGREMOVEHR'];
-		}
-		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
-			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
-		}
-	}//end __construct()
-	//=========================================================================
+	/**
+	 * Returns a version string.
+	 */
+	public function get_version($asArray=FALSE) {
+		return('0.6');
+	}//end get_version()
+	//================================================================================================================
 	
 	
 	
@@ -128,13 +120,10 @@ class cs_globalFunctions {
 				}
 				//build final product.
 				foreach($array as $field=>$value) {
-					$sqlQuotes = 1;
-					if($value === "NULL" || $value === NULL) {
-						$sqlQuotes = 0;
-					}
 					if($cleanString && !preg_match('/^\'/',$value)) {
 						//make sure it doesn't have crap in it...
-						$value = $this->cleanString($value, "sql",$sqlQuotes);
+						$value = $this->cleanString($value, "sql");
+						$value = "'". $value ."'";
 					}
 					$retval = $this->create_list($retval, $field . $separator . $value);
 				}
@@ -482,11 +471,11 @@ class cs_globalFunctions {
 	 */
 	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL) {
 		if(!is_numeric($removeHR)) {
-			$removeHR = $this->debugRemoveHr;
+			$removeHR = $GLOBALS['DEBUGREMOVEHR'];
 		}
 
 		if(!is_numeric($printItForMe)) {
-			$printItForMe = $this->debugPrintOpt;
+			$printItForMe = $GLOBALS['DEBUGPRINTOPT'];
 		}
 		
 		ob_start();
@@ -561,48 +550,6 @@ class cs_globalFunctions {
 
 		return($template);
 	}//end mini_parser()
-	//---------------------------------------------------------------------------------------------
-	
-	
-	//---------------------------------------------------------------------------------------------
-	/**
-	 * Takes the given string & truncates it so the final string is the given 
-	 * maximum length.  Optionally adds a chunk of text to the end, and also 
-	 * optionally STRICTLY truncates (non-strict means the endString will be 
-	 * added blindly, while strict means the length of the endString will be 
-	 * subtracted from the total length, so the final string is EXACTLY the 
-	 * given length or shorter).
-	 * 
-	 * @param string		(str) the string to truncate
-	 * @param $maxLength	(int) maximum length for the result.
-	 * @param $endString	(str,optional) this is added to the end of the 
-	 * 							truncated string, if it exceeds $maxLength
-	 * @param $strict		(bool,optional) if non-strict, the length of 
-	 * 							the return would be $maxLength + length($endString)
-	 */
-	function truncate_string($string,$maxLength,$endString="...",$strict=FALSE) {
-	
-		//determine if it's even worth truncating.
-		$strLength = strlen($string);
-		if($strLength <= $maxLength) {
-			//no need to truncate.
-			$retval = $string;
-		} else {
-			//actually needs to be truncated...
-			if($strict) {
-				$trueMaxLength = $maxLength - strlen($endString);
-			} else {
-				$trueMaxLength = $maxLength;
-			}
-			
-			//rip the first ($trueMaxLength) characters from string, append $endString, and go.
-			$tmp = substr($string,0,$trueMaxLength -1);
-			$retval = $tmp . $endString;
-		}
-		
-		return($retval);
-		
-	}//end truncate_string()
 	//---------------------------------------------------------------------------------------------
 
 }//end cs_globalFunctions{}

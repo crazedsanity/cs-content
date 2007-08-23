@@ -18,16 +18,15 @@ class cs_genericPage {
 	private $tmplDir;
 	private $libDir;
 	private $siteRoot;
-	private $allowRedirect;
 	
 	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
 	 */
-	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedirect=TRUE) {
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedir=TRUE) {
 		//handle some configuration.
-		$this->allowRedirect = $allowRedirect;
+		define("CS-CONTENT_ALLOW_AUTO_REDIR", $allowRedir);
 		
 		//initialize some internal stuff.
 		$this->initialize_locals($mainTemplateFile);
@@ -38,6 +37,17 @@ class cs_genericPage {
 		
 		define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
 	}//end __construct()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Returns a version string.
+	 */
+	public function get_version($asArray=FALSE) {
+		return('0.6');
+	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 	
 	
@@ -458,7 +468,7 @@ class cs_genericPage {
 	 * Performs redirection, provided it is allowed.
 	 */
 	function conditional_header($url, $exitAfter=TRUE) {
-		if($this->allowRedirect) {
+		if(CS-CONTENT_ALLOW_AUTO_REDIR) {
 			//checks to see if headers were sent; if yes: use a meta redirect.
 			//	if no: send header("location") info...
 			if(headers_sent()) {
@@ -484,7 +494,6 @@ class cs_genericPage {
 		}
 		else {
 			//TODO: should an exception be thrown, or maybe exit here anyway?
-			throw new exception(__METHOD__ .": auto redirects not allowed...?");
 		}
 	}//end conditional_header()
 	//---------------------------------------------------------------------------------------------

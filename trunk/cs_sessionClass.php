@@ -34,6 +34,25 @@ class cs_session{
 		
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Returns a version string.
+	 */
+	public function get_version($asArray=FALSE) {
+		$version = array(
+			'major'	=> 0,
+			'minor'	=> 6
+		);
+		if($asArray) {
+			$version = $this->gfObj->string_from_array($version, NULL, '.');
+		}
+		
+		return($version);
+	}//end get_version()
+	//---------------------------------------------------------------------------------------------
 
 
 }//end cs_session{}

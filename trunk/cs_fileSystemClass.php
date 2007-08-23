@@ -13,14 +13,13 @@ require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
 
 class cs_fileSystemClass {
 
-	public $root;		//actual root directory.
-	public $cwd;		//current directory; relative to $this->root
-	public $realcwd;	//$this->root .'/'. $this->cwd
-	public $dh;		//directory handle.
-	public $fh;		//file handle.
-	public $filename;	//filename currently being used.
-	public $gf;		//cs_globalFunctions{} object.
-	public $lineNum = NULL;
+	var $root;		//actual root directory.
+	var $cwd;		//current directory; relative to $this->root
+	var $realcwd;	//$this->root .'/'. $this->cwd
+	var $dh;		//directory handle.
+	var $fh;		//file handle.
+	var $filename;	//filename currently being used.
+	var $gf;		//cs_globalFunctions{} object.
 
 	
 	//========================================================================================
@@ -66,6 +65,17 @@ class cs_fileSystemClass {
 		}
 		
 	}//end __construct()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Returns a version string.
+	 */
+	public function get_version() {
+		return('0.6');
+	}//end get_version()
 	//========================================================================================
 	
 	
@@ -137,7 +147,6 @@ class cs_fileSystemClass {
 	 */
 	public function ls($filename=NULL, $args=NULL) {
 		
-		clearstatcache();
 		//open the directory for reading.
 		$this->dh = opendir($this->realcwd);
 		clearstatcache();
@@ -153,7 +162,7 @@ class cs_fileSystemClass {
 			}
 		} else {
 			//array if file/directory names to ignore if matched exactly.
-			$ignoreArr = array("CVS", ".svn", ".", "..");
+			$ignoreArr = array("CVS", ".", "..");
 			while (($file = readdir($this->dh)) !== false) {
 				if(!in_array($file, $ignoreArr)) {
 					$tFile = $this->realcwd .'/'. $file;
@@ -190,8 +199,7 @@ class cs_fileSystemClass {
 			"uid"		=> fileowner($tFile),
 			"group"		=> $this->my_getuser_group(filegroup($tFile), 'gid'),
 			"gid"		=> filegroup($tFile),
-			"perms"		=> $this->translate_perms(fileperms($tFile)),
-			"perms_num"	=> substr(sprintf('%o', fileperms($tFile)), -4)
+			"perms"		=> $this->translate_perms(fileperms($tFile))
 		);
 		
 		return($retval);
@@ -239,21 +247,21 @@ class cs_fileSystemClass {
 	 * can enlighten me, I'd be glad to give them credit.
 	 */
 	private function translate_perms($in_Perms) {
-		$sP .= (($in_Perms & 0x0100) ? 'r' : '-') .
-			(($in_Perms & 0x0080) ? 'w' : '-') .
+		$sP .= (($in_Perms & 0x0100) ? 'r' : '&minus;') .
+			(($in_Perms & 0x0080) ? 'w' : '&minus;') .
 			(($in_Perms & 0x0040) ? (($in_Perms & 0x0800) ? 's' : 'x' ) :
-						(($in_Perms & 0x0800) ? 'S' : '-'));
+						(($in_Perms & 0x0800) ? 'S' : '&minus;'));
 		// group
-		$sP .= (($in_Perms & 0x0020) ? 'r' : '-') .
-			(($in_Perms & 0x0010) ? 'w' : '-') .
+		$sP .= (($in_Perms & 0x0020) ? 'r' : '&minus;') .
+			(($in_Perms & 0x0010) ? 'w' : '&minus;') .
 			 (($in_Perms & 0x0008) ? (($in_Perms & 0x0400) ? 's' : 'x' ) :
-						(($in_Perms & 0x0400) ? 'S' : '-'));
+						(($in_Perms & 0x0400) ? 'S' : '&minus;'));
 		
 		// world
-		$sP .= (($in_Perms & 0x0004) ? 'r' : '-') .
-			(($in_Perms & 0x0002) ? 'w' : '-') .
+		$sP .= (($in_Perms & 0x0004) ? 'r' : '&minus;') .
+			(($in_Perms & 0x0002) ? 'w' : '&minus;') .
 			(($in_Perms & 0x0001) ? (($in_Perms & 0x0200) ? 't' : 'x' ) :
-						(($in_Perms & 0x0200) ? 'T' : '-'));
+						(($in_Perms & 0x0200) ? 'T' : '&minus;'));
 		return($sP);
 	}//end translate_perms()
 	//========================================================================================
@@ -268,36 +276,15 @@ class cs_fileSystemClass {
 	 * @return 0			(FAIL) unable to create file.
 	 * @return 1			(PASS) file created successfully.
 	 */
-	public function create_file($filename, $truncateFile=FALSE) {
+	public function create_file($filename) {
 		
 		$retval = 0;
-		$this->filename = $filename;
-		
 		//check to see if the file exists...
 		if(!file_exists($filename)) {
-			if($this->is_writable(dirname($filename))) {
-				//no file.  Create it.
-				$createFileRes = touch($this->realcwd .'/'. $filename);
-				if($createFileRes) {
-					$retval = 1;
-				}
-			}
-			else {
-				throw new exception(__METHOD__ .": directory (". dirname($filename) .") is not writable");
-			}
-		}
-		elseif($truncateFile === TRUE) {
-			if($this->is_writable($filename)) {
-				if($this->openFile($filename)) {
-					ftruncate($this->fh,0);
-					$this->closeFile();
-				}
-				else {
-					throw new exception(__METHOD__ .": unable to open specified file");
-				}
-			}
-			else {
-				throw new exception(__METHOD__ .": file is not writable");
+			//no file.  Create it.
+			$createFileRes = touch($this->realcwd .'/'. $filename);
+			if($createFileRes) {
+				$retval = 1;
 			}
 		}
 		return($retval);
@@ -317,39 +304,36 @@ class cs_fileSystemClass {
 	 * @return 1			(PASS) file opened successfully.
 	 */
 	public function openFile($filename=NULL, $mode="r+") {
-		clearstatcache();
-		if(!strlen($filename) || is_null($filename)) {
+	
+		//make sure we've got a mode to use.
+		if(!$filename) {
 			$filename = $this->filename;
 		}
-		$filename = $this->filename2absolute($filename);
-		$this->filename = $filename;
 		
-		if($this->is_readable($filename)) {
-			//make sure we've got a mode to use.
-			
-			if(!is_string($mode)) {
-				$mode = "r+";
-			}
-			$this->mode = $mode;
-			
-			if(in_array($this->mode, array("r+", "w", "w+", "a", "a+", "x", "x+")) && !$this->is_writable($filename)) {
-				throw new exception(__METHOD__ .": file is not writable (". $filename .")");
-			}
-			
-			//attempt to open a stream to a file...
-			$this->fh = fopen($this->filename, $this->mode);
-			if(is_resource($this->fh)) {
-				//looks like we opened successfully.
-				$retval = 1;
-				$this->lineNum = 0;
-			} else {
-				//something bad happened.
-				$retval = 0;
-			}
-		} 
-		else {
-			throw new exception(__METHOD__ .": file is unreadable (". $filename .")");
-		} 
+		if(!file_exists($this->filename)) {
+			throw new exception(__METHOD__ .': filename does not exist ('. $this->filename .')');
+		}
+		
+		//make sure the file exists...
+		$this->create_file($filename);
+		
+		//make sure $filename is absolute...
+		$filename = $this->filename2absolute($filename);
+		
+		if(!is_string($mode)) {
+			$mode = "r+";
+		}
+		$this->mode = $mode;
+	
+		//attempt to open a stream to a file...
+		$this->fh = fopen($this->filename, $this->mode);
+		if(is_resource($this->fh)) {
+			//looks like we opened successfully.
+			$retval = 1;
+		} else {
+			//something bad happened.
+			$retval = 0;
+		}
 		
 		return($retval);
 	}//end openFile()
@@ -391,24 +375,37 @@ class cs_fileSystemClass {
 	 * Takes the given filename & returns the ABSOLUTE pathname: checks to see if the given
 	 * 	string already has the absolute path in it.
 	 */
-	private function filename2absolute($filename) {
+	private function filename2absolute($filename=NULL) {
 		
-		clearstatcache();
+		if(!$filename) {
+			$filename = $this->filename;
+		}
+		
 		//see if it starts with a "/"...
 		if(preg_match("/^\//", $filename)) {
 			//it's an absolute path... see if it's one we can use.
-			$myCwd = preg_replace('/\//', '\\\/', $this->realcwd);
-			if(preg_match('/^'. $myCwd .'/', $filename)) {
-				$retval = $filename;
-			}
-			else {
-				throw new exception(__METHOD__ .": path is outside the allowed directory: ". $filename);
-			}
+			#if() {
+			#
+			#} else {
+			#
+			#}
 		} else {
-			$retval=$this->realcwd .'/'. $filename;
+			//not absolute... see if it's a valid file; if it is, return proper string.
+			if(file_exists($this->realcwd .'/'. $filename)) {
+				//looks good.
+				$this->filename=$this->realcwd .'/'. $filename;
+			} else {
+				/*/bad filename... die.
+				print "filename2absolute(): INVALID FILENAME: $filename<BR>\n
+				CURRENT CWD: ". $this->cwd ."<BR>\n
+				REAL CWD: ". $this->realcwd;
+				debug_print($this->ls(),1);
+				exit;
+				#*/
+			}
 		}
 		
-		return($retval);
+		return($this->filename);
 		
 	}//end filename2absolute()
 	//========================================================================================
@@ -419,275 +416,10 @@ class cs_fileSystemClass {
 	/**
 	 * Reads-in the contents of an entire file.
 	 */
-	 function read($filename, $returnArray=FALSE) {
-	 	$myFile = $this->filename2absolute($filename);
-	 	if($this->is_readable($filename)) {
-	 		if($returnArray) {
-	 			$data = file($myFile);
-	 		}
-	 		else {
-		 		$data = file_get_contents($myFile);
-	 		}
-	 		
-		 	if($data === FALSE) {
-		 		throw new exception(__METHOD__. ": file_get_contents() returned FALSE");
-		 	}
-	 	}
-	 	else {
-	 		throw new exception(__METHOD__. ": File isn't readable (". $filename .")");
-	 	}
+	 function read($filename) {
+	 	$data = file_get_contents($this->realcwd ."/$filename");
 	 	return($data);
 	 }//end read()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	public function rm($filename) {
-		$filename = $this->filename2absolute($filename);
-		return(unlink($filename));
-	}//end rm()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Return the next line for a file.
-	 * 
-	 * When the end of the file is found, this method returns FALSE (returning NULL might be 
-	 * misconstrued as a blank line).
-	 */
-	public function get_next_line($maxLength=NULL, $trimLine=TRUE) {
-		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
-			if(feof($this->fh)) {
-				$retval = FALSE;
-			}
-			else {
-				if(!is_numeric($maxLength)) {
-					$retval = @fgets($this->fh);
-				}
-				else {
-					$retval = fgets($this->fh, $maxLength);
-				}
-				if($trimLine) {
-					$retval = trim($retval);
-				}
-				
-				if(is_null($this->lineNum) || !is_numeric($this->lineNum) || $this->lineNum < 0) {
-					throw new exception(__METHOD__ .": invalid data for lineNum (". $this->lineNum .")");
-				}
-				$this->lineNum++;
-			}
-		}
-		else {
-			throw new exception(__METHOD__ .": invalid filehandle");
-		}
-		
-		return($retval);
-	}//end get_next_line()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	public function append_to_file($data, $eolChar="\n") {
-		$retval = FALSE;
-		if(is_resource($this->fh)) {
-			$result = fwrite($this->fh, $data . $eolChar);
-			if($result === FALSE) {
-				throw new exception(__METHOD__ .": failed to write data to file");
-			}
-			else {
-				$this->lineNum++;
-				$retval = $result;
-			}
-		}
-		else {
-			throw new exception(__METHOD__ .": invalid filehandle");
-		}
-		
-		return($retval);
-	}//end append_to_file()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	public function closeFile() {
-		$retval = FALSE;
-		if(is_resource($this->fh)) {
-			fclose($this->fh);
-			$retval = TRUE;
-		}
-		
-		//reset internal pointers.
-		$this->filename = NULL;
-		$this->lineNum = NULL;
-		
-		return($retval);
-	}//end closeFile()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Compare the given filename to the open filename to see if they match (using this allows 
-	 * giving a filename instead of comparing the whole path).
-	 */
-	public function compare_open_filename($compareToFilename) {
-		if(!strlen($compareToFilename) || is_null($compareToFilename)) {
-			throw new exception(__METHOD__ .": invalid filename to compare");
-		}
-		elseif(!strlen($this->filename)) {
-			$retval = FALSE;
-		}
-		else {
-			$internalFilename = $this->filename2absolute($this->filename);
-			$compareToFilename = $this->filename2absolute($compareToFilename);
-			if($internalFilename == $compareToFilename) {
-				$retval = TRUE;
-			}
-			else {
-				$retval = FALSE;
-			}
-		}
-		
-		return($retval);
-	}//end compare_open_filename()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Give a file a new name.
-	 * 
-	 * TODO: check to make sure both files exist within our root.
-	 */
-	public function rename($currentFilename, $newFilename) {
-		if($newFilename == $currentFilename) {
-			$this->gf->debug_print(func_get_args());
-			throw new exception(__METHOD__ .": renaming file to same name");
-		}
-		
-		if($this->compare_open_filename($currentFilename)) {
-			$this->closeFile();
-		}
-		
-		if($this->compare_open_filename($newFilename)) {
-			//renaming a different file to our currently open file... 
-			$this->gf->debug_print(func_get_args());
-			throw new exception(__METHOD__ .": renaming another file (". $currentFilename .") to the currently open filename (". $newFilename .")");
-		}
-		else {
-			
-			$currentFilename = $this->filename2absolute($currentFilename);
-			$newFilename = $this->filename2absolute($newFilename);
-			
-			if(!$this->is_writable(dirname($newFilename))) {
-				throw new exception(__METHOD__ .": directory isn't writable... ");
-			}
-			$retval = rename($currentFilename, $newFilename);
-			if($retval !== TRUE) {
-				throw new exception(__METHOD__ .": failed to rename file (". $retval .")");
-			}
-		}
-		
-		return($retval);
-		
-	}//end rename()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Check if the given filename is executable.
-	 */
-	public function is_executable($filename) {
-		$filename = $this->filename2absolute($filename);
-		$retval = FALSE;
-		if(strlen($filename)) {
-			$retval = is_executable($filename);
-		}
-		
-		return($retval);
-	}//end is_executable()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Check if the given filename is readable.
-	 */
-	public function is_readable($filename) {
-		$filename = $this->filename2absolute($filename);
-		$retval = FALSE;
-		if(strlen($filename)) {
-			$retval = is_readable($filename);
-		}
-		
-		return($retval);
-	}//end is_readable()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Check if the given filename/path is writable
-	 */
-	public function is_writable($filenameOrPath) {
-		$filenameOrPath = $this->filename2absolute($filenameOrPath);
-		$retval = FALSE;
-		if(strlen($filenameOrPath)) {
-			$retval = is_writable($filenameOrPath);
-		}
-		
-		return($retval);
-	}//end is_writable()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Determines how many lines are left in the current file.
-	 */
-	public function count_remaining_lines() {
-		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
-			$originalLineNum = $this->lineNum;
-			
-			$myFilename = $this->filename;
-			$myNextLine = $this->get_next_line();
-			$retval = 0;
-			while($myNextLine !== FALSE) {
-				$retval++;
-				$myNextLine = $this->get_next_line();
-			}
-			
-			$this->closeFile();
-			$this->openFile($myFilename);
-			
-			if($originalLineNum > 0) {
-				while($originalLineNum > $this->lineNum) {
-					$this->get_next_line();
-				}
-			}
-			
-			if($this->lineNum !== $originalLineNum) {
-				throw new exception(__METHOD__ .": failed to match-up old linenum (". $originalLineNum .") with the current one (". $this->lineNum .")");
-			}
-		}
-		else {
-			throw new exception(__METHOD__ .": Invalid filehandle, can't count remaining lines");
-		}
-		
-		return($retval);
-	}//end count_remaining_files()
 	//========================================================================================
 	
 	
