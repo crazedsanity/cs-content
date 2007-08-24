@@ -25,9 +25,7 @@
 ///////////////////////
 
 
-require_once(dirname(__FILE__) ."/site_config.inc");
-
-class phpDB {
+class cs_phpDB {
 
 	/** Internal result set pointer. */
 	protected $result = NULL;
@@ -37,6 +35,9 @@ class phpDB {
 	
 	/** Status of the current transaction. */
 	protected $transStatus = NULL;
+	
+	/** Whether there is a transaction in progress or not. */
+	protected $inTrans = FALSE;
 	
 	/** Holds the last query performed. */
 	protected $lastQuery = NULL;
@@ -172,9 +173,9 @@ class phpDB {
 		return($retval);
 	}//end close()
 	//=========================================================================
-    
-    
-    
+	
+	
+	
 	//=========================================================================
 	/**
 	 * Connect to the database
@@ -254,7 +255,7 @@ class phpDB {
 			//debug is used for logging all queries to a file... useful for easily spotting
 			//	over-used queries, et
 			if($debug) {
-      			//log the query...
+	  			//log the query...
 				$fp = fopen($GLOBALS['SITE_ROOT'] . "/logs/$logfile", "a");
 				fwrite($fp, $GLOBALS['PHP_SELF'] . ": ".$this->databaseName." : $query - took $totalTime\n=====================================\n");
 				fclose($fp);
@@ -265,7 +266,7 @@ class phpDB {
 				if (eregi("^[[:space:]]*select", $query)) {
 					//If we didn't have an error and we are a select statement, move the pointer to first result
 					$numRows = $this->numRows();
-	    	    	if($numRows > 0) {
+					if($numRows > 0) {
 						$this->moveFirst();
 					}
 					$returnVal = $numRows;
@@ -331,19 +332,19 @@ class phpDB {
 	////////////////////
 	// Cursor movement
 	////////////////////
-    
-    
-    
-    
+	
+	
+	
+	
 	//=========================================================================
 	/**
 	 * move pointer to first row of result set
 	 */
-    function move_first() {
-    	$this->sanity_check();
-    	if($this->result == NULL) {
-    		$retval = FALSE;
-    	}
+	function move_first() {
+		$this->sanity_check();
+		if($this->result == NULL) {
+			$retval = FALSE;
+		}
 		else {
 			$this->set_row(0);
 			$retval = TRUE;
@@ -356,87 +357,87 @@ class phpDB {
 	
 	
 	//=========================================================================
-    /** 
-     * move pointer to last row of result set
-     */
-    function move_last() {
-    	$this->sanity_check();
-        if($this->result == NULL) {
-        	$retval = FALSE;
-        }
-        else {
+	/** 
+	 * move pointer to last row of result set
+	 */
+	function move_last() {
+		$this->sanity_check();
+		if($this->result == NULL) {
+			$retval = FALSE;
+		}
+		else {
 			$this->setRow($this->numRows()-1);
 			$retval = TRUE;
-        }
-        
-        return($retval);
-    }//end move_list()
+		}
+		
+		return($retval);
+	}//end move_list()
 	//=========================================================================
 	
 	
 	
 	//=========================================================================
-    /** 
-     * point to the next row, return false if no next row
-     */
-    function move_next() {
+	/** 
+	 * point to the next row, return false if no next row
+	 */
+	function move_next() {
 		$this->sanity_check();
 		// If more rows, then advance row pointer
 		if($this->row < $this->numRows()-1) {
 			$this->setRow($this->row +1);
 			$retval = TRUE;
-        }
-        else {
+		}
+		else {
 			$retval = FALSE;
-        }
-        
-        return($retval);
-    }//end move_next()
+		}
+		
+		return($retval);
+	}//end move_next()
 	//=========================================================================
 	
 	
 	
 	//=========================================================================
-    /** 
-     * point to the previous row, return false if no previous row
-     */
-    function move_previous() {
-        // If not first row, then advance row pointer
-        if ($this->row > 0) {
-            $this->setRow($this->row -1);
-            return true;
-        }
-        else return false;
-    }//end move_previous()
+	/** 
+	 * point to the previous row, return false if no previous row
+	 */
+	function move_previous() {
+		// If not first row, then advance row pointer
+		if ($this->row > 0) {
+			$this->setRow($this->row -1);
+			return true;
+		}
+		else return false;
+	}//end move_previous()
 	//=========================================================================
 	
 	
 	
 	//=========================================================================
-    // point to the next row, return false if no next row
-    function next_row() {
-        // If more rows, then advance row pointer
-        if ($this->row < $this->numRows()-1) {
-                $this->setRow($this->row +1);
-                return true;
-        }
-        else return false;
-    }//end next_row()
+	// point to the next row, return false if no next row
+	function next_row() {
+		// If more rows, then advance row pointer
+		if ($this->row < $this->numRows()-1) {
+				$this->setRow($this->row +1);
+				return true;
+		}
+		else return false;
+	}//end next_row()
 	//=========================================================================
 	
 	
 	
 	//=========================================================================
-    // can be used to set a pointer to a perticular row
-    function set_row($row){
-    	if(is_numeric($row)) {
-        	$this->row = $row;
-    	}
-    	else {
-    		throw new exception(__METHOD__ .": invalid data for row (". $row .")");
-    	}
-    	return($this->row);
-    }//end set_row();
+	// can be used to set a pointer to a perticular row
+	function set_row($row){
+		if(is_numeric($row)) {
+			$this->row = $row;
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid data for row (". $row .")");
+		}
+		return($this->row);
+	}//end set_row();
 	//=========================================================================
 	
 	
@@ -504,7 +505,7 @@ class phpDB {
 		}
 		
 		return($retval);
-    }//end frow()
+	}//end frow()
 	//=========================================================================
 	
 	
@@ -519,6 +520,7 @@ class phpDB {
 	 */
 	function farray_fieldnames($index=NULL, $numbered=NULL,$unsetIndex=1) {
 		$this->sanity_check();
+		$retval = NULL;
 		
 		//before we get too far, let's make sure there's something there.
 		if($this->numRows() <= 0) {
@@ -549,30 +551,31 @@ class phpDB {
 							//The index for the new array will be this fieldname's value
 							$arrayKey = $value;
 						}
-	
+						
 						$tempContent[$fieldname] = $value;
 						//don't include the "index" field in the subarray; that always seems to end badly.
 						if ($unsetIndex) {
 							unset($tempContent[$index]);
 						}
 					}
-	
+					
 					if (!isset($tempArr[$arrayKey])) {
 						//Make sure we didn't already set this in the array. If so, then we don't have a unique variable to use for the array index. 
 						$tempArr[$arrayKey] = $tempContent;
 					}
 					else {
 						//TODO: bigtime cleaning... should only return at the bottom of the method.
-						return (0);
+						$retval = 0;
+						break;
 					}
 					$arrayKey = NULL; //Blank this out after using it, just in case we don't find one in the next iteration
 				}
 	
 				if (count($tempArr) != count($newArr)) {
 					$details = "farray_fieldnames(): Array counts don't match.<BR>\n"
-	                        ."FUNCTION ARGUMENTS: index=[$index], numbered=[$numbered], unsetIndex=[$unsetIndex]<BR>\n"
-	                        ."LAST QUERY: ". $this->last_query;
-	                throw new exception(__METHOD__ .": $details");
+						."FUNCTION ARGUMENTS: index=[$index], numbered=[$numbered], unsetIndex=[$unsetIndex]<BR>\n"
+						."LAST QUERY: ". $this->last_query;
+					throw new exception(__METHOD__ .": $details");
 				}
 				$newArr = $tempArr;
 			}
@@ -580,260 +583,359 @@ class phpDB {
 			//	I like them to), there's no row w/ a sub-array...  This is only done 
 			//	if $index is NOT set...
 			if(($this->numRows() == 1) AND (!$index) AND (!$numbered)) {
-				 $newArr = $newArr[0];
+				$newArr = $newArr[0];
 			}
-			$retArr = $newArr;
+			$retval = $newArr;
 			ob_end_clean();
 		}
-		return($retArr);
+		return($retval);
 	}//end farray_fieldnames()
 	//=========================================================================
-
-	//////////////////////////////////////////////////////////////////////////////////
-	//this one takes the results from a query that only returned two results and	//
-	//	puts it into an array like so:						//
-	//	$array[<$index value>] => <$value value>				//
-	//////////////////////////////////////////////////////////////////////////////////
-	function farray_nvp($index, $value) {
-		if((!$index) OR (!$value)) {
-			return(0);
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Uses farray_fieldnames() to retrieve the entire result set, but the final 
+	 * array is contains name=>value pairs.
+	 */
+	function farray_nvp($name, $value) {
+		if((!$name) OR (!$value)) {
+			$retval = 0;
 		}
-		$tArr = $this->farray_fieldnames(NULL,1);
-		if(!is_array($tArr)) {
-			return(0);
-		}
-
-		//loop through it & grab the proper info.
-		foreach($tArr as $row=>$array) {
-			$tKey = $array[$index];
-			$tVal = $array[$value];
-			$retArr[$tKey] = $tVal;
+		else {
+			$tArr = $this->farray_fieldnames(NULL,1);
+			if(!is_array($tArr)) {
+				$retval = 0;
+			}
+			else {
+				//loop through it & grab the proper info.
+				$retval = array();
+				foreach($tArr as $row=>$array) {
+					$tKey = $array[$name];
+					$tVal = $array[$value];
+					$retval[$tKey] = $tVal;
+				}
+			}
 		}
 
 		//return the new array.
-		return($retArr);
+		return($retval);
 	}//end farray_nvp()
-
-
-
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Similar to farray_fieldnames(), but only returns the NUMERIC indexes
+	 */
 	function farray_numbered() {
-		//////////////////////////////////////////////////////////////////////////
-		//returns a numbered listing of what's in the array... this ASSUMES     //
-		//      that there be only one field returned in the query.             //
-		//////////////////////////////////////////////////////////////////////////
-
-		do
-		{
+		do {
 			$temp = $this->frow();
 			$retArr[] = $temp[0];
 		}
 		while($this->nextRow());
+		
 		return($retArr);
-	}
-
-
-    function numAffected() {
-	//////////////////////////////////////////////////
-	// RETURNS THE NUMBER OF TUPLES AFFECTED BY AN	//
-	//	INSERT/DELETE/UPDATE QUERY.		//
-	//////////////////////////////////////////////////
-	if($this->result == null) {
-		return 0;
-	} else {
-		$this->affectedRows = pg_affected_rows($this->result);
-		return($this->affectedRows);
-	}
-    }
-
-    // get the number of rows in a result
-    //works just like pg_numrows().
-    function numRows(){
-        if ($this->result == null) return 0;
-        else {
-			$this->numrows = pg_num_rows($this->result);
-			return $this->numrows;
-        }
-    }
-    function affectedRows(){
-	return($this->numAffected);
-    }
+	}//end farray_numbered()
+	//=========================================================================
 	
-
-    // return current row
-    function currRow(){
-        return $this->row;
-    }
-
-    function recordCount() {
-        return $this->numRows();
-    }
-
-    // get the number of fields in a result
-    function numFields() {
-        if ($this->result == null) return 0;
-        else return pg_num_fields ($this->result);
-    }
-
-    function columnCount() {
-        return $this->numFields();
-    }
-
-    // get last OID (object identifier) of last INSERT statement
-    function lastOID($doItForMe=0, $field=NULL) {
-        if ($this->result == NULL) {
-		return(NULL);
-        } else {
-		$tOid = pg_last_oid($this->result);
-		$retVal = $tOid;
-		if(($doItForMe) AND (eregi("^insert", $this->last_query))) {
-			//attempt to parse the insert statement, then select 
-			// all fields (unless $field is set) from it.
-			$t = split(" into ", strtolower($this->last_query));
-			$t = split(" ", $t[1]);
-			$t = split("\(", $t[0]);
-			$table = $t[0];
-
-			//now we have the table. 
-			if(!$field) {
-				$field = "*";
-			}
-			$query = "SELECT $field FROM $table WHERE OID=$tOid";
-			$this->exec($query);
-			$dberror = $this->errorMsg(1,1,1,"lastOID(): ");
-
-			if(!$dberror) {
-				//
-				$res = $this->farray();
-				if(is_string($field)) {
-					$retVal = $res[0];
+	
+	
+	//=========================================================================
+	/**
+	 * Returns the number of tuples affected by an insert/delete/update query.
+	 * NOTE: select queries must use numRows()
+	 */
+	function numAffected() {
+		if($this->result == null) {
+			$retval = 0;
+		} else {
+			$this->affectedRows = pg_affected_rows($this->result);
+			$retval = $this->affectedRows;
+		}
+		
+		return($retval);
+	}//end numAffected()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Returns the number of rows in a result (from a SELECT query).
+	 */
+	function numRows() {
+		if ($this->result == null) {
+			$retval = 0;
+		}
+		else {
+			$this->numrows = pg_num_rows($this->result);
+			$retval = $this->numrows;
+		}
+		
+		return($retval);
+	}//end numRows()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * wrapper for numAffected()
+	 */
+	function affectedRows(){
+		return($this->numAffected());
+	}//end affectedRows()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Returns the current row number.
+	 */
+	function currRow(){
+		return($this->row);
+	}//end currRow()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Get the number of fields in a result.
+	 */
+	// get the number of fields in a result
+	function num_fields() {
+		if($this->result == null) {
+			$retval = 0;
+		}
+		else {
+			$retval = pg_num_fields($this->result);
+		}
+		return($retval);	
+	}//end num_fields()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	function column_count() {
+		return($this->numFields());
+	}//end column_count()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/** 
+	 * get last OID (object identifier) of last INSERT statement
+	 */
+	function lastOID($doItForMe=0, $field=NULL) {
+		if($this->result == NULL) {
+			$retval = NULL;
+		}
+		else {
+			$tOid = pg_last_oid($this->result);
+			$retval = $tOid;
+			
+			if(($doItForMe) AND (eregi("^insert", $this->last_query))) {
+				//attempt to parse the insert statement, then select 
+				// all fields (unless $field is set) from it.
+				$t = split(" into ", strtolower($this->last_query));
+				$t = split(" ", $t[1]);
+				$t = split("\(", $t[0]);
+				$table = $t[0];
+				
+				//now we have the table. 
+				if(!$field) {
+					$field = "*";
+				}
+				$query = "SELECT $field FROM $table WHERE OID=$tOid";
+				$this->exec($query);
+				$dberror = $this->errorMsg(1,1,1,"lastOID(): ");
+				
+				if(!$dberror) {
+					$res = $this->farray();
+					if(is_string($field)) {
+						$retval = $res[0];
+					}
 				}
 			}
 		}
-		return($retVal);
-	}
-    }
-
-    // get result field name
-    function fieldname($fieldnum) {
-        if ($this->result == null) return null;
-        else return pg_field_name($this->result, $fieldnum);
-    }
-
-    ////////////////////////
-    // Transaction related
-    ////////////////////////
-
-    function beginTrans() {
-    	$this->inTrans = TRUE;
-        return($this->exec("BEGIN"));
-    }
-
-    function commitTrans() {
-    	$this->inTrans = FALSE;
-        return($this->exec("COMMIT"));
-    }
-
-    // returns true/false
-    function rollbackTrans() {
-    	$this->inTrans = FALSE;
-        return($this->exec("ABORT"));
-    }
-
-    ////////////////////////
-    // SQL String Related
-    ////////////////////////
-    function querySafe($string) {
-		// replace \' with '
-		// gets rid of evil characters that might lead to SQL injection attacks.
-
-		// replace line-break characters
-		return (cleanString($string,"query"));
-	}
-
-    function sqlSafe($string) {
-        // replace \' with \'\'
-        // use this function only for text fields that may contain "'" s
-		return (cleanString($string,"sql"));
-    }
-    
-    
-    
+		return($retval);
+	}//end lastOID()
 	//=========================================================================
-    /**
-     * Gives textual explanation of the current status of our database 
-     * connection.
-     * 
-     * @param $goodOrBad		(bool,optional) return good/bad status.
-     * 
-     * @return (-1)				(FAIL) connection is broken
-     * @return (0)				(FAIL) error was encountered (transient error)
-     * @return (1)				(PASS) useable
-     * @return (2)				(PASS) useable, but not just yet (working 
-     * 								on something)
-     */
-    function get_transaction_status($goodOrBad=TRUE)
-    {
-    	$myStatus = pg_transaction_status($this->connectionID);
-    	$text = 'unknown';
-    	switch($myStatus)
-    	{
-    		case PGSQL_TRANSACTION_IDLE:
-    		{
-    			//No query in progress: it's idle.
-    			$goodOrBadValue = 1;
-    			$text = 'idle';
-    			break;
-    		}
-    		
-    		
-    		case PGSQL_TRANSACTION_ACTIVE:
-    		{
-    			//there's a command in progress.
-    			$goodOrBadValue = 2;
-    			$text = 'processing';
-    			break;
-    		}
-    		
-    		
-    		case PGSQL_TRANSACTION_INTRANS:
-    		{
-    			//connection idle within a valid transaction block.
-    			$goodOrBadValue = 1;
-    			$text = 'valid transaction';
-    			break;
-    		}
-    		
-    		
-    		case PGSQL_TRANSACTION_INERROR:
-    		{
-    			//connection idle within a broken transaction.
-    			$goodOrBadValue = 0;
-    			$text = 'failed transaction';
-    			break;
-    		}
-    		
-    		
-    		case PGSQL_TRANSACTION_UNKNOWN:
-    		{
-    			//the connection is bad.
-    			$goodOrBadValue = -1;
-    			$text = 'bad connection';
-    			break;
-    		}
-    		
-    	}
-    	
-    	//do they want text or the good/bad number?
-    	$retval = $text;
-    	if($goodOrBad)
-    	{
-    		//they want the number.
-    		$retval = $goodOrBadValue;
-    	}
-    	
-    	return($retval);
-    }//end valid_transaction()
+	
+	
+	
 	//=========================================================================
+	/**
+	 * get result field name of the given field number.
+	 */
+	// get result field name
+	function fieldname($fieldnum) {
+		if($this->result == NULL) {
+			$retval =NULL;
+		}
+		else {
+			$retval = pg_field_name($this->result, $fieldnum);
+		}
+		
+		return($retval);
+	}//end fieldname()
+	//=========================================================================
+	
+	
+	
+	
+	////////////////////////
+	// Transaction related
+	////////////////////////
+	
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Start a transaction.
+	 */
+	function beginTrans() {
+		$this->inTrans = TRUE;
+		return($this->exec("BEGIN"));
+	}//end beginTrans()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Commit a transaction.
+	 */
+	function commitTrans() {
+		$retval = $this->exec("COMMIT");
+		$this->get_transaction_status();
+		return($retval);
+	}//end commitTrans()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	// returns true/false
+	function rollbackTrans() {
+		$retval = $this->exec("ABORT");
+		$this->get_transaction_status();
+		return($retval);
+	}//end rollbackTrans()
+	//=========================================================================
+	
+	
+	
+	////////////////////////
+	// SQL String Related
+	////////////////////////
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Gets rid of evil characters that might lead ot SQL injection attacks.
+	 */
+	function querySafe($string) {
+		return($this->gfObj->cleanString($string,"query"));
+	}//end querySafe()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Make it SQL safe.
+	 */
+	function sqlSafe($string) {
+		return($this->gfObj->cleanString($string,"sql"));
+	}//end sqlSafe()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Gives textual explanation of the current status of our database 
+	 * connection.
+	 * 
+	 * @param $goodOrBad		(bool,optional) return good/bad status.
+	 * 
+	 * @return (-1)				(FAIL) connection is broken
+	 * @return (0)				(FAIL) error was encountered (transient error)
+	 * @return (1)				(PASS) useable
+	 * @return (2)				(PASS) useable, but not just yet (working 
+	 * 								on something)
+	 */
+	function get_transaction_status($goodOrBad=TRUE) {
+		$myStatus = pg_transaction_status($this->connectionID);
+		$text = 'unknown';
+		switch($myStatus) {
+			case PGSQL_TRANSACTION_IDLE: {
+				//No query in progress: it's idle.
+				$goodOrBadValue = 1;
+				$text = 'idle';
+				$this->inTrans = FALSE;
+			}
+			break;
+			
+			
+			case PGSQL_TRANSACTION_ACTIVE: {
+				//there's a command in progress.
+				$goodOrBadValue = 2;
+				$text = 'processing';
+			}
+			break;
+			
+			
+			case PGSQL_TRANSACTION_INTRANS: {
+				//connection idle within a valid transaction block.
+				$goodOrBadValue = 1;
+				$text = 'valid transaction';
+				$this->inTrans = TRUE;
+			}
+			break;
+			
+			
+			case PGSQL_TRANSACTION_INERROR: {
+				//connection idle within a broken transaction.
+				$goodOrBadValue = 0;
+				$text = 'failed transaction';
+				$this->inTrans = TRUE;
+			}
+			break;
+			
+			
+			case PGSQL_TRANSACTION_UNKNOWN:
+			default: {
+				//the connection is bad.
+				$goodOrBadValue = -1;
+				$text = 'bad connection';
+			}
+			break;
+		}
+		
+		//do they want text or the good/bad number?
+		$retval = $text;
+		$this->transactionStatus = $goodOrBadValue;
+		if($goodOrBad) {
+			//they want the number.
+			$retval = $goodOrBadValue;
+		}
+		
+		return($retval);
+	}//end valid_transaction()
+	//=========================================================================
+	
+	
 } // end class phpDB
 
 ?>
