@@ -75,9 +75,6 @@ class cs_phpDB {
 	/** Row counter for looping through records */
 	protected $row = -1;
 	
-	/** Internal error code. */
-	protected $errorCode = NULL;
-	
 	/** cs_globalFunctions object, for string stuff. */
 	protected $gfObj;
 	
@@ -124,9 +121,9 @@ class cs_phpDB {
 		$required = array('host', 'port', 'dbname', 'user', 'password');
 		
 		$requiredCount = 0;
-		foreach($params as $index) {
-			if(property_exists($this, $index) && in_array($required)) {
-				$this->$index = $params[$index];
+		foreach($params as $index=>$value) {
+			if(property_exists($this, $index) && in_array($index, $required)) {
+				$this->$index = $value;
 				$requiredCount++;
 			}
 			else {
@@ -198,7 +195,7 @@ class cs_phpDB {
 			);
 			
 			//make it into a string separated by spaces, don't clean anything, remove null elements
-			$connStr = $this->gfObj->string_from_array($myConnArr, NULL, " ", NULL, TRUE);
+			$connStr = $this->gfObj->string_from_array($myConnArr, 'url', " ");
 			
 			//start output buffer for displaying error.
 			ob_start();
