@@ -300,7 +300,18 @@ class cs_globalFunctions {
 			case "sql":
 				$cleanThis = addslashes(stripslashes($cleanThis));
 			break;
-	
+			
+			
+			case "sql_insert":
+				/*
+				 * This is for descriptive fields, where double quotes don't need to be escaped: in these 
+				 * cases, escaping the double-quotes might lead to inserting something that looks different 
+				 * than the original, but in fact is identical. 
+				 */
+				$cleanThis = addslashes(stripslashes($cleanThis));
+				$cleanThis = preg_replace('/\\\\"/', '"', $cleanThis);
+			break;
+			
 			case "double_quote":
 				//This will remove all double quotes from a string.
 				$cleanThis = str_replace('"',"",$cleanThis);
