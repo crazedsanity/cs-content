@@ -313,9 +313,8 @@ class cs_genericPage {
 
 			//WARNING::: if you give it the wrong type, it'll STILL be parsed. Otherwise 
 			//	this has to match set_message() FAR too closely. And it's a pain.
-			foreach($_SESSION['message'] as $myVarName => $myVarVal) {
-				$errorBox = $this->gfObj->mini_parser($errorBox, $_SESSION['message'], '{', '}');
-			}
+			$_SESSION['message']['messageType'] = $_SESSION['message']['type'];
+			$errorBox = $this->gfObj->mini_parser($errorBox, $_SESSION['message'], '{', '}');
 			if($_SESSION['message']['type'] == "fatal") {
 				//replace content of the page with our error.
 				$this->change_content($errorBox);
