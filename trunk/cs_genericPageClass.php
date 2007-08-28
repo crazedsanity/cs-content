@@ -47,7 +47,7 @@ class cs_genericPage {
 	 * Returns a version string.
 	 */
 	public function get_version($asArray=FALSE) {
-		return('0.6');
+		return('0.7.1');
 	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 	

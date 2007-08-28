@@ -42,15 +42,7 @@ class cs_session{
 	 * Returns a version string.
 	 */
 	public function get_version($asArray=FALSE) {
-		$version = array(
-			'major'	=> 0,
-			'minor'	=> 6
-		);
-		if($asArray) {
-			$version = $this->gfObj->string_from_array($version, NULL, '.');
-		}
-		
-		return($version);
+		return('0.7.1');
 	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 

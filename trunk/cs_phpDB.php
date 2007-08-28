@@ -101,6 +101,17 @@ class cs_phpDB {
 	
 	//=========================================================================
 	/**
+	 * Returns a version string.
+	 */
+	public function get_version($asArray=FALSE) {
+		return('0.7.1');
+	}//end get_version()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
 	 * Make sure the object is sane.
 	 */
 	final protected function sanity_check() {

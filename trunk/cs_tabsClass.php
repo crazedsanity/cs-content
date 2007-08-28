@@ -54,7 +54,7 @@ class cs_tabs {
 	 * Returns a version string.
 	 */
 	public function get_version($asArray=FALSE) {
-		return('0.7');
+		return('0.7.1');
 	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 	
