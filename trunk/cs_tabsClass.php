@@ -4,8 +4,7 @@
  * 
  */
 
-class cs_tabs
-{
+class cs_tabs {
 	private $tabsArr;
 	private $selectedTab;
 	
@@ -25,27 +24,22 @@ class cs_tabs
 	 * @param $csPageObj	(object) Instance of the class "cs_genericPage".
 	 * @param $templateVar	(str,optional) What template var to find the tab blockrows in.
 	 */
-	public function __construct($csPageObj, $templateVar="tabs")
-	{
-		if(is_null($csPageObj) || !is_object($csPageObj) || get_class($csPageObj) !== 'cs_genericPage')
-		{
+	public function __construct($csPageObj, $templateVar="tabs") {
+		if(is_null($csPageObj) || !is_object($csPageObj) || get_class($csPageObj) !== 'cs_genericPage') {
 			//can't continue without that!
 			throw new exception("cs_tabs::__construct(): cannot load without cs_genericPage{} object (". get_class($csPageObj) .")");
 		}
-		else
-		{
+		else {
 			//set it as a member.
 			$this->csPageObj = $csPageObj;
 		}
 		
 		
-		if(is_null($templateVar) || strlen($templateVar) < 3)
-		{
+		if(is_null($templateVar) || strlen($templateVar) < 3) {
 			//no template name?  AHH!!!
 			throw new exception("cs_tabs::__construct(): failed to specify proper template file");
 		}
-		else
-		{
+		else {
 			//set the internal var.
 			$this->templateVar = $templateVar;
 			$this->load_tabs_template();
@@ -60,15 +54,7 @@ class cs_tabs
 	 * Returns a version string.
 	 */
 	public function get_version($asArray=FALSE) {
-		$version = array(
-			'major'	=> 0,
-			'minor'	=> 6
-		);
-		if($asArray) {
-			$version = $this->gfObj->string_from_array($version, NULL, '.');
-		}
-		
-		return($version);
+		return('0.7');
 	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 	
@@ -82,18 +68,15 @@ class cs_tabs
 	 * @param (void)
 	 * @return (void)
 	 */
-	private function load_tabs_template()
-	{
+	private function load_tabs_template() {
 		//now let's parse it for the proper block rows.
 		$blockRows = $this->csPageObj->rip_all_block_rows($this->templateVar);
 		
-		if(count($blockRows) < 2 || !isset($blockRows['selected_tab']) || !isset($blockRows['unselected_tab']))
-		{
+		if(count($blockRows) < 2 || !isset($blockRows['selected_tab']) || !isset($blockRows['unselected_tab'])) {
 			//not enough blocks, or they're not properly named.
 			throw new exception("cs_tabs::load_tabs_template(): failed to retrieve the required block rows");
 		}
-		else
-		{
+		else {
 			//got the rows.  Yay!
 			$this->selectedTabContent = $blockRows['selected_tab'];
 			$this->unselectedTabContent = $blockRows['unselected_tab'];
@@ -104,11 +87,9 @@ class cs_tabs
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function add_tab_array(array $tabs)
-	{
+	public function add_tab_array(array $tabs) {
 		$retval = 0;
-		foreach($tabs as $name=>$url)
-		{
+		foreach($tabs as $name=>$url) {
 			//call an internal method to do it.
 			$retval += $this->add_tab($name, $url);
 		}
@@ -126,8 +107,7 @@ class cs_tabs
 	 * @param $tabName		(str) Sets this tab as selected.
 	 * @return (void)
 	 */
-	public function select_tab($tabName)
-	{
+	public function select_tab($tabName) {
 		$this->selectedTab = $tabName;
 	}//end select_tab()
 	//---------------------------------------------------------------------------------------------
@@ -135,8 +115,7 @@ class cs_tabs
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function add_tab($tabName, $url)
-	{
+	public function add_tab($tabName, $url) {
 		//add it to an array.
 		$this->tabsArr[$tabName] = $url;
 	}//end add_tab()
@@ -148,22 +127,17 @@ class cs_tabs
 	/**
 	 * Call this to add the parsed tabs into the page.
 	 */
-	public function display_tabs()
-	{
-		if(is_array($this->tabsArr) && count($this->tabsArr))
-		{
+	public function display_tabs() {
+		if(is_array($this->tabsArr) && count($this->tabsArr)) {
 			$finalString = "";
 			//loop through the array.
-			foreach($this->tabsArr as $tabName=>$url)
-			{
+			foreach($this->tabsArr as $tabName=>$url) {
 				$useTabContent = $this->unselectedTabContent;
-				if(strtolower($tabName) === strtolower($this->selectedTab))
-				{
+				if(strtolower($tabName) === strtolower($this->selectedTab)) {
 					//it's selected.
 					$useTabContent = $this->selectedTabContent;
 				}
-				$parseThis = array
-				(
+				$parseThis = array(
 					'title'	=> $tabName,
 					'url'	=> $url
 				);
@@ -173,8 +147,7 @@ class cs_tabs
 			//now parse it onto the page.
 			$this->csPageObj->add_template_var($this->templateVar, $finalString);
 		}
-		else
-		{
+		else {
 			//something bombed.
 			throw new exception("cs_tabs::display_tabs(): no tabs to add");
 		}
