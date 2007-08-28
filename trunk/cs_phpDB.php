@@ -177,6 +177,9 @@ class cs_phpDB {
 		if($this->connectionID != -1) {
 			$retval = pg_close($this->connectionID);
 		}
+		else {
+			throw new exception(__METHOD__ .": Failed to close connection: connection is invalid");
+		}
 		
 		return($retval);
 	}//end close()
@@ -223,6 +226,9 @@ class cs_phpDB {
 			else {
 				throw new exception(__METHOD__ .": FATAL ERROR: ". $connectError);
 			}
+		}
+		else {
+			throw new exception(__METHOD__ .": paramsAreSet=(". $this->paramsAreSet ."), isConnected=(". $this->isConnected .")");
 		}
 		
 		return($retval);
