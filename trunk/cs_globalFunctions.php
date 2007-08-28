@@ -23,6 +23,17 @@ class cs_globalFunctions {
 	
 	
 	
+	//=========================================================================
+	/**
+	 * Returns a version string.
+	 */
+	public function get_version($asArray=FALSE) {
+		return('0.6');
+	}//end get_version()
+	//=========================================================================
+	
+	
+	
 	//================================================================================================================
 	/**
 	 * Automatically selects either the header() function, or printing meta-refresh data for redirecting a browser.
