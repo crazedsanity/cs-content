@@ -281,7 +281,7 @@ class cs_phpDB {
 					//If we didn't have an error and we are a select statement, move the pointer to first result
 					$numRows = $this->numRows();
 					if($numRows > 0) {
-						$this->moveFirst();
+						$this->move_first();
 					}
 					$returnVal = $numRows;
 					
