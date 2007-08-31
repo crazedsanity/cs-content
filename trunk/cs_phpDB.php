@@ -829,7 +829,11 @@ class cs_phpDB {
 	 * Commit a transaction.
 	 */
 	function commitTrans() {
-		$retval = $this->exec("COMMIT");
+		$retval = $this->get_transaction_status();
+		if($retval > 1) {
+			$retval = 1;
+		}
+		$this->exec("COMMIT");
 		$this->get_transaction_status();
 		return($retval);
 	}//end commitTrans()
