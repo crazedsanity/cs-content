@@ -380,7 +380,7 @@ class cs_phpDB {
 			$retval = FALSE;
 		}
 		else {
-			$this->setRow($this->numRows()-1);
+			$this->set_row($this->numRows()-1);
 			$retval = TRUE;
 		}
 		
@@ -398,7 +398,7 @@ class cs_phpDB {
 		$this->sanity_check();
 		// If more rows, then advance row pointer
 		if($this->row < $this->numRows()-1) {
-			$this->setRow($this->row +1);
+			$this->set_row($this->row +1);
 			$retval = TRUE;
 		}
 		else {
@@ -418,7 +418,7 @@ class cs_phpDB {
 	function move_previous() {
 		// If not first row, then advance row pointer
 		if ($this->row > 0) {
-			$this->setRow($this->row -1);
+			$this->set_row($this->row -1);
 			return true;
 		}
 		else return false;
@@ -432,7 +432,7 @@ class cs_phpDB {
 	function next_row() {
 		// If more rows, then advance row pointer
 		if ($this->row < $this->numRows()-1) {
-				$this->setRow($this->row +1);
+				$this->set_row($this->row +1);
 				return true;
 		}
 		else return false;
@@ -556,7 +556,7 @@ class cs_phpDB {
 				$newArr[$x] = $tArr;
 				$x++;
 			}
-			while($this->nextRow());
+			while($this->next_row());
 			
 			if($index) {
 				foreach($newArr as $row=>$contents) { //For each of the returned sets of information
@@ -649,7 +649,7 @@ class cs_phpDB {
 			$temp = $this->frow();
 			$retArr[] = $temp[0];
 		}
-		while($this->nextRow());
+		while($this->next_row());
 		
 		return($retArr);
 	}//end farray_numbered()
