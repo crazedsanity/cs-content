@@ -415,24 +415,8 @@ class cs_genericPage {
 			$type = $arrayKeys[0];
 		}
 		
-		$retval = FALSE;
-		//make sure the message type is IN the priority array...
-		if(!in_array($type, array_keys($priorityArr))) {
-			//invalid type.
-			$retval = FALSE;
-		} elseif($_SESSION['message']) {
-			//there's already a message... check if the new one should overwrite the existing.
-			if((!$overwriteSame) AND ($priorityArr[$_SESSION['message']['type']] == $priorityArr[$type])) {
-				//no overwriting.
-				$retval = 0;
-			} elseif($priorityArr[$_SESSION['message']['type']] <= $priorityArr[$type]) {
-				// the existing message is less important.  Overwrite it.
-				unset($_SESSION['message']);
-			}
-		}
-	
 		//Create the array.
-		$_SESSION["message"] = array(
+		$myArr = array(
 			"title"		=> $title,
 			"message"	=> $message,
 			"linkURL"	=> $linkURL,
@@ -441,7 +425,28 @@ class cs_genericPage {
 			"priority"	=> $priority
 			
 		);
-	
+		
+		//make sure the message type is IN the priority array...
+		if(!in_array($type, array_keys($priorityArr))) {
+			//invalid type.
+			$retval = FALSE;
+		} elseif($_SESSION['message']) {
+			//there's already a message... check if the new one should overwrite the existing.
+			if((!$overwriteSame) AND ($priorityArr[$_SESSION['message']['type']] == $priorityArr[$type])) {
+				//no overwriting.
+				$retval = FALSE;
+			} elseif($priorityArr[$_SESSION['message']['type']] <= $priorityArr[$type]) {
+				// the existing message is less important.  Overwrite it.
+				$_SESSION['message'] = $myArr;
+			}
+		}
+		else {
+			$_SESSION['message'] = $myArr;
+			$retval = TRUE;
+		}
+		
+		return($retval);
+		
 	} // end of set_message()
 	//---------------------------------------------------------------------------------------------
 	
