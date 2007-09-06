@@ -954,6 +954,19 @@ class cs_phpDB {
 	//=========================================================================
 	
 	
+	
+	//=========================================================================
+	public function is_connected() {
+		$retval = FALSE;
+		if(is_resource($this->connectionID) && $this->isConnected === TRUE) {
+			$retval = TRUE;
+		}
+		
+		return($retval);
+	}//end is_connected()
+	//=========================================================================
+	
+	
 } // end class phpDB
 
 ?>
