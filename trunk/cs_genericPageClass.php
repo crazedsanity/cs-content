@@ -259,25 +259,22 @@ class cs_genericPage {
 		$this->templateObj->set_var($this->templateVars);
 		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
 		
-		//TODO: fix so setting $stripUndefVars to 0 puts all the template vars in & leaves the undefined ones alone (instead of not doing anything with vars).
 		if($stripUndefVars) {
-			preg_match_all('/\{.*?\}/', $this->templateObj->varvals[out], $tags);
-			$tags = $tags[0];
-			
-			//TODO: figure out why this works when running it twice.
-			foreach($tags as $key=>$str) {
-				$str2 = str_replace("{", "", $str);
-				$str2 = str_replace("}", "", $str2);
-				if(!$this->templateVars[$str2]) {
-					$this->templateObj->varvals[out] = str_replace($str, "$debug", $this->templateObj->varvals[out]);
+			$numLoops = 0;
+			while(preg_match_all('/\{.*?\}/', $this->templateObj->varvals[out], $tags) && $numLoops < 50) {
+				$tags = $tags[0];
+				
+				//TODO: figure out why this works when running it twice.
+				foreach($tags as $key=>$str) {
+					$str2 = str_replace("{", "", $str);
+					$str2 = str_replace("}", "", $str2);
+					if(!$this->templateVars[$str2] && $stripUndefVars) {
+						//TODO: set an internal pointer or something to use here, so they can see what was missed.
+						$this->templateObj->varvals[out] = str_replace($str, '', $this->templateObj->varvals[out]);
+					}
 				}
-			}
-			foreach($tags as $key=>$str) {
-				$str2 = str_replace("{", "", $str);
-				$str2 = str_replace("}", "", $str2);
-				if(!$this->templateVars[$str2]) {
-					$this->templateObj->varvals[out] = str_replace($str, "$debug", $this->templateObj->varvals[out]);
-				}
+				$this->templateObj->parse("out", "out");
+				$numLoops++;
 			}
 		}
 		$this->templateObj->pparse("out","out"); //parse the main page 
@@ -584,13 +581,15 @@ class cs_genericPage {
 		
 		$useTheseBlockRows = $rowDefs['ordered'];
 		$retval = array();
-		foreach($useTheseBlockRows as $blockRowName)
-		{
-			if(!in_array($blockRowName, $exceptionArr))
+		if(is_array($useTheseBlockRows)) {
+			foreach($useTheseBlockRows as $blockRowName)
 			{
-				//remove the block row.
-				$rowData = $this->set_block_row($templateVar, $blockRowName);
-				$retval[$blockRowName] = $rowData;
+				if(!in_array($blockRowName, $exceptionArr))
+				{
+					//remove the block row.
+					$rowData = $this->set_block_row($templateVar, $blockRowName);
+					$retval[$blockRowName] = $rowData;
+				}
 			}
 		}
 		
