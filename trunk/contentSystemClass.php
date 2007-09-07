@@ -302,11 +302,16 @@ class contentSystem {
 			}
 			
 			//check for the file & the directory...
-			$lsDir  = $this->fileSystemObj->ls("$finalSection/index.content.tmpl");
+			$indexFilename = $finalSection ."/index.content.tmpl";
+			if(!strlen($finalSection)) {
+				$indexFilename = 'index.content.tmpl';
+			}
+			
+			$lsDir  = $this->fileSystemObj->ls($indexFilename);
 			$lsFile = $this->fileSystemObj->ls("$finalSection.content.tmpl");
 			if(is_array(array_values($lsDir))) {
 				//it's the dir. 
-				$myIndex = "$finalSection/index.content.tmpl";
+				$myIndex = $indexFilename;
 			} elseif(is_array(array_values($lsFile))) {
 				//it's the file (no dir, or dir w/o index)
 				$myIndex = $finalSection.content.tmpl;
@@ -364,7 +369,7 @@ class contentSystem {
 				}
 			}
 			if(!$this->fileSystemObj->cd($value)) {
-				$this->gfObj->debug_print("load_page_templates(): wasn't able to change dir to $value");
+				$this->gfObj->debug_print("load_page_templates(): wasn't able to change dir to $value, cwd=(". $this->fileSystemObj->cwd .")");
 				break;
 			}
 		}
