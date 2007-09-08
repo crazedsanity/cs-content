@@ -270,7 +270,7 @@ class contentSystem {
 			$this->fileSystemObj->cd('/');
 		} else {
 			//couldn't find the templates directory... ick.
-			$this->die_gracefully("prepare() was unable to find the templates directory, or non-valid page [". $this->validate_page() ."]");
+			$this->die_gracefully(__METHOD__ .": unable to find the templates directory, or non-valid page [". $this->validate_page() ."]");
 		}
 	}//end prepare()
 	//------------------------------------------------------------------------
@@ -330,7 +330,7 @@ class contentSystem {
 				$valid = TRUE;
 				$this->fileSystemObj->cd('/templates');
 			} else {
-				$this->reason = "validate_page() couldn't find page template for (". $this->section .", final=[$finalSection])...";
+				$this->reason = __METHOD__ .": couldn't find page template for (". $this->section .", final=[$finalSection])...";
 			}
 		} else {
 			//just the base template.  Make sure it's good.
@@ -341,7 +341,7 @@ class contentSystem {
 				$valid = TRUE;
 				$this->finalSection = $this->baseDir;
 			} else {
-				$this->reason = "validate_page() couldn't find base template.";
+				$this->reason = __METHOD__ .": couldn't find base template.";
 			}
 		}
 		return($valid);
@@ -369,7 +369,8 @@ class contentSystem {
 				}
 			}
 			if(!$this->fileSystemObj->cd($value)) {
-				$this->gfObj->debug_print("load_page_templates(): wasn't able to change dir to $value, cwd=(". $this->fileSystemObj->cwd .")");
+				$this->gfObj->debug_print(__METHOD__ .": wasn't able to change dir to $value, cwd=(". $this->fileSystemObj->cwd .")");
+				$this->gfObj->debug_print($mySectionArr);
 				break;
 			}
 		}
@@ -588,7 +589,7 @@ class contentSystem {
 		}
 		else {
 			//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
-			$this->gfObj->debug_print("something broke. \nDETAILS::: $details" .
+			$this->gfObj->debug_print(__METHOD__ .": something broke. \nDETAILS::: $details" .
 					"\nREASON::: ". $this->reason);
 			exit;
 		}
