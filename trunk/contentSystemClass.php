@@ -369,8 +369,7 @@ class contentSystem {
 				}
 			}
 			if(!$this->fileSystemObj->cd($value)) {
-				$this->gfObj->debug_print(__METHOD__ .": wasn't able to change dir to $value, cwd=(". $this->fileSystemObj->cwd .")");
-				$this->gfObj->debug_print($mySectionArr);
+				$this->gfObj->debug_print(__METHOD__ .": wasn't able to change dir to $value, cwd=(". $this->fileSystemObj->cwd .")... BUG?");
 				break;
 			}
 		}
