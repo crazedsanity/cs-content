@@ -42,7 +42,6 @@ class cs_tabs {
 		else {
 			//set the internal var.
 			$this->templateVar = $templateVar;
-			$this->load_tabs_template();
 		}
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
@@ -129,6 +128,7 @@ class cs_tabs {
 	 */
 	public function display_tabs() {
 		if(is_array($this->tabsArr) && count($this->tabsArr)) {
+			$this->load_tabs_template();
 			$finalString = "";
 			//loop through the array.
 			foreach($this->tabsArr as $tabName=>$url) {
