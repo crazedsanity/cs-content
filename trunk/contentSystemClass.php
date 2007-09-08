@@ -94,6 +94,7 @@ class contentSystem {
 	protected $includesList		= array();
 	protected $templateObj		= NULL;
 	protected $gfObj			= NULL;
+	protected $tabs				= NULL;
 	
 	protected $finalSection;
 	
@@ -146,6 +147,9 @@ class contentSystem {
 		//create a fileSystem object.
 		$this->fileSystemObj = new cs_fileSystemClass();
 		
+		//create a tabs object, in case they want to load tabs on the page.
+		$this->tabs = new cs_tabs($this->templateObj);
+		
 		//check versions, make sure they're all the same.
 		$myVersion = $this->get_version();
 		if($this->templateObj->get_version() !== $myVersion) {
@@ -156,6 +160,9 @@ class contentSystem {
 		}
 		if($this->gfObj->get_version() !== $myVersion) {
 			throw new exception(__METHOD__ .": ". get_class($this->gfObj) ." has mismatched version (". $this->gfObj->get_version() ." does not equal ". $myVersion .")");
+		}
+		if($this->tabs->get_version() !== $myVersion) {
+			throw new exception(__METHOD__ .": ". get_class($this->tabs) ." has mismatched version (". $this->tabs->get_version() ." does not equal ". $myVersion .")");
 		}
 		
 		//split apart the section so we can do stuff with it later.
@@ -407,12 +414,12 @@ class contentSystem {
 	 * loads templates for the main section they're on.
 	 */
 	private function load_main_templates() {
+		$this->fileSystemObj->cd('/templates');
 		//check to see if the present section is valid.
-		$myFile = $this->baseDir .'/index.content.tmpl';
 		$this->fileSystemObj->cd($this->baseDir);
 		$dirContents = $this->arrange_directory_contents('name', 'section');
 		if(is_array($dirContents)) {
-			foreach($dirContents as $mySection => $subArr) {#$templateFilename) {
+			foreach($dirContents as $mySection => $subArr) {
 				foreach($subArr as $subIndex=>$templateFilename) {
 					$this->templateList[$mySection] = $templateFilename;
 				}
@@ -428,6 +435,8 @@ class contentSystem {
 	 * Loads any shared templates: these can be overwritten later.
 	 */
 	private function load_shared_templates() {
+		
+		$this->fileSystemObj->cd('/templates');
 		
 		//pull a list of the files.
 		$dirContents = $this->arrange_directory_contents();
