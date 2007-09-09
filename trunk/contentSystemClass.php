@@ -459,18 +459,20 @@ class contentSystem {
 	private function arrange_directory_contents($primaryIndex='section', $secondaryIndex='name') {
 		$directoryInfo = $this->fileSystemObj->ls();
 		$arrangedArr = array();
-		foreach($directoryInfo as $index=>$data) {
-			$myType = $data['type'];
-			if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
-				$filename = $this->gfObj->create_list($this->fileSystemObj->cwd, $index, '/');
-				$filename = preg_replace('/^\/templates/', '', $filename);
-				//call another method to rip the filename apart properly, then arrange things as needed.
-				$pieces = $this->parse_filename($index);
-				$myPriIndex = $pieces[$primaryIndex];
-				$mySecIndex = $pieces[$secondaryIndex];
-				if(strlen($myPriIndex) && strlen($mySecIndex)) {
-					//only load if it's got BOTH parts of the filename.
-					$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
+		if(is_array($directoryInfo)) {
+			foreach($directoryInfo as $index=>$data) {
+				$myType = $data['type'];
+				if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
+					$filename = $this->gfObj->create_list($this->fileSystemObj->cwd, $index, '/');
+					$filename = preg_replace('/^\/templates/', '', $filename);
+					//call another method to rip the filename apart properly, then arrange things as needed.
+					$pieces = $this->parse_filename($index);
+					$myPriIndex = $pieces[$primaryIndex];
+					$mySecIndex = $pieces[$secondaryIndex];
+					if(strlen($myPriIndex) && strlen($mySecIndex)) {
+						//only load if it's got BOTH parts of the filename.
+						$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
+					}
 				}
 			}
 		}
