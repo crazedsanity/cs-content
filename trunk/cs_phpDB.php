@@ -81,6 +81,9 @@ class cs_phpDB {
 	/** Internal check to ensure the object has been properly created. */
 	protected $isInitialized=FALSE;
 	
+	/** List of prepared statements, indexed off the name, with the sub-array being fieldname=>dataType. */
+	protected $preparedStatements = array();
+	
 	
 	////////////////////////////////////////////
 	// Core primary connection/database function
@@ -964,6 +967,67 @@ class cs_phpDB {
 		
 		return($retval);
 	}//end is_connected()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Create a prepared statement.
+	 */
+	public function create_prepared_statement($planName,array $fieldToType, $statement) {
+		$retval = FALSE;
+		//store the mappings.
+		$this->preparedStatements[$planName] = $fieldToType;
+		
+		//TODO: check that the string in "$statement" has the same number of "${n}" as are in "$fieldToType".
+		
+		$dataTypeString = "";
+		foreach($fieldToType as $field => $type) {
+			$dataTypeString = $this->gfObj->create_list($dataTypeString, $type, ", ");
+		}
+		
+		$sql = "PREPARE ". $planName ."(". $dataTypeString .") AS ". $statement;
+		
+		$myNumrows = $this->exec($sql);
+		$myDberror = $this->errorMsg();
+		
+		if(!strlen($myDberror)) {
+			$retval = TRUE;
+		}
+		else {
+			throw new exception(__METHOD__ .": failed to create prepared statement '". $planName ."'... dberror::: ". $myDberror ."\n\nSQL::: ". $sql);
+		}
+		
+		return($retval);
+	}//end create_prepared_statement()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Run a statement prepared by this object.
+	 * 
+	 * NOTE: determination of rows affected (numAffected) vs. rows returned (numRows) 
+	 * must be done by the user via the referenced methods.
+	 */
+	public function run_prepared_statement($name, array $data) {
+		$retval = FALSE;
+		if(is_array($this->preparedStatements[$name]) && count($data) == count($this->preparedStatements[$name])) {
+			$this->result = pg_execute($this->connectionID, $name, $data);
+			$dberror = $this->errorMsg();
+			
+			if(!strlen($dberror)) {
+				$retval = TRUE;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid statement name (". $name ."), or incorrect number of elements");
+		}
+		
+		return($retval);
+	}//end run_prepared_statement()
 	//=========================================================================
 	
 	
