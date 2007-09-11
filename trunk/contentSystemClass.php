@@ -124,7 +124,7 @@ class contentSystem {
 	 * Returns a version string.
 	 */
 	public function get_version() {
-		return('0.7.1');
+		return('0.8.0');
 	}//end get_version()
 	//------------------------------------------------------------------------
 	
