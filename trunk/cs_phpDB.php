@@ -84,6 +84,8 @@ class cs_phpDB {
 	/** List of prepared statements, indexed off the name, with the sub-array being fieldname=>dataType. */
 	protected $preparedStatements = array();
 	
+	/** Set to TRUE to save all queries into an array. */
+	protected $useQueryList=FALSE;
 	
 	////////////////////////////////////////////
 	// Core primary connection/database function
@@ -194,7 +196,7 @@ class cs_phpDB {
 	/**
 	 * Connect to the database
 	 */
-	function connect(array $dbParams=NULL){
+	function connect(array $dbParams=NULL, $forceNewConnection=FALSE){
 		$this->sanity_check();
 		$retval = NULL;
 		if(is_array($dbParams)) {
@@ -216,7 +218,12 @@ class cs_phpDB {
 			
 			//start output buffer for displaying error.
 			ob_start();
-			$connID =pg_connect($connStr);
+			if($forceNewConnection) {
+				$connID = pg_connect($connStr, PGSQL_CONNECT_FORCE_NEW);
+			}
+			else {
+				$connID =pg_connect($connStr);
+			}
 			$connectError = ob_get_contents();
 			ob_end_clean();
 			
@@ -253,31 +260,17 @@ class cs_phpDB {
 	/** 
 	 * Run sql queries
 	 * 
-	 * TODO: implement $debug, $logfile, and $useQueryList as internal vars
-	 * TODO: use cs_fileSystemClass to handle creating & writing to the log.
+	 * TODO: re-implement query logging (setting debug, logfilename, etc).
 	 */
-	function exec($query, $debug=0, $logfile="dbqueries.log",$useQueryList=FALSE) {
+	function exec($query) {
 		$this->lastQuery = $query;
-		if($useQueryList) {
+		if($this->useQueryList) {
 			$this->queryList[] = $query;
 		}
 		$returnVal = false;
 		
 		if(($this->get_transaction_status() != -1) && ($this->connectionID != -1)) {
-			$beginTime = microtime();
 			$this->result = @pg_query($this->connectionID, $query);
-			$endTime = microtime();
-			$totalTime = $endTime - $beginTime; //Total time for this query to return
-			
-			//debug is used for logging all queries to a file... useful for easily spotting
-			//	over-used queries, et
-			if($debug) {
-	  			//log the query...
-				$fp = fopen($GLOBALS['SITE_ROOT'] . "/logs/$logfile", "a");
-				fwrite($fp, $GLOBALS['PHP_SELF'] . ": ".$this->databaseName." : $query - took $totalTime\n=====================================\n");
-				fclose($fp);
-				//done logging...
-			}
 
 			if($this->result !== false) {
 				if (eregi("^[[:space:]]*select", $query)) {
@@ -1028,6 +1021,72 @@ class cs_phpDB {
 		
 		return($retval);
 	}//end run_prepared_statement()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Starts a copy command.
+	 * 
+	 * TODO: implement safeguards so they can only put a line until the copy is ended.
+	 */
+	public function start_copy($tableName, array $fields) {
+		$retval = FALSE;
+		$copyStmt = "COPY ". $tableName ." (". $this->gfObj->string_from_array($fields, NULL, ", ") . ") FROM stdin;";
+		$this->exec($copyStmt);
+		if(!strlen($this->errorMsg())) {
+			//TODO: set something here so that NOTHING ELSE can be done except put_line() and end_copy().
+			$this->copyInProgress = TRUE;
+			$retval = TRUE;
+		}
+		else {
+			$this->end_copy();
+			$retval = FALSE;
+		}
+		
+		return($retval);
+	}//end start_copy()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Used to send a line to the COPY in progress (only if it was initiated by 
+	 * the internal start_copy() method).
+	 * 
+	 * NOTE: the "end-of-copy" line, '\.', should NEVER be sent here.
+	 */
+	public function put_line($line) {
+		$retval = FALSE;
+		if($this->copyInProgress === TRUE) {
+			$myLine = trim($line);
+			$myLine .= "\n";
+			
+			$retval = pg_put_line($this->connectionID, $myLine);
+		}
+		else {
+			throw new exception(__METHOD__ .": cannot send line if no copy is in progress");
+		}
+		
+		return($retval);
+	}//end put_line()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function end_copy() {
+		if($this->copyInProgress === TRUE) {
+			//send the end-of-copy line...
+			$this->put_line("\\.\n");
+		}
+		
+		$retval = pg_end_copy($this->connectionID);
+		
+		return($retval);
+	}//end end_copy()
 	//=========================================================================
 	
 	
