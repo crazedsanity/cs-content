@@ -100,20 +100,26 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * The CONSTRUCTOR.  Duh.
 	 */
-	public function __construct() {
-		$this->get_version();
-		$this->get_project();
-		//make a cs_globalFunctions{} object.
-		$this->gfObj = new cs_globalFunctions();
-		
-		//setup the section stuff...
-		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
-		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
-		
-		//figure out the section & subsection stuff.
-		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
-		
-		$this->initialize_locals();
+	public function __construct($testOnly=FALSE) {
+		if($testOnly === 'unit_test') {
+			//It's just a test, don't do anything we might regret later.
+			$this->isTest = TRUE;
+		}
+		else {
+			$this->get_version();
+			$this->get_project();
+			//make a cs_globalFunctions{} object.
+			$this->gfObj = new cs_globalFunctions();
+			
+			//setup the section stuff...
+			$repArr = array($_SERVER['SCRIPT_NAME'], "/");
+			$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
+			
+			//figure out the section & subsection stuff.
+			$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
+			
+			$this->initialize_locals();
+		}
 	}//end __construct()
 	//------------------------------------------------------------------------
 	

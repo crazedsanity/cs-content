@@ -12,6 +12,8 @@
 
 abstract class cs_versionAbstract {
 	
+	public $isTest = FALSE;
+	
 	abstract public function __construct();
 	
 	
@@ -44,7 +46,6 @@ abstract class cs_versionAbstract {
 			throw new exception(__METHOD__ .": failed to retrieve version information");
 		}
 		
-		debug_print(__METHOD__ .": ". $retval);
 		return($retval);
 	}//end get_version()
 	//=========================================================================
@@ -76,7 +77,6 @@ abstract class cs_versionAbstract {
 			throw new exception(__METHOD__ .": failed to retrieve project information");
 		}
 		
-		debug_print(__METHOD__ .": ". $retval);
 		return($retval);
 	}//end get_project()
 	//=========================================================================
