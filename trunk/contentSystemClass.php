@@ -62,24 +62,22 @@
  * 													|--> /includes/content/members/shared.inc
  * 													|--> /includes/content/members/test.inc
  */
-//
+
+//TODO: remove this terrible little hack.
 if(!isset($GLOBALS['SITE_ROOT'])) {
 	//define where our scripts are located.
 	$GLOBALS['SITE_ROOT'] = $_SERVER['DOCUMENT_ROOT'];
 	$GLOBALS['SITE_ROOT'] = str_replace("/public_html", "", $GLOBALS['SITE_ROOT']);
 }
 
-//automatically determine where this file is, & use that directory to include the other files.
-$thisFile = __FILE__;
-$myIncludesDir = dirname(__FILE__);
+require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
+require_once(dirname(__FILE__) ."/cs_fileSystemClass.php");
+require_once(dirname(__FILE__) ."/cs_sessionClass.php");
+require_once(dirname(__FILE__) ."/cs_genericPageClass.php");
+require_once(dirname(__FILE__) ."/cs_tabsClass.php");
+require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
-require_once($myIncludesDir ."/cs_globalFunctions.php");
-require_once($myIncludesDir ."/cs_fileSystemClass.php");
-require_once($myIncludesDir ."/cs_sessionClass.php");
-require_once($myIncludesDir ."/cs_genericPageClass.php");
-require_once($myIncludesDir ."/cs_tabsClass.php");
-
-class contentSystem {
+class contentSystem extends cs_versionAbstract {
 	
 	protected $baseDir			= NULL;			//base directory for templates & includes.			
 	protected $section			= NULL;			//section string, derived from the URL.		
@@ -103,6 +101,8 @@ class contentSystem {
 	 * The CONSTRUCTOR.  Duh.
 	 */
 	public function __construct() {
+		$this->get_version();
+		$this->get_project();
 		//make a cs_globalFunctions{} object.
 		$this->gfObj = new cs_globalFunctions();
 		
@@ -115,17 +115,6 @@ class contentSystem {
 		
 		$this->initialize_locals();
 	}//end __construct()
-	//------------------------------------------------------------------------
-	
-	
-	
-	//------------------------------------------------------------------------
-	/**
-	 * Returns a version string.
-	 */
-	public function get_version() {
-		return('0.8.0');
-	}//end get_version()
 	//------------------------------------------------------------------------
 	
 	

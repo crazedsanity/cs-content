@@ -1,6 +1,8 @@
 <?php
 
-class cs_globalFunctions {
+require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+
+class cs_globalFunctions extends cs_versionAbstract {
 	
 	
 	/* DEBUG PRINT OPTIONS */
@@ -19,17 +21,6 @@ class cs_globalFunctions {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
 	}//end __construct()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Returns a version string.
-	 */
-	public function get_version($asArray=FALSE) {
-		return('0.8.0');
-	}//end get_version()
 	//=========================================================================
 	
 	

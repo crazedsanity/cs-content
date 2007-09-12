@@ -7,9 +7,10 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-require_once("template.inc");
+require_once(dirname(__FILE__) ."/template.inc");
+require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
-class cs_genericPage {
+class cs_genericPage extends cs_versionAbstract {
 	var $sessionObj;					//session_class object to manage our sessin variables
 	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
@@ -38,17 +39,6 @@ class cs_genericPage {
 		
 		define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
 	}//end __construct()
-	//---------------------------------------------------------------------------------------------
-	
-	
-	
-	//---------------------------------------------------------------------------------------------
-	/**
-	 * Returns a version string.
-	 */
-	public function get_version($asArray=FALSE) {
-		return('0.8.0');
-	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 	
 	

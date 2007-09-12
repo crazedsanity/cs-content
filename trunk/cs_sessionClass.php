@@ -7,7 +7,10 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-class cs_session{
+
+require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+
+class cs_session extends cs_versionAbstract {
 
 	protected $db;
 	public $uid;
@@ -33,17 +36,6 @@ class cs_session{
 		$this->sid = session_id();
 		
 	}//end __construct()
-	//---------------------------------------------------------------------------------------------
-	
-	
-	
-	//---------------------------------------------------------------------------------------------
-	/**
-	 * Returns a version string.
-	 */
-	public function get_version($asArray=FALSE) {
-		return('0.8.0');
-	}//end get_version()
 	//---------------------------------------------------------------------------------------------
 
 

@@ -24,8 +24,9 @@
 //
 ///////////////////////
 
+require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
-class cs_phpDB {
+class cs_phpDB extends cs_versionAbstract {
 
 	/** Internal result set pointer. */
 	protected $result = NULL;
@@ -100,17 +101,6 @@ class cs_phpDB {
 		
 		$this->isInitialized = TRUE;
 	}//end __construct()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Returns a version string.
-	 */
-	public function get_version($asArray=FALSE) {
-		return('0.8.0');
-	}//end get_version()
 	//=========================================================================
 	
 	

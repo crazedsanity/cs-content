@@ -10,8 +10,9 @@
  */
 
 require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
+require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
-class cs_fileSystemClass {
+class cs_fileSystemClass extends cs_versionAbstract {
 
 	public $root;		//actual root directory.
 	public $cwd;		//current directory; relative to $this->root
@@ -66,17 +67,6 @@ class cs_fileSystemClass {
 		}
 		
 	}//end __construct()
-	//========================================================================================
-	
-	
-	
-	//========================================================================================
-	/**
-	 * Returns a version string.
-	 */
-	public function get_version() {
-		return('0.8.0');
-	}//end get_version()
 	//========================================================================================
 	
 	
