@@ -29,10 +29,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 	/**
 	 * Automatically selects either the header() function, or printing meta-refresh data for redirecting a browser.
 	 */
-	public function conditional_header($url)
-	{
-		if(headers_sent())
-		{
+	public function conditional_header($url) {
+		if(headers_sent()) {
 			//headers sent.  Use the meta redirect.
 			print "
 			<HTML>
@@ -44,8 +42,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 			</HTML>
 			";
 		}
-		else 
-		{
+		else {
 			header("location:$url");
 		}
 	}//end conditional_header()
@@ -90,7 +87,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 						if(($removeEmptyVals) && (strlen($array[$myIndex]) == 0)) {
 							//remove the index.
 							unset($array[$myIndex]);
-						} else {
+						}
+						else {
 							//now format it properly.
 							$array[$myIndex] = $this->cleanString($array[$myIndex], $myCleanStringArg);
 						}
@@ -180,7 +178,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 					if(is_array($value)) {
 						//doing tricksie things!!!
 						$retval = $this->create_list($retval, $field ." IN (". $this->string_from_array($value) .")", " $delimiter ");
-					} else {
+					}
+					else {
 						//if there's already an operator ($separator), don't specify one.
 						if(preg_match('/^[\(<=>]/', $value)) {
 							$separator = NULL;
@@ -189,8 +188,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 							//make sure it doesn't have crap in it...
 							$value = $this->cleanString($value, "sql");	
 						}
-						if(!is_numeric($value) && isset($separator))
-						{
+						if(!is_numeric($value) && isset($separator)) {
 							$value = "'". $value ."'";	
 						}
 						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ");
@@ -256,7 +254,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 				}
 				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 			}
-		} else {
+		}
+		else {
 			//not an array.
 			$retval = 0;
 		}
@@ -277,11 +276,9 @@ class cs_globalFunctions extends cs_versionAbstract {
 	 * 
 	 * @return (string)			Cleaned data.
 	 */
-	function cleanString($cleanThis=NULL, $cleanType="all",$sqlQuotes=0)
-	{
+	function cleanString($cleanThis=NULL, $cleanType="all",$sqlQuotes=0) {
 		$cleanType = strtolower($cleanType);
-		switch ($cleanType)
-		{
+		switch ($cleanType) {
 			case "none":
 				//nothing to see here (no cleaning wanted/needed).  Move along.
 				$sqlQuotes = 0;
@@ -431,8 +428,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 			case "varchar":
 				$cleanThis=$this->cleanString($cleanThis,"query");
 				$cleanThis="'" . $cleanThis . "'";
-				if($cleanThis == "''")
-				{
+				if($cleanThis == "''") {
 					$cleanThis="NULL";	
 				}
 			break;
@@ -473,7 +469,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 	public function create_list($string=NULL, $addThis=NULL, $delimiter=", ") {
 		if($string) {
 			$retVal = $string . $delimiter . $addThis;
-		} else {
+		}
+		else {
 			$retVal = $addThis;
 		}
 	
@@ -512,7 +509,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(!$_SERVER['SERVER_PROTOCOL']) {
 			$output = strip_tags($output);
 			$hrString = "\n***************************************************************\n";
-		} else {
+		}
+		else {
 			$hrString = "<hr>";
 		}
 		if($removeHR) {
@@ -530,8 +528,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	
 	
 	//================================================================================================================
-	function swapValue(&$value, $c1, $c2)
-	{
+	function swapValue(&$value, $c1, $c2) {
 		if(!$value) {
 			$value = $c1;
 		}
@@ -540,7 +537,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 		/* choose the next color */
 		if($value == "$c1") {
 			$value = "$c2";
-		} else {
+		}
+		else {
 			$value = "$c1";
 		}
 	
@@ -600,11 +598,13 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if($strLength <= $maxLength) {
 			//no need to truncate.
 			$retval = $string;
-		} else {
+		}
+		else {
 			//actually needs to be truncated...
 			if($strict) {
 				$trueMaxLength = $maxLength - strlen($endString);
-			} else {
+			}
+			else {
 				$trueMaxLength = $maxLength;
 			}
 			
