@@ -29,21 +29,35 @@ class cs_globalFunctions extends cs_versionAbstract {
 	/**
 	 * Automatically selects either the header() function, or printing meta-refresh data for redirecting a browser.
 	 */
-	public function conditional_header($url) {
-		if(headers_sent()) {
-			//headers sent.  Use the meta redirect.
-			print "
-			<HTML>
-			<HEAD>
-			<TITLE>Redirect Page</TITLE>
-			<META HTTP-EQUIV='refresh' content='0; URL=$url'>
-			</HEAD>
-			<a href=\"$url\"></a>
-			</HTML>
-			";
+	public function conditional_header($url, $exitAfter=TRUE, $permRedir=FALSE) {
+		
+		if(!strlen($url)) {
+			throw new exception(__METHOD__ .": failed to specify URL (". $url .")");
 		}
 		else {
-			header("location:$url");
+			if(headers_sent()) {
+				//headers sent.  Use the meta redirect.
+				print "
+				<HTML>
+				<HEAD>
+				<TITLE>Redirect Page</TITLE>
+				<META HTTP-EQUIV='refresh' content='0; URL=$url'>
+				</HEAD>
+				<a href=\"$url\"></a>
+				</HTML>
+				";
+			}
+			else {
+				if($permRedir) {
+					//NOTE: can't do much for permanent redirects if headers have already been sent.
+					header("HTTP/1.1 301 Moved Permanently");
+				}
+				header("location:$url");
+			}
+		}
+		
+		if($exitAfter) {
+			exit;
 		}
 	}//end conditional_header()
 	//================================================================================================================
