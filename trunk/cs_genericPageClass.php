@@ -21,6 +21,7 @@ class cs_genericPage extends cs_versionAbstract {
 	private $siteRoot;
 	private $allowRedirect;
 	
+	private $showEditableLink = FALSE;
 	
 	//---------------------------------------------------------------------------------------------
 	/**
@@ -38,6 +39,11 @@ class cs_genericPage extends cs_versionAbstract {
 		$this->gfObj = new cs_globalFunctions;
 		
 		define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
+		
+		//TODO: if the end page doesn't want to allow the "edit" links, will this still work?
+		if(defined("CS_CONTENT_MODIFIABLE") && constant("CS_CONTENT_MODIFIABLE") === TRUE) {
+			$this->showEditableLink = TRUE;
+		}
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
 	
@@ -153,7 +159,13 @@ class cs_genericPage extends cs_versionAbstract {
 	 * TODO: check if $fileName exists before blindly trying to parse it.
 	 */
 	public function add_template_file($handleName, $fileName){
-		$this->add_template_var($handleName, $this->file_to_string($fileName));
+		if($this->showEditableLink) {
+			$prefix = '[<a href="#NULL_page='. $fileName .'"><font color="red"><b>Edit "'. $handleName .'"</b></font></a>]<BR>';
+			$this->add_template_var($handleName, $prefix .$this->file_to_string($fileName));
+		}
+		else {
+			$this->add_template_var($handleName, $this->file_to_string($fileName));
+		}
 	}//end add_template_file()
 	//---------------------------------------------------------------------------------------------
 
