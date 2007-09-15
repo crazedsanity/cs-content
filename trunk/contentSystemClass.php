@@ -629,7 +629,7 @@ class contentSystem extends cs_versionAbstract {
 		
 		foreach($this->templateList as $mySection => $myTmpl) {
 			$myTmpl = preg_replace("/\/\//", "/", $myTmpl);
-			$page->add_template_var($mySection, $page->file_to_string($myTmpl));
+			$page->add_template_file($mySection, $myTmpl);
 		}
 		unset($mySection);
 		unset($myTmpl);
