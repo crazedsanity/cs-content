@@ -11,7 +11,6 @@ require_once(dirname(__FILE__) ."/template.inc");
 require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
 class cs_genericPage extends cs_versionAbstract {
-	var $sessionObj;					//session_class object to manage our sessin variables
 	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
 	var $mainTemplate;				//the default layout of the site
@@ -76,15 +75,10 @@ class cs_genericPage extends cs_versionAbstract {
 		//build a new instance of the template library (from PHPLib)
 		$this->templateObj=new Template($this->tmplDir,"keep"); //initialize a new template parser
 
-		//Create a new cs_session{} object: need the session primarily for set_message() functionality.
-		$this->sessionObj = new cs_session();		//initialize a new session object
-		$this->uid = $this->sessionObj->uid;
-		
 		if(preg_match('/^\//', $mainTemplateFile)) {
 			$mainTemplateFile = $this->tmplDir ."/". $mainTemplateFile;
 		}
 		$this->mainTemplate=$mainTemplateFile; //load the default layout
-		$this->add_template_var(CS-CONTENT_SESSION_NAME, $this->sessionObj->sid);
 	}//end initialize_locals()
 	//---------------------------------------------------------------------------------------------
 	
@@ -293,23 +287,10 @@ class cs_genericPage extends cs_versionAbstract {
 	public function process_set_message() {
 		//if there's not a message set, skip.
 		$errorBox = $this->file_to_string("system/message_box.tmpl");
-		if($this->sessionObj->sid_check == "-1") {
-			//need to set a message saying the session has expired.  No session is 
-			//	available anymore, so we have to do this manually... GRAB THE ASTROGLIDE!!!
-			$this->change_content($errorBox);
-
-			//setup the message...
-			$msg = "For your protection, your session has been expired.<BR>\nPlease re-login.<BR>\n";
-
-			//drop all the proper variables into place.
-			$this->add_template_var("title", "Session Expired");
-			$this->add_template_var("message", $msg);
-			$this->add_template_var("redirect", "<a href='login.php'>Solve this problem.</a>");
-			$this->add_template_var("messageType", "fatal");
-		} elseif(is_array($_SESSION['message'])) {
+		if(is_array($_SESSION['message'])) {
 			//let's make sure the "type" value is *lowercase*.
 			$_SESSION['message']['type'] = strtolower($_SESSION['message']['type']);
-
+			
 			//WARNING::: if you give it the wrong type, it'll STILL be parsed. Otherwise 
 			//	this has to match set_message() FAR too closely. And it's a pain.
 			$_SESSION['message']['messageType'] = $_SESSION['message']['type'];
@@ -321,11 +302,11 @@ class cs_genericPage extends cs_versionAbstract {
 				//Non-fatal: put it into a template var.
 				$this->add_template_var("error_msg", $errorBox);
 			}
-		} 
-
-		//now that we're done displaying the message, let's get it out of the session (otherwise
-		//	they'll never get past this point).
-		unset($_SESSION['message']);
+	
+			//now that we're done displaying the message, let's get it out of the session (otherwise
+			//	they'll never get past this point).
+			unset($_SESSION['message']);
+		}
 	}//end of process_set_message()
 	//---------------------------------------------------------------------------------------------
 	

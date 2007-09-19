@@ -172,6 +172,24 @@ class contentSystem extends cs_versionAbstract {
 	
 	//------------------------------------------------------------------------
 	/**
+	 * Used to determine if contentSystem{} should handle creating the session.
+	 */
+	public function handle_session(&$sessionObj=NULL) {
+		if(is_object($sessionObj)) {
+			//they want us to use a different class... fine.
+			$this->session = $sessionObj;
+		}
+		else {
+			//use our own session handler.
+			$this->session = new cs_session;
+		}
+	}//end handle_session()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
 	 * Rips apart the "section" string, setting $this->section and $this->sectionArr.
 	 */
 	private function parse_section() {
@@ -619,6 +637,9 @@ class contentSystem extends cs_versionAbstract {
 		}
 		
 		$page =& $this->templateObj;
+		if(is_object($this->session)) {
+			$page->session =& $this->session;
+		}
 		
 		
 		//if we loaded an index, but there is no "content", then move 'em around so we have content.
