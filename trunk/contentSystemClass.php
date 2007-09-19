@@ -172,6 +172,38 @@ class contentSystem extends cs_versionAbstract {
 	
 	//------------------------------------------------------------------------
 	/**
+	 * Call this to require that users accessing the given URL are authenticated; 
+	 * if they're not, this will cause them to be redirected to another URL 
+	 * (generally, so they can login).
+	 */
+	public function force_authentication($redirectToUrl, $appendDestination=TRUE) {
+		if(is_object($this->session) && method_exists($this->session, 'is_authenticated')) {
+			if(strlen($redirectToUrl)) {
+				$cleanedRedirect = $this->clean_url($redirectToUrl);
+				if($this->section != $cleanedRedirect) {
+					if(!$this->session->is_authenticated()) {
+						//run the redirect.
+						$this->gfObj->conditional_header($redirectToUrl, TRUE);
+					}
+				}
+				else {
+					throw new exception(__METHOD__ .": redirect url (". $redirectToUrl .") matches current URL");
+				}
+			}
+			else {
+				throw new exception(__METHOD__ .": failed to provide proper redirection URL");
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": cannot force authentication (missing method)");
+		}
+	}//end force_authentication()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
 	 * Used to determine if contentSystem{} should handle creating the session.
 	 */
 	public function handle_session(&$sessionObj=NULL) {
@@ -182,6 +214,10 @@ class contentSystem extends cs_versionAbstract {
 		else {
 			//use our own session handler.
 			$this->session = new cs_session;
+		}
+		
+		if(!method_exists($this->session, 'is_authenticated')) {
+			throw new exception(__METHOD__ .": session class ('". get_class($this->session) ."') is missing method is_authenticated()");
 		}
 	}//end handle_session()
 	//------------------------------------------------------------------------
