@@ -172,10 +172,8 @@ class contentSystem extends cs_versionAbstract {
 	
 	//------------------------------------------------------------------------
 	private function get_template_dirs() {
-		$this->gfObj->debug_print(__METHOD__ .": baseDir=". $this->baseDir ." ");
 		if(is_array($this->sectionArr)) {
 			$this->fileSystemObj->cd("/templates/". $this->baseDir);
-			$this->gfObj->debug_print($this->sectionArr);
 			$retval = array();
 			$retval[] = $this->fileSystemObj->cwd;
 			foreach($this->sectionArr as $index=>$name) {
@@ -183,7 +181,6 @@ class contentSystem extends cs_versionAbstract {
 					$retval[] = $this->fileSystemObj->cwd;
 				}
 				else {
-					$this->gfObj->debug_print(__METHOD__ .": failed to cd to (". $name .") from (". $this->fileSystemObj->cwd .")");
 					break;
 				}
 			}
@@ -460,7 +457,6 @@ class contentSystem extends cs_versionAbstract {
 				}
 			}
 			if(!$this->fileSystemObj->cd($value)) {
-				$this->gfObj->debug_print(__METHOD__ .": wasn't able to change dir to $value, cwd=(". $this->fileSystemObj->cwd .")... BUG?");
 				break;
 			}
 		}
