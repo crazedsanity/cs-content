@@ -171,6 +171,34 @@ class contentSystem extends cs_versionAbstract {
 	
 	
 	//------------------------------------------------------------------------
+	private function get_template_dirs() {
+		$this->gfObj->debug_print(__METHOD__ .": baseDir=". $this->baseDir ." ");
+		if(is_array($this->sectionArr)) {
+			$this->fileSystemObj->cd("/templates/". $this->baseDir);
+			$this->gfObj->debug_print($this->sectionArr);
+			$retval = array();
+			$retval[] = $this->fileSystemObj->cwd;
+			foreach($this->sectionArr as $index=>$name) {
+				if($this->fileSystemObj->cd($name)) {
+					$retval[] = $this->fileSystemObj->cwd;
+				}
+				else {
+					$this->gfObj->debug_print(__METHOD__ .": failed to cd to (". $name .") from (". $this->fileSystemObj->cwd .")");
+					break;
+				}
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": section array is invalid");
+		}
+		
+		return($retval);
+	}//end get_template_dirs()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
 	/**
 	 * Call this to require that users accessing the given URL are authenticated; 
 	 * if they're not, this will cause them to be redirected to another URL 
@@ -313,8 +341,15 @@ class contentSystem extends cs_versionAbstract {
 		$cdResult = $this->fileSystemObj->cd('/templates');
 		$validatePageRes = $this->validate_page();
 		if($foundIncludes || ($cdResult && $validatePageRes)) {
-			//load shared templates.
+			
+			//okay, get template directories & start loading
+			$tmplDirs = $this->get_template_dirs();
+			
 			$this->load_shared_templates();
+			foreach($tmplDirs as $myPath) {
+				//load shared templates.
+				$this->load_shared_templates($myPath);
+			}
 			
 			//load templates for the main section.
 			$this->load_main_templates();
@@ -483,9 +518,14 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Loads any shared templates: these can be overwritten later.
 	 */
-	private function load_shared_templates() {
+	private function load_shared_templates($path=NULL) {
 		
-		$this->fileSystemObj->cd('/templates');
+		if(!is_null($path)) {
+			$this->fileSystemObj->cd($path);
+		}
+		else {
+			$this->fileSystemObj->cd('/templates');
+		}
 		
 		//pull a list of the files.
 		$dirContents = $this->arrange_directory_contents();
