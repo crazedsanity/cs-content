@@ -137,7 +137,7 @@ class contentSystem extends cs_versionAbstract {
 		
 		//setup some default template vars.
 		$this->templateObj->add_template_var('date', date('m-d-Y'));
-		$this->templateObj->add_template_var('time', date('H:m:s'));
+		$this->templateObj->add_template_var('time', date('H:i:s'));
 		
 		//create a fileSystem object.
 		$this->fileSystemObj = new cs_fileSystemClass();
@@ -678,7 +678,7 @@ class contentSystem extends cs_versionAbstract {
 			//Simple "Page Not Found" error... show 'em.
 			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
 			$this->templateObj->add_template_var('details', $details);
-			$this->templateObj->add_template_var('datetime', date('m-d-Y H:m:s'));
+			$this->templateObj->add_template_var('datetime', date('m-d-Y H:i:s'));
 			$this->templateObj->print_page();
 			exit;
 		}
