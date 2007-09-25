@@ -623,7 +623,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 			}
 			
 			//rip the first ($trueMaxLength) characters from string, append $endString, and go.
-			$tmp = substr($string,0,$trueMaxLength -1);
+			$tmp = substr($string,0,$trueMaxLength);
 			$retval = $tmp . $endString;
 		}
 		
