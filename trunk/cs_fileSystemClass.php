@@ -684,7 +684,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			}
 			
 			$this->closeFile();
-			$this->openFile($myFilename);
+			$this->openFile($myFilename, $this->mode);
 			
 			if($originalLineNum > 0) {
 				while($originalLineNum > $this->lineNum) {
