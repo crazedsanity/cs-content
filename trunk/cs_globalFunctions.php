@@ -608,23 +608,28 @@ class cs_globalFunctions extends cs_versionAbstract {
 	function truncate_string($string,$maxLength,$endString="...",$strict=FALSE) {
 	
 		//determine if it's even worth truncating.
-		$strLength = strlen($string);
-		if($strLength <= $maxLength) {
-			//no need to truncate.
-			$retval = $string;
-		}
-		else {
-			//actually needs to be truncated...
-			if($strict) {
-				$trueMaxLength = $maxLength - strlen($endString);
+		if(is_string($string) && is_numeric($maxLength) && $maxLength > 0) {
+			$strLength = strlen($string);
+			if($strLength <= $maxLength) {
+				//no need to truncate.
+				$retval = $string;
 			}
 			else {
-				$trueMaxLength = $maxLength;
+				//actually needs to be truncated...
+				if($strict) {
+					$trueMaxLength = $maxLength - strlen($endString);
+				}
+				else {
+					$trueMaxLength = $maxLength;
+				}
+				
+				//rip the first ($trueMaxLength) characters from string, append $endString, and go.
+				$tmp = substr($string,0,$trueMaxLength);
+				$retval = $tmp . $endString;
 			}
-			
-			//rip the first ($trueMaxLength) characters from string, append $endString, and go.
-			$tmp = substr($string,0,$trueMaxLength);
-			$retval = $tmp . $endString;
+		}
+		else {
+			$retval = $string;
 		}
 		
 		return($retval);
