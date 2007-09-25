@@ -705,5 +705,49 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	//========================================================================================
 	
 	
+	
+	//========================================================================================
+	/**
+	 * Moves the cursor to the given line number.
+	 * 
+	 * NOTE: remember if you're trying to get line #1 (literally), then you'll 
+	 * want to go to line #0, then call get_next_line() to retrieve it... this 
+	 * is the traditional logical vs. programatic numbering issue. A.k.a. the 
+	 * "off-by-one problem".
+	 */
+	public function go_to_line($lineNum) {
+		$retval = FALSE;
+		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
+			if($this->lineNum > $lineNum) {
+				//gotta "rewind" the cursor back to the beginning.
+				rewind($this->fh);
+				$this->lineNum=0;
+			}
+			
+			if($lineNum == $this->lineNum) {
+				$retval = TRUE;
+			}
+			elseif($this->lineNum < $lineNum) {
+				while($this->lineNum < $lineNum) {
+					//don't grab any data, just move the cursor...
+					$this->get_next_line();
+				}
+				if($this->lineNum == $lineNum) {
+					$retval = TRUE;
+				}
+				else {
+					throw new exception(__METHOD__ .": couldn't reach the line (". $lineNum ."), failed at (". $this->lineNum .")");
+				}
+			}
+			else {
+				throw new exception(__METHOD__ .": internal lineNum (". $this->lineNum .") couldn't be retrieved or reset to (". $lineNum .")");
+			}
+		}
+		
+		return($retval);
+	}//end go_to_line()
+	//========================================================================================
+	
+	
 }//end cs_filesystemClass{}
 ?>
