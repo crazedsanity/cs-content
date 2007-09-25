@@ -147,7 +147,20 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			$tFile=$this->filename2absolute($filename);
 			if(file_exists($tFile)) {
 				//it's there... get info about it.
-				$retval[$filename] = $this->get_fileinfo($tFile);
+				$info = $this->get_fileinfo($tFile);
+				if($info['type'] == 'dir') {
+					$oldCwd = $this->cwd;
+					$oldRealCwd = $this->realcwd;
+					
+					$this->cd($filename);
+					$retval = $this->ls();
+					
+					$this->cwd = $oldCwd;
+					$this->realcwd = $oldRealCwd;
+				}
+				else {
+					$retval[$filename] = $info;
+				}
 			} else {
 				//stupid!
 				$retval[$filename] = "FILE NOT FOUND.";
