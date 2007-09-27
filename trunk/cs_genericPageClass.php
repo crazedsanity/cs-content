@@ -395,12 +395,18 @@ class cs_genericPage extends cs_versionAbstract {
 			$type = $arrayKeys[0];
 		}
 		
+		if(strlen($linkURL)) {
+			if(!strlen($linkText) || is_null($linkText)) {
+				$linkText = "Link";
+			}
+			$redirectText = '<a href="'. $linkURL .'">'. $linkText .'</a>';
+		}
+		
 		//Create the array.
 		$myArr = array(
 			"title"		=> $title,
 			"message"	=> $message,
-			"linkURL"	=> $linkURL,
-			"linkText"	=> $linkText,
+			"redirect"	=> $redirectText,
 			"type"		=> $type,
 			"priority"	=> $priority
 			
