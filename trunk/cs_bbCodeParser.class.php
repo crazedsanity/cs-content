@@ -18,6 +18,8 @@
  * been converted.
  */
 
+require_once(dirname(__FILE__) .'/cs_versionAbstract.class.php');
+
 class cs_bbCodeParser extends cs_versionAbstract {
 	
 	/** Array containing all the codes & how to parse them. */
@@ -95,7 +97,26 @@ class cs_bbCodeParser extends cs_versionAbstract {
 			$data = str_replace("\n", '||newline||', $data); 
 			
 			foreach( $this->bbCodeData as $k => $v ) {
-				$data = preg_replace("/".$this->bbCodeData[$k]['start'][1].$this->bbCodeData[$k]['end'][1]."/U", $this->bbCodeData[$k]['start'][2].$this->bbCodeData[$k]['end'][2], $data);
+				if(isset($this->bbCodeData[$k]['special'])) {
+					$myMatches = array();
+					$regex = '/'. $this->bbCodeData[$k]['start'][1] . $this->bbCodeData[$k]['end'][1] .'/';
+					$x = preg_match_all($regex .'U', $data, $myMatches);
+					
+					if(count($myMatches[1])) {
+						$funcName = $v['special'];
+						$myArgs = $myMatches[1];
+						$myArgs = array_unique($myArgs);
+						
+						foreach($myArgs as $index=>$value) {
+							$showThis = $this->$funcName($value);
+							$replaceThis = str_replace(array('[', ']'), array('\\[', '\\]'), $myMatches[0][$index]);
+							$data = preg_replace('/'. $replaceThis .'/U', $showThis, $data);
+						}
+					}
+				}
+				else {
+					$data = preg_replace("/".$this->bbCodeData[$k]['start'][1].$this->bbCodeData[$k]['end'][1]."/U", $this->bbCodeData[$k]['start'][2].$this->bbCodeData[$k]['end'][2], $data);
+				}
 			}
 			
 			$replaceNewlineStr = "\n";
@@ -107,6 +128,36 @@ class cs_bbCodeParser extends cs_versionAbstract {
 		}
 		return $data;
 	}//end parseString()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Enables extending classes to register a bbCode with special parsing.
+	 * 
+	 * NOTE: right now, this will only handle syntax like "[{bbCodeString}={arg}]".
+	 */
+	protected function register_code_with_callback($bbCodeString, $method) {
+		
+		if(method_exists($this, $method)) {
+			$this->bbCodeData[$bbCodeString] = array(
+				'special'	=> $method,
+				'start'		=> array(
+					'['. $bbCodeString .']',
+					'\['. $bbCodeString .'=(.*)'
+				),
+				'end'		=> array(
+					'',
+					'\]'
+				)
+			);
+		}
+		else {
+			throw new exception(__METHOD__ .": method (". $method .") doesn't exist");
+		}
+		
+	}//end register_code_with_callback()
 	//=========================================================================
 	
 }
