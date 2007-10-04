@@ -413,7 +413,13 @@ class cs_globalFunctions extends cs_versionAbstract {
 			case "integer":
 			case "numeric":
 				//Remove everything that's not numeric.
-				$cleanThis = preg_replace("/[^0-9]/","",$cleanThis);
+				if(is_null($cleanThis)) {
+					$cleanThis = "NULL";
+					$sqlQuotes = 0;
+				}
+				else {
+					$cleanThis = preg_replace("/[^0-9]/","",$cleanThis);
+				}
 			break;
 			
 			case "decimal":
@@ -453,9 +459,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 				
 			case "datetime":
 				$cleanThis=preg_replace("/[^A-Za-z0-9\/: \-\'\.]/","",$cleanThis);
-				if(!preg_match('/\'/', $cleanThis)) {
-					$cleanThis="'" . $cleanThis . "'";
-				}
 			break;
 				
 			case "all":
