@@ -48,19 +48,19 @@ class cs_bbCodeParser extends cs_versionAbstract {
 			),
 			
 			'image' => array(
-				'start'	=> array('[img]', '\[img\](http:\/\/|ftp:\/\/|\/)(.*)(.jpg|.jpeg|.bmp|.gif|.png)', '<img src=\'\\1\\2\\3\' />'),
+				'start'	=> array('[img]', '\[img\](http:\/\/|https:\/\/|ftp:\/\/|\/)(.*)(.jpg|.jpeg|.bmp|.gif|.png)', '<img src=\'\\1\\2\\3\' />'),
 				'end'	=> array('[/img]', '\[\/img\]', ''), 
 			),
 			
 			#  [url]http://x.com[/url]
 			'url1' => array(
-				'start'	=> array('[url]', '\[url\](http:\/\/|ftp:\/\/)(.*)', '<a target="_blank" href=\'\\1\\2\'>\\1\\2'),
+				'start'	=> array('[url]', '\[url\](http:\/\/|https:\/\/|ftp:\/\/)(.*)', '<a target="_blank" href=\'\\1\\2\'>\\1\\2'),
 				'end'	=> array('[/url]', '\[\/url\]', '</a>'),
 			),
 			
 			# [url=http://x.com]stuff[/url]
 			'url2' => array(
-				'start'	=> array('[url]', '\[url=(http:\/\/|ftp:\/\/)(.*)\](.*)', '<a target="_blank" href=\'\\1\\2\'>\\3'), 
+				'start'	=> array('[url]', '\[url=(http:\/\/|https:\/\/|ftp:\/\/)(.*)\](.*)', '<a target="_blank" href=\'\\1\\2\'>\\3'), 
 				'end'	=> array('[/url]', '\[\/url\]', '</a>'),
 			),
 			
