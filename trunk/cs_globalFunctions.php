@@ -8,7 +8,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	/* DEBUG PRINT OPTIONS */
 	/** Remove the separator below the output of each debug_print()? */
 	public $debugRemoveHr = 0;
-	public $debugPrintOpt = 1;
+	public $debugPrintOpt = 0;
 	
 	//=========================================================================
 	public function __construct() {
