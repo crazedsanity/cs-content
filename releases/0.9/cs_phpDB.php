@@ -574,7 +574,7 @@ class cs_phpDB extends cs_versionAbstract {
 				if (count($tempArr) != count($newArr)) {
 					$details = "farray_fieldnames(): Array counts don't match.<BR>\n"
 						."FUNCTION ARGUMENTS: index=[$index], numbered=[$numbered], unsetIndex=[$unsetIndex]<BR>\n"
-						."LAST QUERY: ". $this->last_query;
+						."LAST QUERY: ". $this->lastQuery;
 					throw new exception(__METHOD__ .": $details");
 				}
 				$newArr = $tempArr;
