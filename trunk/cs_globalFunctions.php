@@ -84,7 +84,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 		
 		//precheck... if it's not an array, kill it.
 		if(!is_array($array)) {
-			return(0);
+			return(NULL);
 		}
 		
 		//make sure $style is valid.
