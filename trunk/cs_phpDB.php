@@ -88,6 +88,9 @@ class cs_phpDB extends cs_versionAbstract {
 	/** Set to TRUE to save all queries into an array. */
 	protected $useQueryList=FALSE;
 	
+	/** array that essentially remembers how many times beginTrans() was called. */
+	protected $transactionTree = NULL;
+	
 	////////////////////////////////////////////
 	// Core primary connection/database function
 	////////////////////////////////////////////
@@ -802,8 +805,31 @@ class cs_phpDB extends cs_versionAbstract {
 	/**
 	 * Start a transaction.
 	 */
-	function beginTrans() {
-		$this->inTrans = TRUE;
+	function beginTrans($transName=NULL) {
+		cs_debug_backtrace(1);
+		$transStatus = $this->get_transaction_status(TRUE);
+		if(!$this->inTrans) {
+			//not in a transaction.  Set up the transaction tree properly.
+			$this->transactionTree = array();
+		}
+		else {
+			if($this->inTrans && is_null($this->transactionTree)) {
+				$transLevel = $this->get_transaction_level();
+				//transaction started without using beginTrans()...
+				$this->gfObj->debug_print($this->transactionTree,1); 
+				$this->transactionTree = array();
+				$this->gfObj->debug_print(__METHOD__ .": transaction already started, transStatus=(". $transStatus ."), transLevel=(". $transLevel .")",1);
+				$this->transactionTree[] = "Already started...";
+				exit;
+			}
+		}
+		
+		if(is_null($transName)) {
+			$transName = time(TRUE);
+		}
+		$this->transactionTree[] = $transName;
+		$transLevel = $this->get_transaction_level();
+		$this->gfObj->debug_print(__METHOD__ .": starting transaction at transLevel=(". $transLevel .")",1);
 		return($this->exec("BEGIN"));
 	}//end beginTrans()
 	//=========================================================================
@@ -816,10 +842,18 @@ class cs_phpDB extends cs_versionAbstract {
 	 */
 	function commitTrans() {
 		$retval = $this->get_transaction_status();
-		if($retval > 1) {
-			$retval = 1;
+		$lastTransLayer = array_pop($this->transactionTree);
+		$transLevel = $this->get_transaction_level();
+		if($transLevel == 0) {
+			if($retval > 1) {
+				$retval = 1;
+			}
+			$this->exec("COMMIT");
 		}
-		$this->exec("COMMIT");
+		else {
+			$this->gfObj->debug_print(__METHOD__ .": transLevel is (". $transLevel ."), not committing... " .
+				$this->gfObj->debug_print($this->transactionTree,0), 1);
+		}
 		$this->get_transaction_status();
 		return($retval);
 	}//end commitTrans()
@@ -936,7 +970,7 @@ class cs_phpDB extends cs_versionAbstract {
 		}
 		
 		return($retval);
-	}//end valid_transaction()
+	}//end get_transaction_status()
 	//=========================================================================
 	
 	
@@ -1078,6 +1112,23 @@ class cs_phpDB extends cs_versionAbstract {
 		return($retval);
 	}//end end_copy()
 	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function get_transaction_level() {
+		if(is_array($this->transactionTree)) {
+			$retval = count($this->transactionTree);
+			$this->gfObj->debug_print($this->transactionTree,1);
+		}
+		else {
+			$retval = 0;
+		}
+		
+		return($retval);
+	}//end get_transaction_level()
+	//=========================================================================
+	
 	
 	
 } // end class phpDB
