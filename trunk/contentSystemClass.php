@@ -735,9 +735,21 @@ class contentSystem extends cs_versionAbstract {
 		
 		//now include the includes scripts, if there are any.
 		if(is_array($this->includesList) && count($this->includesList)) {
-			foreach($this->includesList as $myInternalIndex=>$myInternalScriptName) {
-				$this->myLastInclude = $myInternalScriptName;
-				include_once($this->myLastInclude);
+			try {
+				foreach($this->includesList as $myInternalIndex=>$myInternalScriptName) {
+					$this->myLastInclude = $myInternalScriptName;
+					include_once($this->myLastInclude);
+				}
+			}
+			catch(exception $e) {
+				$myRoot = preg_replace('/\//', '\\\/', $this->fileSystemObj->root);
+				$displayableInclude = preg_replace('/^'. $myRoot .'/', '', $this->myLastInclude);
+				$this->templateObj->set_message_wrapper(array(
+					'title'		=> "Fatal Error",
+					'message'	=> __METHOD__ .": A fatal error occurred while processing <b>". 
+							$displayableInclude ."</b>:<BR>\n<b>ERROR</b>: ". $e->getMessage(),
+					'type'		=> "fatal"
+				));
 			}
 			unset($myInternalIndex);
 			unset($myInternalScriptName);

@@ -639,6 +639,49 @@ class cs_globalFunctions extends cs_versionAbstract {
 		
 	}//end truncate_string()
 	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//##########################################################################
+	public function array_as_option_list(array $data, $checkedValue=NULL, $type="select", $useTemplateString=NULL, array $repArr=NULL) {
+		$typeArr = array (
+			"select"	=> "selected",
+			"radio"		=> "checked",
+			"checkbox"	=> "checked"
+		);
+		
+		$myType = $typeArr[$type];
+		if(is_null($useTemplateString)) {
+			//
+			$useTemplateString = "\t\t<option value='%%value%%'%%selectedString%%>%%display%%</option>";
+		}
+		
+		$retval = "";
+		foreach($data as $value=>$display) {
+			//see if it's the value that's been selected.
+			$selectedString = "";
+			if($value == $checkedValue) {
+				//yep, it's selected.
+				$selectedString = " ". $myType;
+			}
+			
+			//create the string.
+			$myRepArr = array(
+				'value'				=> $value,
+				'display'			=> $display,
+				'selectedString'	=> $selectedString
+			);
+			if(is_array($repArr) && is_array($repArr[$value])) {
+				//merge the arrays.
+				$myRepArr = array_merge($repArr[$value], $myRepArr);
+			}
+			$addThis = $this->mini_parser($useTemplateString, $myRepArr, "%%", "%%");
+			$retval = $this->create_list($retval, $addThis, "\n");
+		}
+		
+		return($retval);
+	}//end array_as_option_list()
+	//##########################################################################
 
 }//end cs_globalFunctions{}
 
