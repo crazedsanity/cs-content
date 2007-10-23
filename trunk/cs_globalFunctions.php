@@ -167,7 +167,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 						$value = $this->cleanString($value, "sql");
 						$value = "'". $value ."'";
 					}
-					$retval = $this->create_list($retval, $field . $separator . $value, " ");
+					$retval = $this->create_list($retval, $value, ", ");
 				}
 				if($style == "order" && !preg_match('/order by/', strtolower($retval))) {
 					$retval = "ORDER BY ". $retval;
