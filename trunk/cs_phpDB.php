@@ -1116,6 +1116,13 @@ class cs_phpDB extends cs_versionAbstract {
 	
 	
 	//=========================================================================
+	/**
+	 * Determines how many times a transaction has been started.  Starting 
+	 * multiple transactions does NOT protect the outer transaction from 
+	 * problems that occur in the inner transaction.  In fact, it does the 
+	 * opposite: it protects the code from committing too early (which might 
+	 * destroy something that depending on the transaction).
+	 */
 	public function get_transaction_level() {
 		if(is_array($this->transactionTree)) {
 			$retval = count($this->transactionTree);
@@ -1127,6 +1134,22 @@ class cs_phpDB extends cs_versionAbstract {
 		
 		return($retval);
 	}//end get_transaction_level()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Simple way to determine if the current connection is inside a 
+	 * transaction or not.
+	 */
+	public function is_in_transaction() {
+		$retval = 0;
+		if($this->inTrans || $this->get_transaction_level() != 0) {
+			$retval = TRUE;
+		}
+		return($retval);
+	}//end is_in_transaction()
 	//=========================================================================
 	
 	
