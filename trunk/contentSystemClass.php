@@ -750,6 +750,11 @@ class contentSystem extends cs_versionAbstract {
 							$displayableInclude ."</b>:<BR>\n<b>ERROR</b>: ". $e->getMessage(),
 					'type'		=> "fatal"
 				));
+				
+				//try to pass the error on to the user's exception handler, if there is one.
+				if(function_exists('exception_handler')) {
+					exception_handler($e);
+				}
 			}
 			unset($myInternalIndex);
 			unset($myInternalScriptName);
