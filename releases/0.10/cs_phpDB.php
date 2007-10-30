@@ -99,8 +99,6 @@ class cs_phpDB extends cs_versionAbstract {
 	//=========================================================================
 	public function __construct() {
 		$this->gfObj = new cs_globalFunctions;
-		$this->gfObj->debugRemoveHr=0;
-		$this->gfObj->debugPrintOpt=0;
 		
 		$this->isInitialized = TRUE;
 	}//end __construct()
@@ -806,7 +804,6 @@ class cs_phpDB extends cs_versionAbstract {
 	 * Start a transaction.
 	 */
 	function beginTrans($transName=NULL) {
-		cs_debug_backtrace(1);
 		$transStatus = $this->get_transaction_status(TRUE);
 		if(!$this->inTrans) {
 			//not in a transaction.  Set up the transaction tree properly.
@@ -816,11 +813,10 @@ class cs_phpDB extends cs_versionAbstract {
 			if($this->inTrans && is_null($this->transactionTree)) {
 				$transLevel = $this->get_transaction_level();
 				//transaction started without using beginTrans()...
-				$this->gfObj->debug_print($this->transactionTree,1); 
+				$this->gfObj->debug_print($this->transactionTree); 
 				$this->transactionTree = array();
-				$this->gfObj->debug_print(__METHOD__ .": transaction already started, transStatus=(". $transStatus ."), transLevel=(". $transLevel .")",1);
+				$this->gfObj->debug_print(__METHOD__ .": transaction already started, transStatus=(". $transStatus ."), transLevel=(". $transLevel .")");
 				$this->transactionTree[] = "Already started...";
-				exit;
 			}
 		}
 		
@@ -829,7 +825,7 @@ class cs_phpDB extends cs_versionAbstract {
 		}
 		$this->transactionTree[] = $transName;
 		$transLevel = $this->get_transaction_level();
-		$this->gfObj->debug_print(__METHOD__ .": starting transaction at transLevel=(". $transLevel .")",1);
+		$this->gfObj->debug_print(__METHOD__ .": starting transaction at transLevel=(". $transLevel .")");
 		return($this->exec("BEGIN"));
 	}//end beginTrans()
 	//=========================================================================
@@ -852,7 +848,7 @@ class cs_phpDB extends cs_versionAbstract {
 		}
 		else {
 			$this->gfObj->debug_print(__METHOD__ .": transLevel is (". $transLevel ."), not committing... " .
-				$this->gfObj->debug_print($this->transactionTree,0), 1);
+				$this->gfObj->debug_print($this->transactionTree,0));
 		}
 		$this->get_transaction_status();
 		return($retval);
@@ -1126,7 +1122,7 @@ class cs_phpDB extends cs_versionAbstract {
 	public function get_transaction_level() {
 		if(is_array($this->transactionTree)) {
 			$retval = count($this->transactionTree);
-			$this->gfObj->debug_print($this->transactionTree,1);
+			$this->gfObj->debug_print($this->transactionTree);
 		}
 		else {
 			$retval = 0;
