@@ -813,7 +813,6 @@ class cs_phpDB extends cs_versionAbstract {
 			if($this->inTrans && is_null($this->transactionTree)) {
 				$transLevel = $this->get_transaction_level();
 				//transaction started without using beginTrans()...
-				$this->gfObj->debug_print($this->transactionTree); 
 				$this->transactionTree = array();
 				$this->gfObj->debug_print(__METHOD__ .": transaction already started, transStatus=(". $transStatus ."), transLevel=(". $transLevel .")");
 				$this->transactionTree[] = "Already started...";
@@ -850,10 +849,6 @@ class cs_phpDB extends cs_versionAbstract {
 			if(strlen($this->errorMsg())) {
 				$retval = 0;
 			}
-		}
-		else {
-			$this->gfObj->debug_print(__METHOD__ .": transLevel is (". $transLevel ."), not committing... " .
-				$this->gfObj->debug_print($this->transactionTree,0));
 		}
 		$this->get_transaction_status();
 		return($retval);
@@ -1127,7 +1122,6 @@ class cs_phpDB extends cs_versionAbstract {
 	public function get_transaction_level() {
 		if(is_array($this->transactionTree)) {
 			$retval = count($this->transactionTree);
-			$this->gfObj->debug_print($this->transactionTree);
 		}
 		else {
 			$retval = 0;
