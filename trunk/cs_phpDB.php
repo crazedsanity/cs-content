@@ -845,6 +845,11 @@ class cs_phpDB extends cs_versionAbstract {
 				$retval = 1;
 			}
 			$this->exec("COMMIT");
+			
+			//check to see if there was an error (deferred constraints are checked at commit time)
+			if(strlen($this->errorMsg())) {
+				$retval = 0;
+			}
 		}
 		else {
 			$this->gfObj->debug_print(__METHOD__ .": transLevel is (". $transLevel ."), not committing... " .
