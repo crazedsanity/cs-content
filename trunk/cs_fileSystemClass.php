@@ -307,11 +307,11 @@ class cs_fileSystemClass extends cs_versionAbstract {
 					$this->closeFile();
 				}
 				else {
-					throw new exception(__METHOD__ .": unable to open specified file");
+					throw new exception(__METHOD__ .": unable to open specified file (". $filename .")");
 				}
 			}
 			else {
-				throw new exception(__METHOD__ .": file is not writable");
+				throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
 			}
 		}
 		return($retval);
