@@ -45,6 +45,53 @@ class cs_session extends cs_versionAbstract {
 		return(FALSE);
 	}//end is_authenticated()
 	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function get_cookie($name) {
+		$retval = NULL;
+		if(isset($_COOKIE) && $_COOKIE[$name]) {
+			$retval = $_COOKIE[$name];
+		}
+		return($retval);
+	}//end get_cookie()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function create_cookie($name, $value, $expiration=NULL) {
+		
+		$expTime = NULL;
+		if(!is_null($expiration)) {
+			if(is_numeric($expiration)) {
+				$expTime = $expiration;
+			}
+			elseif(preg_match('/ /', $expiration)) {
+				$expTime = strtotime($expiration);
+			}
+			else {
+				throw new exception(__METHOD__ .": invalid timestamp given (". $expiration .")");
+			}
+		}
+		
+		$retval = setcookie($name, $value, $expTime, '/');
+		return($retval);
+		
+	}//end create_cookie()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function drop_cookie($name) {
+		if(isset($_COOKIE[$name])) {
+			setcookie($name, $_COOKIE[$name], time() -10000, '/');
+			unset($_COOKIE[$name]);
+		}
+	}//end drop_cookie()
+	//---------------------------------------------------------------------------------------------
 
 
 }//end cs_session{}
