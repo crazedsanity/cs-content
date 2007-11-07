@@ -18,6 +18,11 @@ class cs_session extends cs_versionAbstract {
 	public $sid_check = 1;
 	
 	//---------------------------------------------------------------------------------------------
+	/**
+	 * The constructor.
+	 * 
+	 * @param $createSession	(boolean,optional) determines if a session will be started or not.
+	 */
 	function __construct($createSession=1) {
 		if($createSession) {
 			//now actually create the session.
@@ -41,6 +46,14 @@ class cs_session extends cs_versionAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
+	/**
+	 * Required method, so passing the object to contentSystem::handle_session() 
+	 * will work properly.
+	 * 
+	 * @param (none)
+	 * 
+	 * @return FALSE		FAIL: user is not authenticated (hard-coded this way).
+	 */
 	public function is_authenticated() {
 		return(FALSE);
 	}//end is_authenticated()
@@ -49,6 +62,14 @@ class cs_session extends cs_versionAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
+	/**
+	 * Retrieve data for an existing cookie.
+	 * 
+	 * @param $name		(string) Name of cookie to retrieve value for.
+	 * 
+	 * @return NULL		FAIL (?): cookie doesn't exist or has NULL value.
+	 * @return (string)	PASS: value of cookie.
+	 */
 	public function get_cookie($name) {
 		$retval = NULL;
 		if(isset($_COOKIE) && $_COOKIE[$name]) {
@@ -61,6 +82,13 @@ class cs_session extends cs_versionAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
+	/**
+	 * Create a new cookie.
+	 * 
+	 * @param $name			(string) Name of cookie
+	 * @param $value		(string) value of cookie
+	 * @param $expiration	(string/number) unix timestamp or value for strtotime().
+	 */
 	public function create_cookie($name, $value, $expiration=NULL) {
 		
 		$expTime = NULL;
@@ -85,11 +113,22 @@ class cs_session extends cs_versionAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
+	/**
+	 * Destroy (expire) an existing cookie.
+	 * 
+	 * @param $name		(string) Name of cookie to destroy
+	 * 
+	 * @return FALSE	FAIL: no cookie by that name.
+	 * @return TRUE		PASS: cookie destroyed.
+	 */
 	public function drop_cookie($name) {
+		$retval = FALSE;
 		if(isset($_COOKIE[$name])) {
 			setcookie($name, $_COOKIE[$name], time() -10000, '/');
 			unset($_COOKIE[$name]);
+			$retval = TRUE;
 		}
+		return($retval);
 	}//end drop_cookie()
 	//---------------------------------------------------------------------------------------------
 
