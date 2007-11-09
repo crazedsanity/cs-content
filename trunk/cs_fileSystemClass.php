@@ -253,6 +253,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	 * can enlighten me, I'd be glad to give them credit.
 	 */
 	private function translate_perms($in_Perms) {
+		$sP = "";
 		$sP .= (($in_Perms & 0x0100) ? 'r' : '-') .
 			(($in_Perms & 0x0080) ? 'w' : '-') .
 			(($in_Perms & 0x0040) ? (($in_Perms & 0x0800) ? 's' : 'x' ) :
