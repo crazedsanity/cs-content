@@ -24,6 +24,11 @@
 //
 ///////////////////////
 
+//TODO: option to not use layered transactions
+//TODO: rollbackTrans() in layered transaction causes abort when final layer is committed/aborted
+//TODO: stop sending queries to backend when transction is bad/aborted.
+//TODO: commit/abort specific layer requests (i.e. if there's 8 layers & the first is named "x", calling commitTrans("x") will cause the whole transaction to commit & all layers to be destroyed.
+
 require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
 class cs_phpDB extends cs_versionAbstract {
