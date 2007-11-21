@@ -661,7 +661,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 		foreach($data as $value=>$display) {
 			//see if it's the value that's been selected.
 			$selectedString = "";
-			if($value == $checkedValue) {
+			if($value == $checkedValue || $display == $checkedValue) {
 				//yep, it's selected.
 				$selectedString = " ". $myType;
 			}
