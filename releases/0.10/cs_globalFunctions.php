@@ -82,6 +82,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	 */
 	public function string_from_array($array,$style=NULL,$separator=NULL, $cleanString=NULL, $removeEmptyVals=FALSE) {
 		
+		$retval = NULL;
 		//precheck... if it's not an array, kill it.
 		if(!is_array($array)) {
 			return(NULL);
@@ -271,7 +272,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 		}
 		else {
 			//not an array.
-			$retval = 0;
+			$retval = NULL;
 		}
 		
 		return($retval);
@@ -660,7 +661,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 		foreach($data as $value=>$display) {
 			//see if it's the value that's been selected.
 			$selectedString = "";
-			if($value == $checkedValue) {
+			if($value == $checkedValue || $display == $checkedValue) {
 				//yep, it's selected.
 				$selectedString = " ". $myType;
 			}

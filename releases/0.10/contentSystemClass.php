@@ -687,9 +687,8 @@ class contentSystem extends cs_versionAbstract {
 		}
 		else {
 			//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
-			$this->gfObj->debug_print(__METHOD__ .": something broke. \nDETAILS::: $details" .
+			throw new exception(__METHOD__ .": something broke. \nDETAILS::: $details" .
 					"\nREASON::: ". $this->reason);
-			exit;
 		}
 	}//end die_gracefully()
 	//------------------------------------------------------------------------
