@@ -105,6 +105,10 @@ class cs_phpDB extends cs_versionAbstract {
 	public function __construct() {
 		$this->gfObj = new cs_globalFunctions;
 		
+		if(defined('DEBUGPRINTOPT')) {
+			$this->gfObj->debugPrintOpt = DEBUGPRINTOPT;
+		}
+		
 		$this->isInitialized = TRUE;
 	}//end __construct()
 	//=========================================================================
