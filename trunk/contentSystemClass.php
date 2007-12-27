@@ -503,6 +503,10 @@ class contentSystem extends cs_versionAbstract {
 					$this->templateList[$mySection] = $myTmpl;
 				}
 			}
+			if(isset($tmplList[$this->baseDir]['content'])) {
+				//load template for the main page (if $this->baseDir == "help", this would load "/help.content.tmpl" as content)
+				$this->templateList['content'] = $tmplList[$this->baseDir]['content'];
+			}
 		}
 	}//end load_page_templates()
 	//------------------------------------------------------------------------
@@ -570,6 +574,7 @@ class contentSystem extends cs_versionAbstract {
 				if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
 					$filename = $this->gfObj->create_list($this->fileSystemObj->cwd, $index, '/');
 					$filename = preg_replace('/^\/templates/', '', $filename);
+					$filename = preg_replace('/^\/\//', '/', $filename);
 					//call another method to rip the filename apart properly, then arrange things as needed.
 					$pieces = $this->parse_filename($index);
 					$myPriIndex = $pieces[$primaryIndex];
