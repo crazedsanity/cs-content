@@ -430,10 +430,19 @@ class contentSystem extends cs_versionAbstract {
 				$this->reason = __METHOD__ .": couldn't find page template for ". $this->section;
 			}
 		} else {
-			//just the base template.  Make sure it's good.
+			//if the baseDir is "help", this would try to use "/help/index.content.tmpl"
 			$myFile = $this->baseDir .'/index.content.tmpl';
-			$lsData = $this->fileSystemObj->ls($myFile);
-			if(isset($lsData[$myFile]) && $lsData[$myFile]['type'] == 'file') {
+			$sectionLsData = $this->fileSystemObj->ls($myFile);
+			
+			//if the baseDir is "help", this would try to use "/help.content.tmpl"
+			$sectionFile = $this->baseDir .'.content.tmpl';
+			$lsData = $this->fileSystemObj->ls();
+			
+			if(isset($lsData[$sectionFile]) && is_array($lsData[$sectionFile])) {
+				$valid = TRUE;
+				$this->finalSection = $this->baseDir;
+			}
+			elseif(isset($sectionLsData[$myFile]) && $sectionLsData[$myFile]['type'] == 'file') {
 				//we're good.
 				$valid = TRUE;
 				$this->finalSection = $this->baseDir;
