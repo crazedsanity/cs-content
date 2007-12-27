@@ -22,6 +22,8 @@ class cs_genericPage extends cs_versionAbstract {
 	
 	private $showEditableLink = FALSE;
 	
+	private $allowInvalidUrls=NULL;
+	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
@@ -594,6 +596,17 @@ class cs_genericPage extends cs_versionAbstract {
 		$retval = $this->rip_all_block_rows($templateVar, $exceptionArr);
 		return($retval);
 	}//end set_all_block_rows()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function allow_invalid_urls($newSetting=NULL) {
+		if(!is_null($newSetting) && is_bool($newSetting)) {
+			$this->allowInvalidUrls = $newSetting;
+		}
+		return($this->allowInvalidUrls);
+	}//end allow_invalid_urls()
 	//---------------------------------------------------------------------------------------------
 
 }//end cs_genericPage{}

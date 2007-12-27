@@ -406,11 +406,11 @@ class contentSystem extends cs_versionAbstract {
 			$lsDirVals = array_values($lsDir);
 			$lsFile = $this->fileSystemObj->ls("$finalSection.content.tmpl");
 			
-			if(is_array(array_values($lsFile))) {
+			if(is_array(array_values($lsFile)) && is_array($lsFile[$finalSection .".content.tmpl"])) {
 				//it's the file ("{finalSection}.content.tmpl", like "mySection.content.tmpl")
 				$myIndex = $finalSection .".content.tmpl";
 			}
-			elseif(is_array($lsDirVals) && ($lsDirVals[0] != 'FILE NOT FOUND')) {
+			elseif(is_array(array_values($lsDir)) && (is_array($lsDir[$indexFilename]))) {
 				$myIndex = $indexFilename;
 			} else {
 				//nothin' doin'.
@@ -768,6 +768,10 @@ class contentSystem extends cs_versionAbstract {
 			}
 			unset($myInternalIndex);
 			unset($myInternalScriptName);
+		}
+		
+		if(is_bool($this->templateObj->allow_invalid_urls() === TRUE) && $this->isValid === FALSE) {
+			$this->isValid = $this->templateObj->allow_invalid_urls();
 		}
 		
 		if($this->isValid === TRUE) {
