@@ -96,6 +96,9 @@ class contentSystem extends cs_versionAbstract {
 	
 	protected $finalSection;
 	
+	private $isValid=FALSE;
+	private $reason=NULL;
+	
 	//------------------------------------------------------------------------
 	/**
 	 * The CONSTRUCTOR.  Duh.
@@ -286,6 +289,7 @@ class contentSystem extends cs_versionAbstract {
 
 		//make sure we've still got something valid to work with.
 		if(!strlen($section)) {
+			//TODO: remove the extra return statement (should only be one at the bottom of the method).
 			return(0);
 		} else {
 			//check the string to make sure it doesn't begin or end with a "/"
@@ -360,7 +364,7 @@ class contentSystem extends cs_versionAbstract {
 			//now cd() all the way back.
 			$this->fileSystemObj->cd('/');
 		} else {
-			//couldn't find the templates directory... ick.
+			//couldn't find the templates directory, and no includes... it's dead.
 			$this->die_gracefully(__METHOD__ .": unable to find the templates directory, or non-valid page [". $this->validate_page() ."]");
 		}
 	}//end prepare()
@@ -399,6 +403,7 @@ class contentSystem extends cs_versionAbstract {
 			}
 			
 			$lsDir  = $this->fileSystemObj->ls($indexFilename);
+			$lsDirVals = array_values($lsDir);
 			$lsFile = $this->fileSystemObj->ls("$finalSection.content.tmpl");
 			
 			if(is_array(array_values($lsFile)) && is_array($lsFile[$finalSection .".content.tmpl"])) {
@@ -407,9 +412,6 @@ class contentSystem extends cs_versionAbstract {
 			}
 			elseif(is_array(array_values($lsDir)) && (is_array($lsDir[$indexFilename]))) {
 				$myIndex = $indexFilename;
-			} elseif(is_array(array_values($lsFile))) {
-				//it's the file (no dir, or dir w/o index)
-				$myIndex = $finalSection.content.tmpl;
 			} else {
 				//nothin' doin'.
 				$myIndex = NULL;
@@ -425,7 +427,7 @@ class contentSystem extends cs_versionAbstract {
 				$valid = TRUE;
 				$this->fileSystemObj->cd('/templates');
 			} else {
-				$this->reason = __METHOD__ .": couldn't find page template for (". $this->section .", final=[$finalSection])...";
+				$this->reason = __METHOD__ .": couldn't find page template for ". $this->section;
 			}
 		} else {
 			//just the base template.  Make sure it's good.
@@ -439,6 +441,8 @@ class contentSystem extends cs_versionAbstract {
 				$this->reason = __METHOD__ .": couldn't find base template.";
 			}
 		}
+		$this->isValid = $valid;
+		
 		return($valid);
 	}//end validate_page()
 	//------------------------------------------------------------------------
@@ -691,7 +695,7 @@ class contentSystem extends cs_versionAbstract {
 		}
 		else {
 			//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
-			throw new exception(__METHOD__ .": something broke. \nDETAILS::: $details" .
+			throw new exception(__METHOD__ .": Couldn't find 404 template, plus additional error... \nDETAILS::: $details" .
 					"\nREASON::: ". $this->reason);
 		}
 	}//end die_gracefully()
