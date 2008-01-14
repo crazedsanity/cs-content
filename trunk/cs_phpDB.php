@@ -34,6 +34,7 @@ require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 class cs_phpDB extends cs_versionAbstract {
 	
 	private $dbLayerObj;
+	private $dbType;
 	
 	//=========================================================================
 	public function __construct($type='pgsql') {
@@ -43,6 +44,7 @@ class cs_phpDB extends cs_versionAbstract {
 			require_once(dirname(__FILE__) .'/db_types/'. __CLASS__ .'__'. $type .'.class.php');
 			$className = __CLASS__ .'__'. $type;
 			$this->dbLayerObj = new $className;
+			$this->dbType = $type;
 			
 			$this->gfObj = new cs_globalFunctions;
 			
@@ -60,10 +62,21 @@ class cs_phpDB extends cs_versionAbstract {
 	
 	
 	
+	//=========================================================================
+	/**
+	 * Magic method to call methods within the database abstraction layer ($this->dbLayerObj).
+	 */
 	public function __call($methodName, $args) {
-		$retval = call_user_func_array(array($this->dbLayerObj, $methodName), $args);
+		if(method_exists($this->dbLayerObj, $methodName)) {
+			$retval = call_user_func_array(array($this->dbLayerObj, $methodName), $args);
+		}
+		else {
+			throw new exception(__METHOD__ .': unsupported method ('. $methodName .') for database of type ('. $this->dbType .')');
+		}
 		return($retval);
 	}//end __call()	
+	//=========================================================================
+	
 } // end class phpDB
 
 ?>
