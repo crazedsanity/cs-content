@@ -235,27 +235,24 @@ class cs_phpDB__mysql {
 		}
 		$returnVal = false;
 		
-		exit;
-		if(($this->get_transaction_status() != -1) && ($this->connectionID != -1)) {
-			//TODO: implement MySQL version..
-			$this->result = @pg_query($this->connectionID, $query);
-
-			if($this->result !== false) {
-				if (eregi("^[[:space:]]*select", $query)) {
-					//If we didn't have an error and we are a select statement, move the pointer to first result
-					$numRows = $this->numRows();
-					if($numRows > 0) {
-						$this->move_first();
-					}
-					$returnVal = $numRows;
-					
+		//TODO: implement MySQL version..
+		$this->result = @mysql_query($this->connectionID, $query);
+		
+		if($this->result !== false) {
+			if (eregi("^[[:space:]]*select", $query)) {
+				//If we didn't have an error and we are a select statement, move the pointer to first result
+				$numRows = $this->numRows();
+				if($numRows > 0) {
+					$this->move_first();
 				}
-				else {
-					//We got something other than an update. Use numAffected
-					$returnVal = $this->numAffected();
-				}
+				$returnVal = $numRows;
+				
 			}
- 		}
+			else {
+				//We got something other than an update. Use numAffected
+				$returnVal = $this->numAffected();
+			}
+		}
 		return($returnVal);
 	}//end exec()
 	//=========================================================================
@@ -299,7 +296,7 @@ class cs_phpDB__mysql {
 			}
 		} else {
 			//TODO: implement MySQL version..
-			$retVal = pg_last_error($this->connectionID);
+			$retVal = mysql_error($this->connectionID);
 		}
 
 		return($retVal);
@@ -440,7 +437,7 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$retval = pg_fetch_object($this->result, $this->row);
+			$retval = mysql_fetch_object($this->result, $this->row);
 		}
 		
 		return($retval);
@@ -459,7 +456,7 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$retval = pg_fetch_array($this->result,$this->row);
+			$retval = mysql_fetch_array($this->result,$this->row);
 		}
 		
 		return($retval);
@@ -483,7 +480,7 @@ class cs_phpDB__mysql {
 			}
 			else {
 			//TODO: implement MySQL version..
-				$retval = pg_fetch_row($this->result, $this->row);
+				$retval = mysql_fetch_row($this->result, $this->row);
 			}
 		}
 		
@@ -586,7 +583,7 @@ class cs_phpDB__mysql {
 		if((!$name) OR (!$value)) {
 			$retval = 0;
 		}
-		else {
+		else {	
 			$tArr = $this->farray_fieldnames(NULL,1);
 			if(!is_array($tArr)) {
 				$retval = 0;
@@ -636,7 +633,7 @@ class cs_phpDB__mysql {
 			$retval = 0;
 		} else {
 			//TODO: implement MySQL version..
-			$this->affectedRows = pg_affected_rows($this->result);
+			$this->affectedRows = mysql_affected_rows($this->result);
 			$retval = $this->affectedRows;
 		}
 		
@@ -656,7 +653,7 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$this->numrows = pg_num_rows($this->result);
+			$this->numrows = mysql_num_rows($this->result);
 			$retval = $this->numrows;
 		}
 		
@@ -699,7 +696,7 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$retval = pg_num_fields($this->result);
+			$retval = mysql_num_fields($this->result);
 		}
 		return($retval);	
 	}//end num_fields()
@@ -717,41 +714,10 @@ class cs_phpDB__mysql {
 	
 	//=========================================================================
 	/** 
-	 * get last OID (object identifier) of last INSERT statement
+	 * get last ID of last INSERT statement
 	 */
-	function lastOID($doItForMe=0, $field=NULL) {
-		if($this->result == NULL) {
-			$retval = NULL;
-		}
-		else {
-			//TODO: implement MySQL version..
-			$tOid = pg_last_oid($this->result);
-			$retval = $tOid;
-			
-			if(($doItForMe) AND (eregi("^insert", $this->last_query))) {
-				//attempt to parse the insert statement, then select 
-				// all fields (unless $field is set) from it.
-				$t = split(" into ", strtolower($this->last_query));
-				$t = split(" ", $t[1]);
-				$t = split("\(", $t[0]);
-				$table = $t[0];
-				
-				//now we have the table. 
-				if(!$field) {
-					$field = "*";
-				}
-				$query = "SELECT $field FROM $table WHERE OID=$tOid";
-				$this->exec($query);
-				$dberror = $this->errorMsg(1,1,1,"lastOID(): ");
-				
-				if(!$dberror) {
-					$res = $this->farray();
-					if(is_string($field)) {
-						$retval = $res[0];
-					}
-				}
-			}
-		}
+	function lastID() {
+		$retval = mysql_insert_id();
 		return($retval);
 	}//end lastOID()
 	//=========================================================================
@@ -769,90 +735,12 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$retval = pg_field_name($this->result, $fieldnum);
+			$retval = mysql_field_name($this->result, $fieldnum);
 		}
 		
 		return($retval);
 	}//end fieldname()
 	//=========================================================================
-	
-	
-	
-	
-	////////////////////////
-	// Transaction related
-	////////////////////////
-	
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Start a transaction.
-	 */
-	function beginTrans($transName=NULL) {
-		$transStatus = $this->get_transaction_status(TRUE);
-		if(!$this->inTrans) {
-			//not in a transaction.  Set up the transaction tree properly.
-			$this->transactionTree = array();
-		}
-		else {
-			if($this->inTrans && is_null($this->transactionTree)) {
-				$transLevel = $this->get_transaction_level();
-				//transaction started without using beginTrans()...
-				$this->transactionTree = array();
-				$this->gfObj->debug_print(__METHOD__ .": transaction already started, transStatus=(". $transStatus ."), transLevel=(". $transLevel .")");
-				$this->transactionTree[] = "Already started...";
-			}
-		}
-		
-		if(is_null($transName)) {
-			$transName = time(TRUE);
-		}
-		$this->transactionTree[] = $transName;
-		$transLevel = $this->get_transaction_level();
-		$this->gfObj->debug_print(__METHOD__ .": starting transaction at transLevel=(". $transLevel .")");
-		return($this->exec("BEGIN"));
-	}//end beginTrans()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Commit a transaction.
-	 */
-	function commitTrans() {
-		$retval = $this->get_transaction_status();
-		$lastTransLayer = array_pop($this->transactionTree);
-		$transLevel = $this->get_transaction_level();
-		if($transLevel == 0) {
-			if($retval > 1) {
-				$retval = 1;
-			}
-			$this->exec("COMMIT");
-			
-			//check to see if there was an error (deferred constraints are checked at commit time)
-			if(strlen($this->errorMsg())) {
-				$retval = 0;
-			}
-		}
-		$this->get_transaction_status();
-		return($retval);
-	}//end commitTrans()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	// returns true/false
-	function rollbackTrans() {
-		$retval = $this->exec("ABORT");
-		$this->get_transaction_status();
-		return($retval);
-	}//end rollbackTrans()
-	//=========================================================================
-	
 	
 	
 	////////////////////////
