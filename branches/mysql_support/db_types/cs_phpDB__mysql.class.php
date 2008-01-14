@@ -161,8 +161,7 @@ class cs_phpDB__mysql {
 		$this->isConnected = FALSE;
 		$retval = null;
 		if($this->connectionID != -1) {
-			//TODO: implement MySQL version..
-			#$retval = pg_close($this->connectionID);
+			$retval = mysqlclose($this->connectionID);
 		}
 		else {
 			throw new exception(__METHOD__ .": Failed to close connection: connection is invalid");
@@ -187,26 +186,10 @@ class cs_phpDB__mysql {
 		
 		if($this->paramsAreSet === TRUE && $this->isConnected === FALSE) {
 			
-			$myConnArr = array(
-				'host'		=> $this->host,
-				'dbname'	=> $this->dbname,
-				'user'		=> $this->user,
-				'password'	=> $this->password
-			);
-			
-			//make it into a string separated by spaces, don't clean anything, remove null elements
-			$connStr = $this->gfObj->string_from_array($myConnArr, 'url', " ");
-			
 			//start output buffer for displaying error.
 			ob_start();
-			if($forceNewConnection) {
-				//TODO: implement MySQL version..
-				$connID = pg_connect($connStr, PGSQL_CONNECT_FORCE_NEW);
-			}
-			else {
-				//TODO: implement MySQL version..
-				$connID =pg_connect($connStr);
-			}
+			$connID = mysql_connect($this->host, $this->user, $this->pass, $forceNewConnection);
+			mysql_select_db($this->dbname);
 			$connectError = ob_get_contents();
 			ob_end_clean();
 			
