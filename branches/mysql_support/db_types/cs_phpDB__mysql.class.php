@@ -235,8 +235,7 @@ class cs_phpDB__mysql {
 		}
 		$returnVal = false;
 		
-		//TODO: implement MySQL version..
-		$this->result = @mysql_query($this->connectionID, $query);
+		$this->result = mysql_query($query, $this->connectionID);
 		
 		if($this->result !== false) {
 			if (eregi("^[[:space:]]*select", $query)) {
@@ -633,7 +632,7 @@ class cs_phpDB__mysql {
 			$retval = 0;
 		} else {
 			//TODO: implement MySQL version..
-			$this->affectedRows = mysql_affected_rows($this->result);
+			$this->affectedRows = mysql_affected_rows($this->connectionID);
 			$retval = $this->affectedRows;
 		}
 		
@@ -653,7 +652,7 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$this->numrows = mysql_num_rows($this->result);
+			$this->numrows = mysql_num_rows($this->connectionID);
 			$retval = $this->numrows;
 		}
 		
