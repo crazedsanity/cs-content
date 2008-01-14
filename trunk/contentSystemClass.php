@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * FILE INFORMATION: 
  * $HeadURL$
@@ -803,8 +803,7 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Method for accessing the protected $this->sectionArr array.
 	 */
-	public function get_sectionArr()
-	{
+	public function get_sectionArr() {
 		//give 'em what they want.
 		return($this->sectionArr);
 	}//end get_sectionArr()
@@ -816,8 +815,7 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Method for accessing the protected member $this->finalSection.
 	 */
-	public function get_finalSection()
-	{
+	public function get_finalSection() {
 		//give 'em what they want.
 		return($this->finalSection);
 	}//end get_finalSection()
@@ -829,8 +827,7 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Method for accessing "baseDir", only referenced as the base section.
 	 */
-	public function get_baseSection()
-	{
+	public function get_baseSection() {
 		return($this->baseDir);
 	}//end get_baseSection()
 	//------------------------------------------------------------------------
