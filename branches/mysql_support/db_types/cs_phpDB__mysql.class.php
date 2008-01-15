@@ -652,7 +652,7 @@ class cs_phpDB__mysql {
 		}
 		else {
 			//TODO: implement MySQL version..
-			$this->numrows = mysql_num_rows($this->connectionID);
+			$this->numrows = mysql_num_rows($this->result);
 			$retval = $this->numrows;
 		}
 		
