@@ -259,7 +259,7 @@ class cs_genericPage extends cs_versionAbstract {
 		
 		if($stripUndefVars) {
 			$numLoops = 0;
-			while(preg_match_all('/\{.*?\}/', $this->templateObj->varvals['out'], $tags) && $numLoops < 50) {
+			while(preg_match_all('/\{.\S+?\}/', $this->templateObj->varvals['out'], $tags) && $numLoops < 50) {
 				$tags = $tags[0];
 				
 				//TODO: figure out why this works when running it twice.
