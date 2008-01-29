@@ -90,7 +90,7 @@ class contentSystem extends cs_versionAbstract {
 								);
 	protected $templateList		= array();
 	protected $includesList		= array();
-	protected $templateObj		= NULL;
+	public $templateObj		= NULL;
 	protected $gfObj			= NULL;
 	protected $tabs				= NULL;
 	
