@@ -291,7 +291,8 @@ class contentSystem extends cs_versionAbstract {
 		if(!strlen($section)) {
 			//TODO: remove the extra return statement (should only be one at the bottom of the method).
 			return(0);
-		} else {
+		}
+		else {
 			//check the string to make sure it doesn't begin or end with a "/"
 			if($section[0] == '/') {
 				$section = substr($section, 1, strlen($section));
@@ -363,7 +364,8 @@ class contentSystem extends cs_versionAbstract {
 			
 			//now cd() all the way back.
 			$this->fileSystemObj->cd('/');
-		} else {
+		}
+		else {
 			//couldn't find the templates directory, and no includes... it's dead.
 			$this->die_gracefully(__METHOD__ .": unable to find the templates directory, or non-valid page [". $this->validate_page() ."]");
 		}
@@ -412,7 +414,8 @@ class contentSystem extends cs_versionAbstract {
 			}
 			elseif(is_array(array_values($lsDir)) && (is_array($lsDir[$indexFilename]))) {
 				$myIndex = $indexFilename;
-			} else {
+			}
+			else {
 				//nothin' doin'.
 				$myIndex = NULL;
 			}
@@ -426,10 +429,12 @@ class contentSystem extends cs_versionAbstract {
 			if(isset($myIndex)) {
 				$valid = TRUE;
 				$this->fileSystemObj->cd('/templates');
-			} else {
+			}
+			else {
 				$this->reason = __METHOD__ .": couldn't find page template for ". $this->section;
 			}
-		} else {
+		}
+		else {
 			//if the baseDir is "help", this would try to use "/help/index.content.tmpl"
 			$myFile = $this->baseDir .'/index.content.tmpl';
 			$sectionLsData = $this->fileSystemObj->ls($myFile);
@@ -446,7 +451,8 @@ class contentSystem extends cs_versionAbstract {
 				//we're good.
 				$valid = TRUE;
 				$this->finalSection = $this->baseDir;
-			} else {
+			}
+			else {
 				$this->reason = __METHOD__ .": couldn't find base template.";
 			}
 		}
