@@ -260,8 +260,7 @@ class contentSystem extends cs_versionAbstract {
 	 * Rips apart the "section" string, setting $this->section and $this->sectionArr.
 	 */
 	private function parse_section() {
-		//
-		if($this->section === 0) {
+		if($this->section === 0 || is_null($this->section) || !strlen($this->section)) {
 			$this->section = "content/index";
 		}
 		$myArr = split('/', $this->section);
