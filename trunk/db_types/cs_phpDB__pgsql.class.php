@@ -831,7 +831,6 @@ class cs_phpDB__pgsql {
 		}
 		$this->transactionTree[] = $transName;
 		$transLevel = $this->get_transaction_level();
-		$this->gfObj->debug_print(__METHOD__ .": starting transaction at transLevel=(". $transLevel .")");
 		return($this->exec("BEGIN"));
 	}//end beginTrans()
 	//=========================================================================
