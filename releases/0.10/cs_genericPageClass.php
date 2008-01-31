@@ -259,7 +259,7 @@ class cs_genericPage extends cs_versionAbstract {
 		
 		if($stripUndefVars) {
 			$numLoops = 0;
-			while(preg_match_all('/\{.*?\}/', $this->templateObj->varvals['out'], $tags) && $numLoops < 50) {
+			while(preg_match_all('/\{.\S+?\}/', $this->templateObj->varvals['out'], $tags) && $numLoops < 50) {
 				$tags = $tags[0];
 				
 				//TODO: figure out why this works when running it twice.
@@ -288,8 +288,9 @@ class cs_genericPage extends cs_versionAbstract {
 	 */
 	public function process_set_message() {
 		//if there's not a message set, skip.
-		$errorBox = $this->file_to_string("system/message_box.tmpl");
+		$errorBox = "";
 		if(isset($_SESSION['message']) && is_array($_SESSION['message'])) {
+			$errorBox = $this->file_to_string("system/message_box.tmpl");
 			//let's make sure the "type" value is *lowercase*.
 			$_SESSION['message']['type'] = strtolower($_SESSION['message']['type']);
 			
@@ -309,6 +310,7 @@ class cs_genericPage extends cs_versionAbstract {
 			//	they'll never get past this point).
 			unset($_SESSION['message']);
 		}
+		return($errorBox);
 	}//end of process_set_message()
 	//---------------------------------------------------------------------------------------------
 	

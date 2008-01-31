@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * FILE INFORMATION: 
  * $HeadURL$
@@ -90,7 +90,7 @@ class contentSystem extends cs_versionAbstract {
 								);
 	protected $templateList		= array();
 	protected $includesList		= array();
-	protected $templateObj		= NULL;
+	public $templateObj		= NULL;
 	protected $gfObj			= NULL;
 	protected $tabs				= NULL;
 	
@@ -260,8 +260,7 @@ class contentSystem extends cs_versionAbstract {
 	 * Rips apart the "section" string, setting $this->section and $this->sectionArr.
 	 */
 	private function parse_section() {
-		//
-		if($this->section === 0) {
+		if($this->section === 0 || is_null($this->section) || !strlen($this->section)) {
 			$this->section = "content/index";
 		}
 		$myArr = split('/', $this->section);
@@ -291,7 +290,8 @@ class contentSystem extends cs_versionAbstract {
 		if(!strlen($section)) {
 			//TODO: remove the extra return statement (should only be one at the bottom of the method).
 			return(0);
-		} else {
+		}
+		else {
 			//check the string to make sure it doesn't begin or end with a "/"
 			if($section[0] == '/') {
 				$section = substr($section, 1, strlen($section));
@@ -363,7 +363,8 @@ class contentSystem extends cs_versionAbstract {
 			
 			//now cd() all the way back.
 			$this->fileSystemObj->cd('/');
-		} else {
+		}
+		else {
 			//couldn't find the templates directory, and no includes... it's dead.
 			$this->die_gracefully(__METHOD__ .": unable to find the templates directory, or non-valid page [". $this->validate_page() ."]");
 		}
@@ -412,7 +413,8 @@ class contentSystem extends cs_versionAbstract {
 			}
 			elseif(is_array(array_values($lsDir)) && (is_array($lsDir[$indexFilename]))) {
 				$myIndex = $indexFilename;
-			} else {
+			}
+			else {
 				//nothin' doin'.
 				$myIndex = NULL;
 			}
@@ -426,18 +428,30 @@ class contentSystem extends cs_versionAbstract {
 			if(isset($myIndex)) {
 				$valid = TRUE;
 				$this->fileSystemObj->cd('/templates');
-			} else {
+			}
+			else {
 				$this->reason = __METHOD__ .": couldn't find page template for ". $this->section;
 			}
-		} else {
-			//just the base template.  Make sure it's good.
+		}
+		else {
+			//if the baseDir is "help", this would try to use "/help/index.content.tmpl"
 			$myFile = $this->baseDir .'/index.content.tmpl';
-			$lsData = $this->fileSystemObj->ls($myFile);
-			if(isset($lsData[$myFile]) && $lsData[$myFile]['type'] == 'file') {
+			$sectionLsData = $this->fileSystemObj->ls($myFile);
+			
+			//if the baseDir is "help", this would try to use "/help.content.tmpl"
+			$sectionFile = $this->baseDir .'.content.tmpl';
+			$lsData = $this->fileSystemObj->ls();
+			
+			if(isset($lsData[$sectionFile]) && is_array($lsData[$sectionFile])) {
+				$valid = TRUE;
+				$this->finalSection = $this->baseDir;
+			}
+			elseif(isset($sectionLsData[$myFile]) && $sectionLsData[$myFile]['type'] == 'file') {
 				//we're good.
 				$valid = TRUE;
 				$this->finalSection = $this->baseDir;
-			} else {
+			}
+			else {
 				$this->reason = __METHOD__ .": couldn't find base template.";
 			}
 		}
@@ -493,6 +507,10 @@ class contentSystem extends cs_versionAbstract {
 				foreach($tmplList['index'] as $mySection => $myTmpl) {
 					$this->templateList[$mySection] = $myTmpl;
 				}
+			}
+			if(isset($tmplList[$this->baseDir]['content'])) {
+				//load template for the main page (if $this->baseDir == "help", this would load "/help.content.tmpl" as content)
+				$this->templateList['content'] = $tmplList[$this->baseDir]['content'];
 			}
 		}
 	}//end load_page_templates()
@@ -561,6 +579,7 @@ class contentSystem extends cs_versionAbstract {
 				if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
 					$filename = $this->gfObj->create_list($this->fileSystemObj->cwd, $index, '/');
 					$filename = preg_replace('/^\/templates/', '', $filename);
+					$filename = preg_replace('/^\/\//', '/', $filename);
 					//call another method to rip the filename apart properly, then arrange things as needed.
 					$pieces = $this->parse_filename($index);
 					$myPriIndex = $pieces[$primaryIndex];
@@ -789,8 +808,7 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Method for accessing the protected $this->sectionArr array.
 	 */
-	public function get_sectionArr()
-	{
+	public function get_sectionArr() {
 		//give 'em what they want.
 		return($this->sectionArr);
 	}//end get_sectionArr()
@@ -802,8 +820,7 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Method for accessing the protected member $this->finalSection.
 	 */
-	public function get_finalSection()
-	{
+	public function get_finalSection() {
 		//give 'em what they want.
 		return($this->finalSection);
 	}//end get_finalSection()
@@ -815,8 +832,7 @@ class contentSystem extends cs_versionAbstract {
 	/**
 	 * Method for accessing "baseDir", only referenced as the base section.
 	 */
-	public function get_baseSection()
-	{
+	public function get_baseSection() {
 		return($this->baseDir);
 	}//end get_baseSection()
 	//------------------------------------------------------------------------

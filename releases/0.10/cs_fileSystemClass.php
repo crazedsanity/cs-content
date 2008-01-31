@@ -1,4 +1,4 @@
-<?
+<?php
 
 /*
  * FILE INFORMATION:
