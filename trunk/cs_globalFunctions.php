@@ -524,7 +524,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	
 		$output = "<pre>$output</pre>";
 	
-		if(!$_SERVER['SERVER_PROTOCOL']) {
+		if(!isset($_SERVER['SERVER_PROTOCOL']) || !$_SERVER['SERVER_PROTOCOL']) {
 			$output = strip_tags($output);
 			$hrString = "\n***************************************************************\n";
 		}
