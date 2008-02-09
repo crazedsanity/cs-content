@@ -441,7 +441,10 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	 */
 	 function read($filename, $returnArray=FALSE) {
 	 	$myFile = $this->filename2absolute($filename);
-	 	if($this->is_readable($filename)) {
+	 	if(!file_exists($myFile)) {
+	 		throw new exception(__METHOD__ .": file doesn't exist (". $myFile .")");
+	 	}
+	 	elseif($this->is_readable($myFile)) {
 	 		if($returnArray) {
 	 			$data = file($myFile);
 	 		}
@@ -454,7 +457,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		 	}
 	 	}
 	 	else {
-	 		throw new exception(__METHOD__. ": File isn't readable (". $filename .")");
+	 		throw new exception(__METHOD__. ": File isn't readable (". $myFile .")");
 	 	}
 	 	return($data);
 	 }//end read()
