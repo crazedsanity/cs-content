@@ -1,7 +1,7 @@
 <?php
 
 /*
- * A class for generic PostgreSQL database access.
+ * A class for generic MySQL database access.
  * 
  * SVN INFORMATION:::
  * SVN Signature:::::::: $Id$
@@ -10,26 +10,9 @@
  * 
  */
 
-///////////////////////
-// ORIGINATION INFO:
-// 		Author: Trevin Chow (with contributions from Lee Pang, wleepang@hotmail.com)
-// 		Email: t1@mail.com
-// 		Date: February 21, 2000
-// 		Last Updated: August 14, 2001
-//
-// 		Description:
-//  		Abstracts both the php function calls and the server information to POSTGRES
-//  		databases.  Utilizes class variables to maintain connection information such
-//  		as number of rows, result id of last operation, etc.
-//
-///////////////////////
 
-//TODO: option to not use layered transactions
-//TODO: rollbackTrans() in layered transaction causes abort when final layer is committed/aborted
-//TODO: stop sending queries to backend when transction is bad/aborted.
-//TODO: commit/abort specific layer requests (i.e. if there's 8 layers & the first is named "x", calling commitTrans("x") will cause the whole transaction to commit & all layers to be destroyed.
 
-class cs_phpDB__pgsql {
+class cs_phpDB__mysql {
 
 	/** Internal result set pointer. */
 	protected $result = NULL;
@@ -132,7 +115,7 @@ class cs_phpDB__pgsql {
 	 */
 	public function set_db_info(array $params){
 		$this->sanity_check();
-		$required = array('host', 'port', 'dbname', 'user', 'password');
+		$required = array('host', 'dbname', 'user', 'password');
 		
 		$requiredCount = 0;
 		foreach($params as $index=>$value) {
@@ -178,7 +161,7 @@ class cs_phpDB__pgsql {
 		$this->isConnected = FALSE;
 		$retval = null;
 		if($this->connectionID != -1) {
-			$retval = pg_close($this->connectionID);
+			$retval = mysqlclose($this->connectionID);
 		}
 		else {
 			throw new exception(__METHOD__ .": Failed to close connection: connection is invalid");
@@ -203,25 +186,10 @@ class cs_phpDB__pgsql {
 		
 		if($this->paramsAreSet === TRUE && $this->isConnected === FALSE) {
 			
-			$myConnArr = array(
-				'host'		=> $this->host,
-				'port'		=> $this->port,
-				'dbname'	=> $this->dbname,
-				'user'		=> $this->user,
-				'password'	=> $this->password
-			);
-			
-			//make it into a string separated by spaces, don't clean anything, remove null elements
-			$connStr = $this->gfObj->string_from_array($myConnArr, 'url', " ");
-			
 			//start output buffer for displaying error.
 			ob_start();
-			if($forceNewConnection) {
-				$connID = pg_connect($connStr, PGSQL_CONNECT_FORCE_NEW);
-			}
-			else {
-				$connID =pg_connect($connStr);
-			}
+			$connID = mysql_connect($this->host, $this->user, $this->pass, $forceNewConnection);
+			mysql_select_db($this->dbname);
 			$connectError = ob_get_contents();
 			ob_end_clean();
 			
@@ -267,25 +235,23 @@ class cs_phpDB__pgsql {
 		}
 		$returnVal = false;
 		
-		if(($this->get_transaction_status() != -1) && ($this->connectionID != -1)) {
-			$this->result = @pg_query($this->connectionID, $query);
-
-			if($this->result !== false) {
-				if (eregi("^[[:space:]]*select", $query)) {
-					//If we didn't have an error and we are a select statement, move the pointer to first result
-					$numRows = $this->numRows();
-					if($numRows > 0) {
-						$this->move_first();
-					}
-					$returnVal = $numRows;
-					
+		$this->result = mysql_query($query, $this->connectionID);
+		
+		if($this->result !== false) {
+			if (eregi("^[[:space:]]*select", $query)) {
+				//If we didn't have an error and we are a select statement, move the pointer to first result
+				$numRows = $this->numRows();
+				if($numRows > 0) {
+					$this->move_first();
 				}
-				else {
-					//We got something other than an update. Use numAffected
-					$returnVal = $this->numAffected();
-				}
+				$returnVal = $numRows;
+				
 			}
- 		}
+			else {
+				//We got something other than an update. Use numAffected
+				$returnVal = $this->numAffected();
+			}
+		}
 		return($returnVal);
 	}//end exec()
 	//=========================================================================
@@ -302,6 +268,7 @@ class cs_phpDB__pgsql {
 	function errorMsg($setMessage=NULL,$logError=NULL) {
 		$this->sanity_check();
 		if ($this->connectionID < 0) {
+			//TODO: implement MySQL version (error codes may vary)...
 			switch ($this->errorCode) {
 				//###############################################
 				case -1:
@@ -327,7 +294,8 @@ class cs_phpDB__pgsql {
 				//###############################################
 			}
 		} else {
-			$retVal = pg_last_error($this->connectionID);
+			//TODO: implement MySQL version..
+			$retVal = mysql_error($this->connectionID);
 		}
 
 		return($retVal);
@@ -467,7 +435,8 @@ class cs_phpDB__pgsql {
 			$retval = NULL;
 		}
 		else {
-			$retval = pg_fetch_object($this->result, $this->row);
+			//TODO: implement MySQL version..
+			$retval = mysql_fetch_object($this->result, $this->row);
 		}
 		
 		return($retval);
@@ -485,7 +454,8 @@ class cs_phpDB__pgsql {
 			$retval = NULL;
 		}
 		else {
-			$retval = pg_fetch_array($this->result,$this->row);
+			//TODO: implement MySQL version..
+			$retval = mysql_fetch_array($this->result,$this->row);
 		}
 		
 		return($retval);
@@ -508,7 +478,8 @@ class cs_phpDB__pgsql {
 				$retval = NULL;
 			}
 			else {
-				$retval = pg_fetch_row($this->result, $this->row);
+			//TODO: implement MySQL version..
+				$retval = mysql_fetch_row($this->result, $this->row);
 			}
 		}
 		
@@ -611,7 +582,7 @@ class cs_phpDB__pgsql {
 		if((!$name) OR (!$value)) {
 			$retval = 0;
 		}
-		else {
+		else {	
 			$tArr = $this->farray_fieldnames(NULL,1);
 			if(!is_array($tArr)) {
 				$retval = 0;
@@ -660,7 +631,8 @@ class cs_phpDB__pgsql {
 		if($this->result == null) {
 			$retval = 0;
 		} else {
-			$this->affectedRows = pg_affected_rows($this->result);
+			//TODO: implement MySQL version..
+			$this->affectedRows = mysql_affected_rows($this->connectionID);
 			$retval = $this->affectedRows;
 		}
 		
@@ -679,7 +651,8 @@ class cs_phpDB__pgsql {
 			$retval = 0;
 		}
 		else {
-			$this->numrows = pg_num_rows($this->result);
+			//TODO: implement MySQL version..
+			$this->numrows = mysql_num_rows($this->result);
 			$retval = $this->numrows;
 		}
 		
@@ -721,7 +694,8 @@ class cs_phpDB__pgsql {
 			$retval = 0;
 		}
 		else {
-			$retval = pg_num_fields($this->result);
+			//TODO: implement MySQL version..
+			$retval = mysql_num_fields($this->result);
 		}
 		return($retval);	
 	}//end num_fields()
@@ -739,40 +713,10 @@ class cs_phpDB__pgsql {
 	
 	//=========================================================================
 	/** 
-	 * get last OID (object identifier) of last INSERT statement
+	 * get last ID of last INSERT statement
 	 */
-	function lastOID($doItForMe=0, $field=NULL) {
-		if($this->result == NULL) {
-			$retval = NULL;
-		}
-		else {
-			$tOid = pg_last_oid($this->result);
-			$retval = $tOid;
-			
-			if(($doItForMe) AND (eregi("^insert", $this->last_query))) {
-				//attempt to parse the insert statement, then select 
-				// all fields (unless $field is set) from it.
-				$t = split(" into ", strtolower($this->last_query));
-				$t = split(" ", $t[1]);
-				$t = split("\(", $t[0]);
-				$table = $t[0];
-				
-				//now we have the table. 
-				if(!$field) {
-					$field = "*";
-				}
-				$query = "SELECT $field FROM $table WHERE OID=$tOid";
-				$this->exec($query);
-				$dberror = $this->errorMsg(1,1,1,"lastOID(): ");
-				
-				if(!$dberror) {
-					$res = $this->farray();
-					if(is_string($field)) {
-						$retval = $res[0];
-					}
-				}
-			}
-		}
+	function lastID() {
+		$retval = mysql_insert_id();
 		return($retval);
 	}//end lastOID()
 	//=========================================================================
@@ -789,89 +733,13 @@ class cs_phpDB__pgsql {
 			$retval =NULL;
 		}
 		else {
-			$retval = pg_field_name($this->result, $fieldnum);
+			//TODO: implement MySQL version..
+			$retval = mysql_field_name($this->result, $fieldnum);
 		}
 		
 		return($retval);
 	}//end fieldname()
 	//=========================================================================
-	
-	
-	
-	
-	////////////////////////
-	// Transaction related
-	////////////////////////
-	
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Start a transaction.
-	 */
-	function beginTrans($transName=NULL) {
-		$transStatus = $this->get_transaction_status(TRUE);
-		if(!$this->inTrans) {
-			//not in a transaction.  Set up the transaction tree properly.
-			$this->transactionTree = array();
-		}
-		else {
-			if($this->inTrans && is_null($this->transactionTree)) {
-				$transLevel = $this->get_transaction_level();
-				//transaction started without using beginTrans()...
-				$this->transactionTree = array();
-				$this->gfObj->debug_print(__METHOD__ .": transaction already started, transStatus=(". $transStatus ."), transLevel=(". $transLevel .")");
-				$this->transactionTree[] = "Already started...";
-			}
-		}
-		
-		if(is_null($transName)) {
-			$transName = time(TRUE);
-		}
-		$this->transactionTree[] = $transName;
-		$transLevel = $this->get_transaction_level();
-		return($this->exec("BEGIN"));
-	}//end beginTrans()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Commit a transaction.
-	 */
-	function commitTrans() {
-		$retval = $this->get_transaction_status();
-		$lastTransLayer = array_pop($this->transactionTree);
-		$transLevel = $this->get_transaction_level();
-		if($transLevel == 0) {
-			if($retval > 1) {
-				$retval = 1;
-			}
-			$this->exec("COMMIT");
-			
-			//check to see if there was an error (deferred constraints are checked at commit time)
-			if(strlen($this->errorMsg())) {
-				$retval = 0;
-			}
-		}
-		$this->get_transaction_status();
-		return($retval);
-	}//end commitTrans()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	// returns true/false
-	function rollbackTrans() {
-		$retval = $this->exec("ABORT");
-		$this->get_transaction_status();
-		return($retval);
-	}//end rollbackTrans()
-	//=========================================================================
-	
 	
 	
 	////////////////////////
@@ -916,6 +784,7 @@ class cs_phpDB__pgsql {
 	 * 								on something)
 	 */
 	function get_transaction_status($goodOrBad=TRUE) {
+		//TODO: implement MySQL version..
 		$myStatus = pg_transaction_status($this->connectionID);
 		$text = 'unknown';
 		switch($myStatus) {
@@ -992,72 +861,12 @@ class cs_phpDB__pgsql {
 	
 	//=========================================================================
 	/**
-	 * Create a prepared statement.
-	 */
-	public function create_prepared_statement($planName,array $fieldToType, $statement) {
-		$retval = FALSE;
-		//store the mappings.
-		$this->preparedStatements[$planName] = $fieldToType;
-		
-		//TODO: check that the string in "$statement" has the same number of "${n}" as are in "$fieldToType".
-		
-		$dataTypeString = "";
-		foreach($fieldToType as $field => $type) {
-			$dataTypeString = $this->gfObj->create_list($dataTypeString, $type, ", ");
-		}
-		
-		$sql = "PREPARE ". $planName ."(". $dataTypeString .") AS ". $statement;
-		
-		$myNumrows = $this->exec($sql);
-		$myDberror = $this->errorMsg();
-		
-		if(!strlen($myDberror)) {
-			$retval = TRUE;
-		}
-		else {
-			throw new exception(__METHOD__ .": failed to create prepared statement '". $planName ."'... dberror::: ". $myDberror ."\n\nSQL::: ". $sql);
-		}
-		
-		return($retval);
-	}//end create_prepared_statement()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Run a statement prepared by this object.
-	 * 
-	 * NOTE: determination of rows affected (numAffected) vs. rows returned (numRows) 
-	 * must be done by the user via the referenced methods.
-	 */
-	public function run_prepared_statement($name, array $data) {
-		$retval = FALSE;
-		if(is_array($this->preparedStatements[$name]) && count($data) == count($this->preparedStatements[$name])) {
-			$this->result = pg_execute($this->connectionID, $name, $data);
-			$dberror = $this->errorMsg();
-			
-			if(!strlen($dberror)) {
-				$retval = TRUE;
-			}
-		}
-		else {
-			throw new exception(__METHOD__ .": invalid statement name (". $name ."), or incorrect number of elements");
-		}
-		
-		return($retval);
-	}//end run_prepared_statement()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
 	 * Starts a copy command.
 	 * 
 	 * TODO: implement safeguards so they can only put a line until the copy is ended.
 	 */
 	public function start_copy($tableName, array $fields) {
+		//TODO: implement MySQL version..
 		$retval = FALSE;
 		$copyStmt = "COPY ". $tableName ." (". $this->gfObj->string_from_array($fields, NULL, ", ") . ") FROM stdin;";
 		$this->exec($copyStmt);
@@ -1085,6 +894,7 @@ class cs_phpDB__pgsql {
 	 * NOTE: the "end-of-copy" line, '\.', should NEVER be sent here.
 	 */
 	public function put_line($line) {
+		//TODO: implement MySQL version..
 		$retval = FALSE;
 		if($this->copyInProgress === TRUE) {
 			$myLine = trim($line);
@@ -1109,6 +919,7 @@ class cs_phpDB__pgsql {
 			$this->put_line("\\.\n");
 		}
 		
+		//TODO: implement MySQL version..
 		$retval = pg_end_copy($this->connectionID);
 		
 		return($retval);
@@ -1158,4 +969,3 @@ class cs_phpDB__pgsql {
 } // end class phpDB
 
 ?>
->>>>>>> .merge-right.r257
