@@ -1158,4 +1158,3 @@ class cs_phpDB__pgsql {
 } // end class phpDB
 
 ?>
->>>>>>> .merge-right.r257
