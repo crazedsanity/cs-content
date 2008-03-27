@@ -233,6 +233,10 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		} else {
 			$retval = $int;
 		}
+		
+		if(!function_exists($func)) {
+			throw new exception(__METHOD__ .": required function missing (". $func .")");
+		}
 		$t = $func($int);
 		return($t['name']);
 	
