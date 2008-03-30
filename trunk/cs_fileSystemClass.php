@@ -846,5 +846,24 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	//========================================================================================
 	
 	
+	
+	//========================================================================================
+	public function copy_file($filename, $destination) {
+		$retval = FALSE;
+		if($this->openFile()) {
+			if($this->check_chroot($destination)) {
+				//okay, try to copy.
+				$retval = copy($this->fh, $destination);
+			}
+			else {
+				throw new exception(__METHOD__ .':: destination is not in the directory path');
+			}
+		}
+		
+		return($retval);
+	}//end copy_file()
+	//========================================================================================
+	
+	
 }//end cs_filesystemClass{}
 ?>
