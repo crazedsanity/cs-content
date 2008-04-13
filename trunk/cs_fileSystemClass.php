@@ -291,15 +291,19 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	public function create_file($filename, $truncateFile=FALSE) {
 		
 		$retval = 0;
+		$filename = $this->resolve_path_with_dots($filename);
 		$this->filename = $filename;
 		
 		//check to see if the file exists...
 		if(!file_exists($filename)) {
 			if($this->is_writable(dirname($filename))) {
 				//no file.  Create it.
-				$createFileRes = touch($this->realcwd .'/'. $filename);
+				$createFileRes = touch($filename);
 				if($createFileRes) {
 					$retval = 1;
+				}
+				else {
+					throw new exception(__METHOD__ .": invalid return from touch(". $filename ."), return was (". $createFileRes .")");
 				}
 			}
 			else {
@@ -319,6 +323,9 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			else {
 				throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
 			}
+		}
+		else {
+			throw new exception(__METHOD__ .": file exists and truncate not set");
 		}
 		return($retval);
 	}//end create_file()
