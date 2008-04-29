@@ -43,6 +43,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		}
 		
 		$this->gf = new cs_globalFunctions();
+		$this->root = $this->resolve_path_with_dots($this->root);
 		
 		//set the CURRENT working directory... this should be a RELATIVE path to $this->root.
 		if(($cwd) AND (is_dir($rootDir .'/'. $cwd)) AND (!ereg($this->root, $cwd))) {
@@ -232,6 +233,10 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		} else {
 			$retval = $int;
 		}
+		
+		if(!function_exists($func)) {
+			throw new exception(__METHOD__ .": required function missing (". $func .")");
+		}
 		$t = $func($int);
 		return($t['name']);
 	
@@ -286,15 +291,19 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	public function create_file($filename, $truncateFile=FALSE) {
 		
 		$retval = 0;
+		$filename = $this->resolve_path_with_dots($filename);
 		$this->filename = $filename;
 		
 		//check to see if the file exists...
 		if(!file_exists($filename)) {
 			if($this->is_writable(dirname($filename))) {
 				//no file.  Create it.
-				$createFileRes = touch($this->realcwd .'/'. $filename);
+				$createFileRes = touch($filename);
 				if($createFileRes) {
 					$retval = 1;
+				}
+				else {
+					throw new exception(__METHOD__ .": invalid return from touch(". $filename ."), return was (". $createFileRes .")");
 				}
 			}
 			else {
@@ -314,6 +323,9 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			else {
 				throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
 			}
+		}
+		else {
+			throw new exception(__METHOD__ .": file exists and truncate not set");
 		}
 		return($retval);
 	}//end create_file()
@@ -409,18 +421,22 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	private function filename2absolute($filename) {
 		
 		clearstatcache();
+		
+		$filename = $this->resolve_path_with_dots($filename);
+		
 		//see if it starts with a "/"...
 		if(preg_match("/^\//", $filename)) {
-			//it's an absolute path... see if it's one we can use.
-			$myCwd = preg_replace('/\//', '\\\/', $this->realcwd);
-			if(preg_match('/^'. $myCwd .'/', $filename)) {
-				$retval = $filename;
-			}
-			else {
-				throw new exception(__METHOD__ .": path is outside the allowed directory: ". $filename);
-			}
+			$retval = $filename;
 		} else {
 			$retval=$this->realcwd .'/'. $filename;
+			$retval = $this->resolve_path_with_dots($retval);
+			#debug_print(__METHOD__ .": realcwd=(". $this->realcwd .")");
+			#$this->resolve_path_with_dots($retval);
+		}
+		
+		if(!$this->check_chroot($retval)) {
+			debug_print(func_get_args());
+			throw new exception(__METHOD__ .": file is outside of allowed directory (". $retval .")");
 		}
 		
 		return($retval);
@@ -436,7 +452,10 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	 */
 	 function read($filename, $returnArray=FALSE) {
 	 	$myFile = $this->filename2absolute($filename);
-	 	if($this->is_readable($filename)) {
+	 	if(!file_exists($myFile)) {
+	 		throw new exception(__METHOD__ .": file doesn't exist (". $myFile .")");
+	 	}
+	 	elseif($this->is_readable($myFile)) {
 	 		if($returnArray) {
 	 			$data = file($myFile);
 	 		}
@@ -449,7 +468,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		 	}
 	 	}
 	 	else {
-	 		throw new exception(__METHOD__. ": File isn't readable (". $filename .")");
+	 		throw new exception(__METHOD__. ": File isn't readable (". $myFile .")");
 	 	}
 	 	return($data);
 	 }//end read()
@@ -747,6 +766,109 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		
 		return($retval);
 	}//end go_to_line()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	/**
+	 * Fix a path that contains "../".
+	 * 
+	 * EXAMPLE: changes "/home/user/blah/blah/../../test" into "/home/user/test"
+	 */
+	public function resolve_path_with_dots($path) {
+		
+		while(preg_match('/\/\//', $path)) {
+			$path = preg_replace('/\/\//', '/', $path);
+		}
+		$retval = $path;
+		if(strlen($path) && preg_match('/\./', $path)) {
+			
+			$isAbsolute = FALSE;
+			if(preg_match('/^\//', $path)) {
+				$isAbsolute = TRUE;
+				$path = preg_replace('/^\//', '', $path);
+			}
+			$pieces = explode('/', $path);
+			
+			$finalPieces = array();
+			for($i=0; $i < count($pieces); $i++) {
+				$dirName = $pieces[$i];
+				if($dirName == '.') {
+					//do nothing; don't bother appending.
+				}
+				elseif($dirName == '..') {
+					$rippedIndex = array_pop($finalPieces);
+				}
+				else {
+					$finalPieces[] = $dirName;
+				}
+			}
+			
+			$retval = $this->gf->string_from_array($finalPieces, NULL, '/');
+			if($isAbsolute) {
+				$retval = '/'. $retval;
+			}
+		}
+		
+		return($retval);
+	}//end resolve_path_with_dots()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	private function check_chroot($path) {
+		$path = $this->resolve_path_with_dots($path);
+		
+		//now, let's go through the root directory structure, & make sure $path is within that.
+		$rootPieces = explode('/', $this->root);
+		$pathPieces = explode('/', $path);
+		
+		
+		if($rootPieces[0] == '') {
+			array_shift($rootPieces);
+		}
+		if($rootPieces[(count($rootPieces) -1)] == '') {
+			array_pop($rootPieces);
+		}
+		if($pathPieces[0] == '') {
+			array_shift($pathPieces);
+		}
+		
+		$retval = TRUE;
+		$tmp = '';
+		foreach($rootPieces as $index=>$dirName) {
+			$pathDir = $pathPieces[$index];
+			if($pathDir != $dirName) {
+				$retval = FALSE;
+				debug_print(__METHOD__ .": failed... tmp=(". $tmp ."), dirName=(". $dirName .")");
+				break;
+			}
+			$tmp = $this->gf->create_list($tmp, $dirName, '/');
+		}
+		
+		return($retval);
+	}//end check_chroot()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function copy_file($filename, $destination) {
+		$retval = FALSE;
+		if($this->openFile()) {
+			if($this->check_chroot($destination)) {
+				//okay, try to copy.
+				$retval = copy($this->fh, $destination);
+			}
+			else {
+				throw new exception(__METHOD__ .':: destination is not in the directory path');
+			}
+		}
+		
+		return($retval);
+	}//end copy_file()
 	//========================================================================================
 	
 	
