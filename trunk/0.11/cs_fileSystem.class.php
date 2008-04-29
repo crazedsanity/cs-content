@@ -2,17 +2,17 @@
 
 /*
  * FILE INFORMATION:
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
+ * $HeadURL:https://cs-content.svn.sourceforge.net/svnroot/cs-content/trunk/0.11/cs_fileSystem.class.php $
+ * $Id:cs_fileSystem.class.php 269 2008-04-29 15:54:05Z crazedsanity $
+ * $LastChangedDate:2008-04-29 10:54:05 -0500 (Tue, 29 Apr 2008) $
+ * $LastChangedBy:crazedsanity $
+ * $LastChangedRevision:269 $
  */
 
-require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
+require_once(dirname(__FILE__) ."/cs_globalFunctions.class.php");
 require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
-class cs_fileSystemClass extends cs_versionAbstract {
+class cs_fileSystem extends cs_versionAbstract {
 
 	public $root;		//actual root directory.
 	public $cwd;		//current directory; relative to $this->root

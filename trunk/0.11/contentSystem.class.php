@@ -1,11 +1,11 @@
 <?php
 /*
  * FILE INFORMATION: 
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedRevision$
- * $LastChangedBy$
+ * $HeadURL:https://cs-content.svn.sourceforge.net/svnroot/cs-content/trunk/0.11/contentSystem.class.php $
+ * $Id:contentSystem.class.php 269 2008-04-29 15:54:05Z crazedsanity $
+ * $LastChangedDate:2008-04-29 10:54:05 -0500 (Tue, 29 Apr 2008) $
+ * $LastChangedRevision:269 $
+ * $LastChangedBy:crazedsanity $
  * 
  * HOW THE SYSTEM WORKS:::
  * 	TEMPLATE FILES:
@@ -70,11 +70,11 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 	$GLOBALS['SITE_ROOT'] = str_replace("/public_html", "", $GLOBALS['SITE_ROOT']);
 }
 
-require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
-require_once(dirname(__FILE__) ."/cs_fileSystemClass.php");
-require_once(dirname(__FILE__) ."/cs_sessionClass.php");
-require_once(dirname(__FILE__) ."/cs_genericPageClass.php");
-require_once(dirname(__FILE__) ."/cs_tabsClass.php");
+require_once(dirname(__FILE__) ."/cs_globalFunctions.class.php");
+require_once(dirname(__FILE__) ."/cs_fileSystem.class.php");
+require_once(dirname(__FILE__) ."/cs_session.class.php");
+require_once(dirname(__FILE__) ."/cs_genericPage.class.php");
+require_once(dirname(__FILE__) ."/cs_tabs.class.php");
 require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
 
 class contentSystem extends cs_versionAbstract {
