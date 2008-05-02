@@ -434,7 +434,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			#$this->resolve_path_with_dots($retval);
 		}
 		
-		if(!$this->check_chroot($retval)) {
+		if(!$this->check_chroot($retval, FALSE)) {
 			debug_print(func_get_args());
 			throw new exception(__METHOD__ .": file is outside of allowed directory (". $retval .")");
 		}
@@ -818,8 +818,10 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	
 	
 	//========================================================================================
-	private function check_chroot($path) {
-		$path = $this->resolve_path_with_dots($path);
+	private function check_chroot($path, $translatePath=TRUE) {
+		if($translatePath === TRUE) {
+			$path = $this->filename2absolute($path);
+		}
 		
 		//now, let's go through the root directory structure, & make sure $path is within that.
 		$rootPieces = explode('/', $this->root);
@@ -857,7 +859,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	//========================================================================================
 	public function copy_file($filename, $destination) {
 		$retval = FALSE;
-		if($this->openFile()) {
+		if($this->openFile($filename)) {
 			if($this->check_chroot($destination)) {
 				//okay, try to copy.
 				$retval = copy($this->fh, $destination);
@@ -869,6 +871,26 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		
 		return($retval);
 	}//end copy_file()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function move_file($filename, $destination) {
+		$retval = FALSE;
+		if($this->is_readable($filename)) {
+			if($this->check_chroot($destination)) {
+				//do the move.
+				$retval = rename($filename, $destination);
+			}
+			else {
+				$this->gf->debug_print(__METHOD__ .":: ". $this->check_chroot($destination),1);
+				throw new exception(__METHOD__ .':: destination is not in the directory path (from=['. $filename .'], to=['. $destination .']');
+			}
+		}
+		
+		return($retval);
+	}//end move_file()
 	//========================================================================================
 	
 	
