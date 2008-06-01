@@ -894,5 +894,27 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	//========================================================================================
 	
 	
+	
+	//========================================================================================
+	public function mkdir($name) {
+		$retval = NULL;
+		if(!is_null($name) && strlen($name)) {
+			$name = $this->filename2absolute($name);
+			if($this->check_chroot($name)) {
+				$retval = mkdir($name, 0777);
+			}
+			else {
+				throw new exception(__METHOD__ .': ('. $name .') isn\'t within chroot');
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .': invalid data: ('. $name .')');
+		}
+		
+		return($retval);
+	}//end mkdir()
+	//========================================================================================
+	
+	
 }//end cs_filesystemClass{}
 ?>
