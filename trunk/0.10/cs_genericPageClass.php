@@ -39,7 +39,9 @@ class cs_genericPage extends cs_versionAbstract {
 		$this->check_login($restrictedAccess);
 		$this->gfObj = new cs_globalFunctions;
 		
-		define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
+		if(!defined('CS-CONTENT_SESSION_NAME')) {
+			define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
+		}
 		
 		//TODO: if the end page doesn't want to allow the "edit" links, will this still work?
 		if(defined("CS_CONTENT_MODIFIABLE") && constant("CS_CONTENT_MODIFIABLE") === TRUE) {
