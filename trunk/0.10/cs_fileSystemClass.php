@@ -34,9 +34,6 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		if(($rootDir) AND (is_dir($rootDir))) {
 			// yup... use it.
 			$this->root = $rootDir;
-		} elseif(($GLOBALS['SITE_ROOT']) AND (is_dir($GLOBALS['SITE_ROOT']))) {
-			//not set, but SITE_ROOT is... use it.
-			$this->root = $GLOBALS['SITE_ROOT'];
 		} else {
 			//nothing useable... die.
 			exit("UNUSEABLE ROOT: $rootDir");
