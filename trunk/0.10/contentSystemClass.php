@@ -212,7 +212,7 @@ class contentSystem extends cs_versionAbstract {
 					if(!$this->session->is_authenticated()) {
 						//run the redirect.
 						if(strlen($destinationArg)) {
-							$redirectToUrl .= '?'. $destinationArg .'='. urlencode($_SERVER['REQUEST_URI']);
+							$redirectToUrl .= '?'. $destinationArg .'=/'. urlencode($_SERVER['REQUEST_URI']);
 						}
 						$this->gfObj->conditional_header($redirectToUrl, TRUE);
 					}
