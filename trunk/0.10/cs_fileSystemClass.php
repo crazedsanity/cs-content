@@ -291,6 +291,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	public function create_file($filename, $truncateFile=FALSE) {
 		
 		$retval = 0;
+		$filename = $this->filename2absolute($filename);
 		$filename = $this->resolve_path_with_dots($filename);
 		$this->filename = $filename;
 		
@@ -360,7 +361,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			$this->mode = $mode;
 			
 			if(in_array($this->mode, array("r+", "w", "w+", "a", "a+", "x", "x+")) && !$this->is_writable($filename)) {
-				throw new exception(__METHOD__ .": file is not writable (". $filename .")");
+				throw new exception(__METHOD__ .": file is not writable (". $filename .") (". $this->is_writable($filename) ."), mode=(". $this->mode .")");
 			}
 			
 			//attempt to open a stream to a file...
