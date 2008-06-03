@@ -141,6 +141,7 @@ class contentSystem extends cs_versionAbstract {
 		//setup some default template vars.
 		$this->templateObj->add_template_var('date', date('m-d-Y'));
 		$this->templateObj->add_template_var('time', date('H:i:s'));
+		$this->templateObj->add_template_var('CURRENT_URL', '/'. $this->section);
 		
 		//create a fileSystem object.
 		$this->fileSystemObj = new cs_fileSystemClass();
