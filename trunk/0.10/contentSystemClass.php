@@ -295,7 +295,7 @@ class contentSystem extends cs_versionAbstract {
 		//make sure we've still got something valid to work with.
 		if(!strlen($section)) {
 			//TODO: remove the extra return statement (should only be one at the bottom of the method).
-			return(0);
+			return(NULL);
 		}
 		else {
 			//check the string to make sure it doesn't begin or end with a "/"
@@ -307,6 +307,12 @@ class contentSystem extends cs_versionAbstract {
 			if($section[strlen($section) -1] == '/') {
 				//last char is a '/'... kill it.
 				$section = substr($section, 0, strlen($section) -1);
+			}
+	
+			//if we've been sent a query, kill it off the string...
+			if(preg_match('/\?/', $section)) {
+				$section = split('\?', $section);
+				$section = $section[0];
 			}
 	
 			if(ereg("\.", $section)) {
@@ -321,12 +327,6 @@ class contentSystem extends cs_versionAbstract {
 					$tSection = $this->gfObj->create_list($tSection, $tSecName, '/');
 				}
 				$section = $tSection;
-			}
-	
-			//if we've been sent a query, kill it off the string...
-			if(ereg('\?', $section)) {
-				$section = split('\?', $section);
-				$section = $section[0];
 			}
 		}
 

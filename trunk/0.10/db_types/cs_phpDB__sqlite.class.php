@@ -43,23 +43,11 @@ class cs_phpDB__sqlite {
 	/** Resource handle. */
 	protected $connectionID = -1;
 	
-	/** Hostname or IP to connect to */
-	protected $host;
-	
-	/** Port to connect to (default for Postgres is 5432) */
-	protected $port;
-	
 	/** Name of the database */
 	protected $dbname;
 	
-	/** Username to connect to the database */
-	protected $user;
-	
-	/** password to connect to the database */
-	protected $password;
-	
-	/** Row counter for looping through records */
-	protected $row = -1;
+	/** Directory that is readable + writable, which contains the SQLite db file. */
+	protected $rwDir;
 	
 	/** cs_globalFunctions object, for string stuff. */
 	protected $gfObj;
@@ -75,9 +63,6 @@ class cs_phpDB__sqlite {
 	
 	/** array that essentially remembers how many times beginTrans() was called. */
 	protected $transactionTree = NULL;
-	
-	/**  */
-	private $dbConnObj;
 	
 	////////////////////////////////////////////
 	// Core primary connection/database function
@@ -192,7 +177,7 @@ class cs_phpDB__sqlite {
 			$dbFile = $this->rwDir .'/'. $this->dbname;
 			$this->connectionID = sqlite_open($dbFile, $connectError);
 			
-			if(is_resource($this->dbConnObj)) {
+			if(is_resource($this->connectionID)) {
 				$this->errorCode=0;
 				$this->isConnected = TRUE;
 				$retval = $this->connectionID;
@@ -224,18 +209,14 @@ class cs_phpDB__sqlite {
 		}
 		$returnVal = false;
 		
-		if(($this->get_transaction_status() != -1) && ($this->connectionID != -1)) {
-			$this->result = @sqlite_exec($this->connectionID, $query);
+		if($this->connectionID != -1) {
+			$this->result = @sqlite_query($this->connectionID, $query);
 
 			if($this->result !== false) {
 				if (eregi("^[[:space:]]*select", $query)) {
 					//If we didn't have an error and we are a select statement, move the pointer to first result
 					$numRows = $this->numRows();
-					if($numRows > 0) {
-						$this->move_first();
-					}
 					$returnVal = $numRows;
-					
 				}
 				else {
 					//We got something other than an update. Use numAffected
@@ -261,7 +242,13 @@ class cs_phpDB__sqlite {
 		if ($this->connectionID < 0 || !is_resource($this->connectionID)) {
 			$retVal = "Failed to open connection to database (". $this->dbname .")";
 		} else {
-			$retVal = pg_last_error($this->connectionID);
+			$errorCode = sqlite_last_error($this->connectionID);
+			if($errorCode === 0) {
+				$retVal = NULL;
+			}
+			else {
+				$retVal = sqlite_error_string($errorCode);
+			}
 		}
 
 		return($retVal);
@@ -311,6 +298,126 @@ class cs_phpDB__sqlite {
 		
 		return($retval);
 	}//end farray()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Similar to farray(), except all indexes are non-numeric, and the entire 
+	 * result set is retrieved: if only one row is available, no numeric index 
+	 * is set, unless $numbered is TRUE.
+	 * 
+	 * TODO: clean this up!
+	 */
+	function farray_fieldnames($index=NULL, $numbered=NULL, $unsetIndex=1) {
+		$this->sanity_check();
+		$retval = NULL;
+		
+		//before we get too far, let's make sure there's something there.
+		if($this->numRows() <= 0) {
+			$retval = 0;
+		}
+		else {
+			$loopThis = $this->fetch_all();
+			$retval = array();
+			foreach($loopThis as $num=>$record) {
+				if(!is_null($index)) {
+					if(!isset($record[$index])) {
+						throw new exception(__METHOD__ .": index (". $index .") doesn't exist in array::: ". $this->gfObj->debug_print($record,0));
+					}
+					if($unsetIndex) {
+						unset($record[$index]);
+					}
+				}
+				else {
+					$index = $num;
+				}
+				
+				$subRecordArr = array();
+				foreach($record as $subIndex=>$subValue) {
+					if(!is_numeric($subIndex)) {
+						$subRecordArr[$subIndex] = $subValue;
+					}
+				}
+				$retval[$record[$index]] = $subRecordArr;
+			}
+			
+			if(!$numbered && count($retval) == 1) {
+				//just give back the single record...
+				$keys = array_keys($retval);
+				$retval = $retval[$keys[0]];
+			}
+		}
+		return($retval);
+	}//end farray_fieldnames()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Retrieve the entire result set, with the final array containing 
+	 * name=>value pairs.
+	 */
+	function farray_nvp($name, $value) {
+		if((!$name) OR (!$value)) {
+			$retval = 0;
+		}
+		else {
+			$data = $this->fetch_all();
+			$retval = array();
+			foreach($data as $key=>$data) {
+				$retval[$data[$name]] = $data[$value];
+			}
+		}
+
+		return($retval);
+	}//end farray_nvp()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Similar to farray_fieldnames(), but only returns the NUMERIC indexes
+	 */
+	function farray_numbered($index, $unsetIndex=NULL) {
+		$this->sanity_check();
+		$retval = NULL;
+		
+		//before we get too far, let's make sure there's something there.
+		if($this->numRows() <= 0) {
+			$retval = 0;
+		}
+		else {
+			$loopThis = $this->fetch_all();
+			$retval = array();
+			foreach($loopThis as $num=>$record) {
+				if(!is_null($index)) {
+					if(!isset($record[$index])) {
+						throw new exception(__METHOD__ .": index (". $index .") doesn't exist in array::: ". $this->gfObj->debug_print($record,0));
+					}
+					if($unsetIndex) {
+						unset($record[$index]);
+					}
+				}
+				else {
+					$index = $num;
+				}
+				
+				$subRecordArr = array();
+				foreach($record as $subIndex=>$subValue) {
+					if(is_numeric($subIndex)) {
+						$subRecordArr[$subIndex] = $subValue;
+					}
+				}
+				$retval[$record[$index]] = $subRecordArr;
+			}
+		}
+		
+		return($retval);
+	}//end farray_numbered()
 	//=========================================================================
 	
 	
