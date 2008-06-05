@@ -144,7 +144,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 					//clean the string, if required.
 					if($cleanString) {
 						//make sure it's not full of poo...
-						$value = $this->cleanString($value, "sql");
+						#$value = $this->cleanString($value, "sql");
 						$value = "'". $value ."'";
 					}
 					if((is_null($value)) OR ($value == "")) {
@@ -346,6 +346,18 @@ class cs_globalFunctions extends cs_versionAbstract {
 				 */
 				$cleanThis = addslashes(stripslashes($cleanThis));
 				$cleanThis = preg_replace('/\\\\"/', '"', $cleanThis);
+			break;
+			
+			
+			case "sql92_insert":
+				/*
+				 * Just like 'sql_insert', except that single quotes are "delimited" by
+				 * adding another single quote, which works *at least* with postgres & sqlite.
+				 */
+				$cleanThis = preg_replace("/'/", "''", $cleanThis);
+				$cleanThis = preg_replace('/\\\\"/', '"', $cleanThis);
+				$cleanThis = stripslashes($cleanThis);
+				$sqlQuotes = 0;
 			break;
 			
 			case "double_quote":

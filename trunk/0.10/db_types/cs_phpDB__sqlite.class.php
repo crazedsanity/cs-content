@@ -520,8 +520,8 @@ class cs_phpDB__sqlite {
 	 * get last OID (object identifier) of last INSERT statement
 	 */
 	function lastOID($doItForMe=0, $field=NULL) {
-		if($this->result == NULL) {
-			$retval = NULL;
+		if($this->connectionID == NULL) {
+			throw new exception(__METHOD__ .": no connectionID to use (". $this->connectionID .")");
 		}
 		else {
 			$retval = sqlite_last_insert_rowid($this->connectionID);
