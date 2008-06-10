@@ -310,7 +310,7 @@ class cs_phpDB__sqlite {
 	 * 
 	 * TODO: clean this up!
 	 */
-	function farray_fieldnames($index=NULL, $numbered=NULL, $unsetIndex=1) {
+	function farray_fieldnames($index=NULL, $numbered=NULL, $unsetIndex=NULL) {
 		$this->sanity_check();
 		$retval = NULL;
 		
@@ -326,9 +326,6 @@ class cs_phpDB__sqlite {
 					if(!isset($record[$index])) {
 						throw new exception(__METHOD__ .": index (". $index .") doesn't exist in array::: ". $this->gfObj->debug_print($record,0));
 					}
-					if($unsetIndex) {
-						unset($record[$index]);
-					}
 				}
 				else {
 					$index = $num;
@@ -339,6 +336,10 @@ class cs_phpDB__sqlite {
 					if(!is_numeric($subIndex)) {
 						$subRecordArr[$subIndex] = $subValue;
 					}
+				}
+				
+				if($unsetIndex) {
+					unset($subRecordArr[$index]);
 				}
 				$retval[$record[$index]] = $subRecordArr;
 			}
