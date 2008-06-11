@@ -326,7 +326,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			}
 		}
 		else {
-			throw new exception(__METHOD__ .": file exists and truncate not set");
+			throw new exception(__METHOD__ .": file (". $filename .") exists and truncate not set");
 		}
 		return($retval);
 	}//end create_file()
