@@ -436,7 +436,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		}
 		
 		if(!$this->check_chroot($retval, FALSE)) {
-			debug_print(func_get_args());
+			$this->gf->debug_print(func_get_args());
 			throw new exception(__METHOD__ .": file is outside of allowed directory (". $retval .")");
 		}
 		
@@ -845,7 +845,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			$pathDir = $pathPieces[$index];
 			if($pathDir != $dirName) {
 				$retval = FALSE;
-				debug_print(__METHOD__ .": failed... tmp=(". $tmp ."), dirName=(". $dirName .")");
+				$this->gf->debug_print(__METHOD__ .": failed... tmp=(". $tmp ."), dirName=(". $dirName .")");
 				break;
 			}
 			$tmp = $this->gf->create_list($tmp, $dirName, '/');
