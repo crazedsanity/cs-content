@@ -139,8 +139,9 @@ class cs_globalFunctions extends cs_versionAbstract {
 					$separator = " VALUES ";
 				}
 				//build temporary data...
+				$tmp = array();
 				foreach($array as $key=>$value) {
-					$tmp[0] = $this->create_list($tmp[0], $key);
+					@$tmp[0] = $this->create_list($tmp[0], $key);
 					//clean the string, if required.
 					if($cleanString) {
 						//make sure it's not full of poo...
@@ -150,7 +151,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 					if((is_null($value)) OR ($value == "")) {
 						$value = "NULL";
 					}
-					$tmp[1] = $this->create_list($tmp[1], $value);
+					@$tmp[1] = $this->create_list($tmp[1], $value);
 				}
 				
 				//make the final product.
