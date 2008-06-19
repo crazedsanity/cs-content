@@ -312,18 +312,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			}
 		}
 		elseif($truncateFile === TRUE) {
-			if($this->is_writable($filename)) {
-				if($this->openFile($filename)) {
-					ftruncate($this->fh,0);
-					$this->closeFile();
-				}
-				else {
-					throw new exception(__METHOD__ .": unable to open specified file (". $filename .")");
-				}
-			}
-			else {
-				throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
-			}
+			$this->truncate_file($filename);
 		}
 		else {
 			throw new exception(__METHOD__ .": file (". $filename .") exists and truncate not set");
@@ -914,6 +903,27 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		
 		return($retval);
 	}//end mkdir()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function truncate_file($filename) {
+		if($this->is_writable($filename)) {
+			if($this->openFile($filename)) {
+				$retval = ftruncate($this->fh,0);
+				$this->closeFile();
+			}
+			else {
+				throw new exception(__METHOD__ .": unable to open specified file (". $filename .")");
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
+		}
+		
+		return($retval);
+	}//end truncate_file()
 	//========================================================================================
 	
 	
