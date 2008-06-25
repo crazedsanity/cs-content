@@ -886,12 +886,16 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	
 	
 	//========================================================================================
-	public function mkdir($name) {
+	public function mkdir($name, $mode=0777) {
+		if(!is_numeric($mode) || strlen($mode) != 4) {
+			$mode = 0777;
+		}
 		$retval = NULL;
 		if(!is_null($name) && strlen($name)) {
 			$name = $this->filename2absolute($name);
 			if($this->check_chroot($name)) {
-				$retval = mkdir($name, 0777);
+				$retval = mkdir($name, $mode);
+				chmod($name, $mode);
 			}
 			else {
 				throw new exception(__METHOD__ .': ('. $name .') isn\'t within chroot');
