@@ -931,5 +931,30 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	//========================================================================================
 	
 	
+	
+	//========================================================================================
+	public function go_to_last_line() {
+		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
+			if(feof($this->fh)) {
+				$retval = TRUE;
+			}
+			else {
+				//NOTE::: fseek() doesn't update the file pointer in $this->fh, so we have to use fgets(), which seems faster anyway.
+				while(!feof($this->fh)) {
+					fgets($this->fh);
+					$this->lineNum++;
+				}
+				$retval = TRUE;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid filehandle");
+		}
+		
+		return($retval);
+	}//end go_to_last_line()
+	//========================================================================================
+	
+	
 }//end cs_filesystemClass{}
 ?>
