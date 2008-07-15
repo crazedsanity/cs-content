@@ -142,6 +142,12 @@ class contentSystem extends cs_versionAbstract {
 		$this->templateObj->add_template_var('date', date('m-d-Y'));
 		$this->templateObj->add_template_var('time', date('H:i:s'));
 		
+		$myUrl = '/';
+		if(strlen($this->section) && $this->section !== 0) {
+			$myUrl = '/'. $this->section;
+		}
+		$this->templateObj->add_template_var('CURRENT_URL', $myUrl);
+		
 		//create a fileSystem object.
 		$this->fileSystemObj = new cs_fileSystemClass();
 		
@@ -212,7 +218,7 @@ class contentSystem extends cs_versionAbstract {
 					if(!$this->session->is_authenticated()) {
 						//run the redirect.
 						if(strlen($destinationArg)) {
-							$redirectToUrl .= '?'. $destinationArg .'='. urlencode($_SERVER['REQUEST_URI']);
+							$redirectToUrl .= '?'. $destinationArg .'=/'. urlencode($_SERVER['REQUEST_URI']);
 						}
 						$this->gfObj->conditional_header($redirectToUrl, TRUE);
 					}
@@ -289,7 +295,7 @@ class contentSystem extends cs_versionAbstract {
 		//make sure we've still got something valid to work with.
 		if(!strlen($section)) {
 			//TODO: remove the extra return statement (should only be one at the bottom of the method).
-			return(0);
+			return(NULL);
 		}
 		else {
 			//check the string to make sure it doesn't begin or end with a "/"
@@ -301,6 +307,12 @@ class contentSystem extends cs_versionAbstract {
 			if($section[strlen($section) -1] == '/') {
 				//last char is a '/'... kill it.
 				$section = substr($section, 0, strlen($section) -1);
+			}
+	
+			//if we've been sent a query, kill it off the string...
+			if(preg_match('/\?/', $section)) {
+				$section = split('\?', $section);
+				$section = $section[0];
 			}
 	
 			if(ereg("\.", $section)) {
@@ -315,12 +327,6 @@ class contentSystem extends cs_versionAbstract {
 					$tSection = $this->gfObj->create_list($tSection, $tSecName, '/');
 				}
 				$section = $tSection;
-			}
-	
-			//if we've been sent a query, kill it off the string...
-			if(ereg('\?', $section)) {
-				$section = split('\?', $section);
-				$section = $section[0];
 			}
 		}
 

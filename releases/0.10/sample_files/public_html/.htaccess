@@ -11,3 +11,4 @@ DirectoryIndex content content.php index.php  index.html
 
 RedirectMatch ^/index(.*)		/content/index.php
 RedirectMatch ^/svn(.*)			/content/index.php
+RedirectMatch ^/content\.(.*)	/content/index.$1

@@ -291,6 +291,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	public function create_file($filename, $truncateFile=FALSE) {
 		
 		$retval = 0;
+		$filename = $this->filename2absolute($filename);
 		$filename = $this->resolve_path_with_dots($filename);
 		$this->filename = $filename;
 		
@@ -311,21 +312,10 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			}
 		}
 		elseif($truncateFile === TRUE) {
-			if($this->is_writable($filename)) {
-				if($this->openFile($filename)) {
-					ftruncate($this->fh,0);
-					$this->closeFile();
-				}
-				else {
-					throw new exception(__METHOD__ .": unable to open specified file (". $filename .")");
-				}
-			}
-			else {
-				throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
-			}
+			$this->truncate_file($filename);
 		}
 		else {
-			throw new exception(__METHOD__ .": file exists and truncate not set");
+			throw new exception(__METHOD__ .": file (". $filename .") exists and truncate not set");
 		}
 		return($retval);
 	}//end create_file()
@@ -360,7 +350,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			$this->mode = $mode;
 			
 			if(in_array($this->mode, array("r+", "w", "w+", "a", "a+", "x", "x+")) && !$this->is_writable($filename)) {
-				throw new exception(__METHOD__ .": file is not writable (". $filename .")");
+				throw new exception(__METHOD__ .": file is not writable (". $filename .") (". $this->is_writable($filename) ."), mode=(". $this->mode .")");
 			}
 			
 			//attempt to open a stream to a file...
@@ -435,7 +425,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		}
 		
 		if(!$this->check_chroot($retval, FALSE)) {
-			debug_print(func_get_args());
+			$this->gf->debug_print(func_get_args());
 			throw new exception(__METHOD__ .": file is outside of allowed directory (". $retval .")");
 		}
 		
@@ -844,7 +834,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			$pathDir = $pathPieces[$index];
 			if($pathDir != $dirName) {
 				$retval = FALSE;
-				debug_print(__METHOD__ .": failed... tmp=(". $tmp ."), dirName=(". $dirName .")");
+				$this->gf->debug_print(__METHOD__ .": failed... tmp=(". $tmp ."), dirName=(". $dirName .")");
 				break;
 			}
 			$tmp = $this->gf->create_list($tmp, $dirName, '/');
@@ -891,6 +881,78 @@ class cs_fileSystemClass extends cs_versionAbstract {
 		
 		return($retval);
 	}//end move_file()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function mkdir($name, $mode=0777) {
+		if(!is_numeric($mode) || strlen($mode) != 4) {
+			$mode = 0777;
+		}
+		$retval = NULL;
+		if(!is_null($name) && strlen($name)) {
+			$name = $this->filename2absolute($name);
+			if($this->check_chroot($name)) {
+				$retval = mkdir($name, $mode);
+				chmod($name, $mode);
+			}
+			else {
+				throw new exception(__METHOD__ .': ('. $name .') isn\'t within chroot');
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .': invalid data: ('. $name .')');
+		}
+		
+		return($retval);
+	}//end mkdir()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function truncate_file($filename) {
+		if($this->is_writable($filename)) {
+			if($this->openFile($filename)) {
+				$retval = ftruncate($this->fh,0);
+				$this->closeFile();
+			}
+			else {
+				throw new exception(__METHOD__ .": unable to open specified file (". $filename .")");
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": Cannot truncate, file (". $filename .") is not writable");
+		}
+		
+		return($retval);
+	}//end truncate_file()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function go_to_last_line() {
+		if(is_resource($this->fh) && get_resource_type($this->fh) == 'stream') {
+			if(feof($this->fh)) {
+				$retval = TRUE;
+			}
+			else {
+				//NOTE::: fseek() doesn't update the file pointer in $this->fh, so we have to use fgets(), which seems faster anyway.
+				while(!feof($this->fh)) {
+					fgets($this->fh);
+					$this->lineNum++;
+				}
+				$retval = TRUE;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid filehandle");
+		}
+		
+		return($retval);
+	}//end go_to_last_line()
 	//========================================================================================
 	
 	
