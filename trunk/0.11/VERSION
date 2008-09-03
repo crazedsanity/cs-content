@@ -1,5 +1,0 @@
-## Stores the current version of the cs-content system, and it's source.  Please do NOT modify this file.
-
-VERSION: 0.10.10
-PROJECT: cs-content
-$HeadURL:https://cs-content.svn.sourceforge.net/svnroot/cs-content/trunk/VERSION $
