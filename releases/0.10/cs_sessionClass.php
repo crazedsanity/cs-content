@@ -21,10 +21,16 @@ class cs_session extends cs_versionAbstract {
 	/**
 	 * The constructor.
 	 * 
-	 * @param $createSession	(boolean,optional) determines if a session will be started or not.
+	 * @param $createSession	(mixed,optional) determines if a session will be started or not; if
+	 * 								this parameter is non-null and non-numeric, the value will be 
+	 * 								used as the session name.
 	 */
 	function __construct($createSession=1) {
 		if($createSession) {
+			if(!is_null($createSession) && strlen($createSession) && !is_numeric($createSession)) {
+				session_name($createSession);
+			}
+			
 			//now actually create the session.
 			session_start();
 		}
