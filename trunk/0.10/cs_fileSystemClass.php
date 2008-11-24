@@ -476,6 +476,15 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	
 	
 	//========================================================================================
+	public function rmdir($dirname) {
+		$dirname = $this->filename2absolute($dirname);
+		return(rmdir($dirname));
+	}//end rm()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
 	/**
 	 * Return the next line for a file.
 	 * 
@@ -902,6 +911,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			}
 		}
 		else {
+			cs_debug_backtrace(1);
 			throw new exception(__METHOD__ .': invalid data: ('. $name .')');
 		}
 		
