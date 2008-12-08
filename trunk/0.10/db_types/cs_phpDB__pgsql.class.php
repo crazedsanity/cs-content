@@ -1155,6 +1155,30 @@ class cs_phpDB__pgsql {
 	
 	
 	
+	//=========================================================================
+	public function get_currval($sequence) {
+		if(is_string($sequence) && strlen($sequence) >= 5) {
+			$numrows = $this->exec("SELECT currval('". $sequence ."')");
+			$dberror = $this->errorMsg();
+			
+			if($numrows == 1 && !strlen($dberror)) {
+				$data = $this->farray();
+				$retval = $data[0];
+			}
+			else {
+				throw new exception(__METHOD__ .": invalid rows (". $numrows .") or database error (". $dberror .")");
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid sequence name (". $sequence .")");
+		}
+		
+		return($retval);
+	}//end get_currval()
+	//=========================================================================
+	
+	
+	
 } // end class phpDB
 
 ?>
