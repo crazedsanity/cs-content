@@ -135,14 +135,14 @@ class cs_phpDB__pgsql {
 		$required = array('host', 'port', 'dbname', 'user', 'password');
 		
 		$requiredCount = 0;
-		foreach($params as $index=>$value) {
-			if(property_exists($this, $index) && in_array($index, $required)) {
-				$this->$index = $value;
+		foreach($required as $index) {
+			if(isset($params[$index])) {
+				$this->$index = $params[$index];
 				$requiredCount++;
 			}
 			else {
-				throw new exception(__METHOD__. ": property (". $index .") does " .
-					"not exist or isn't allowed");
+				$this->gfObj->debug_print($params,1);
+				throw new exception(__METHOD__. ": property (". $index .") missing");
 			}
 		}
 		
