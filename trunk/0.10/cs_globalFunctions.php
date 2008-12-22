@@ -145,8 +145,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 					//clean the string, if required.
 					if($cleanString) {
 						//make sure it's not full of poo...
-						#$value = $this->cleanString($value, "sql");
-						$value = "'". $value ."'";
+						$value = "'". $this->cleanString($value, "sql") ."'";
+						#$value = "'". $value ."'";
 					}
 					if((is_null($value)) OR ($value == "")) {
 						$value = "NULL";
@@ -347,6 +347,9 @@ class cs_globalFunctions extends cs_versionAbstract {
 				 */
 				$cleanThis = addslashes(stripslashes($cleanThis));
 				$cleanThis = preg_replace('/\\\\"/', '"', $cleanThis);
+				$cleanThis = preg_replace("/'/", "\\\'", $cleanThis);
+				
+				$this->debug_print(__METHOD__ .": Done escaping...",1);
 			break;
 			
 			
