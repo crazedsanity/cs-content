@@ -8,7 +8,7 @@
  * $LastChangedRevision$
  */
 require_once(dirname(__FILE__) ."/template.inc");
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class cs_genericPage extends cs_versionAbstract {
 	var $templateObj;					//template object to parse the pages
@@ -33,6 +33,7 @@ class cs_genericPage extends cs_versionAbstract {
 		$this->allowRedirect = $allowRedirect;
 		
 		//initialize some internal stuff.
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		$this->initialize_locals($mainTemplateFile);
 		
 		//if they need to be logged-in... 

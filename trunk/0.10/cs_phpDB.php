@@ -24,7 +24,7 @@
 //
 ///////////////////////
 
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class cs_phpDB extends cs_versionAbstract {
 	
@@ -33,6 +33,7 @@ class cs_phpDB extends cs_versionAbstract {
 	
 	//=========================================================================
 	public function __construct($type='pgsql') {
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		
 		if(strlen($type)) {
 			

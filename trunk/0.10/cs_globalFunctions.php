@@ -1,6 +1,6 @@
 <?php
 
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class cs_globalFunctions extends cs_versionAbstract {
 	
@@ -23,6 +23,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 	}//end __construct()
 	//=========================================================================
 	

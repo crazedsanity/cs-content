@@ -8,7 +8,7 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class cs_session extends cs_versionAbstract {
 
@@ -26,6 +26,7 @@ class cs_session extends cs_versionAbstract {
 	 * 								used as the session name.
 	 */
 	function __construct($createSession=1) {
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		if($createSession) {
 			if(!is_null($createSession) && strlen($createSession) && !is_numeric($createSession)) {
 				session_name($createSession);
