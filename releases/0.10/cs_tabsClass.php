@@ -25,6 +25,7 @@ class cs_tabs extends cs_versionAbstract {
 	 * @param $templateVar	(str,optional) What template var to find the tab blockrows in.
 	 */
 	public function __construct(cs_genericPage $csPageObj, $templateVar="tabs") {
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		if(is_null($csPageObj) || !is_object($csPageObj) || get_class($csPageObj) !== 'cs_genericPage') {
 			//can't continue without that!
 			throw new exception("cs_tabs::__construct(): cannot load without cs_genericPage{} object (". get_class($csPageObj) .")");

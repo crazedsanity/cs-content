@@ -10,7 +10,7 @@
  */
 
 require_once(dirname(__FILE__) ."/cs_globalFunctions.php");
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class cs_fileSystemClass extends cs_versionAbstract {
 
@@ -29,6 +29,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	 * The constructor.
 	 */
 	public function __construct($rootDir=NULL, $cwd=NULL, $initialMode=NULL) {
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		//set the root directory that we'll be using; this is considered just like "/" in 
 		//	linux.  Directories above it are considered non-existent.
 		if(($rootDir) AND (is_dir($rootDir))) {
@@ -476,6 +477,15 @@ class cs_fileSystemClass extends cs_versionAbstract {
 	
 	
 	//========================================================================================
+	public function rmdir($dirname) {
+		$dirname = $this->filename2absolute($dirname);
+		return(rmdir($dirname));
+	}//end rm()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
 	/**
 	 * Return the next line for a file.
 	 * 
@@ -902,6 +912,7 @@ class cs_fileSystemClass extends cs_versionAbstract {
 			}
 		}
 		else {
+			cs_debug_backtrace(1);
 			throw new exception(__METHOD__ .': invalid data: ('. $name .')');
 		}
 		

@@ -1,6 +1,6 @@
 <?php
 
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class cs_globalFunctions extends cs_versionAbstract {
 	
@@ -9,6 +9,9 @@ class cs_globalFunctions extends cs_versionAbstract {
 	/** Remove the separator below the output of each debug_print()? */
 	public $debugRemoveHr = 0;
 	public $debugPrintOpt = 0;
+	
+	private $forceSqlQuotes=0;
+	private $oldForceSqlQuotes=0;
 	
 	//=========================================================================
 	public function __construct() {
@@ -20,7 +23,47 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
+		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 	}//end __construct()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function switch_force_sql_quotes($newSetting) {
+		if(is_bool($newSetting)) {
+			if($newSetting === true) {
+				$newSetting = 1;
+			}
+			else {
+				$newSetting = 1;
+			}
+		}
+		elseif(is_numeric($newSetting)) {
+			if($newSetting > 0) {
+				$newSetting = 1;
+			}
+			else {
+				$newSetting = 0;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid new setting (". $newSetting .")");
+		}
+		
+		if($newSetting !== $this->forceSqlQuotes) {
+			$this->oldForceSqlQuotes = $this->forceSqlQuotes;
+			$this->forceSqlQuotes = $newSetting;
+			$retval = true;
+			$this->debug_print(__METHOD__ .": swapped (OLD=". $this->oldForceSqlQuotes .", CUR=". $this->forceSqlQuotes .")");
+		}
+		else {
+			$retval = false;
+			$this->debug_print(__METHOD__ .": no swap (OLD=". $this->oldForceSqlQuotes .", CUR=". $this->forceSqlQuotes .")");
+		}
+		
+		return($retval);
+	}//end force_sql_quotes()
 	//=========================================================================
 	
 	
@@ -145,17 +188,18 @@ class cs_globalFunctions extends cs_versionAbstract {
 					//clean the string, if required.
 					if($cleanString) {
 						//make sure it's not full of poo...
-						#$value = $this->cleanString($value, "sql");
-						$value = "'". $value ."'";
+						$value = $this->cleanString($value, "sql");
+						#$value = "'". $value ."'";
 					}
 					if((is_null($value)) OR ($value == "")) {
 						$value = "NULL";
 					}
-					@$tmp[1] = $this->create_list($tmp[1], $value);
+					@$tmp[1] = $this->create_list($tmp[1], $value, ",", 1);
 				}
 				
 				//make the final product.
 				$retval = "(". $tmp[0] .")" . $separator . "(". $tmp[1] .")";
+				
 				break;
 				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 				
@@ -167,7 +211,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 				//build final product.
 				foreach($array as $field=>$value) {
 					$sqlQuotes = 1;
-					if($value === "NULL" || $value === NULL) {
+					if(($value === "NULL" || $value === NULL) && !$this->forceSqlQuotes) {
 						$sqlQuotes = 0;
 					}
 					if($cleanString && !preg_match('/^\'/',$value)) {
@@ -188,7 +232,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 				foreach($array as $field=>$value) {
 					if($cleanString) {
 						//make sure it doesn't have crap in it...
-						$value = $this->cleanString($value, "sql");
+						$value = $this->cleanString($value, "sql", $this->forceSqlQuotes);
 						$value = "'". $value ."'";
 					}
 					$retval = $this->create_list($retval, $value, ", ");
@@ -215,7 +259,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 					$delimiter = "AND";
 					if(is_array($value)) {
 						//doing tricksie things!!!
-						$retval = $this->create_list($retval, $field ." IN (". $this->string_from_array($value) .")", " $delimiter ");
+						$retval = $this->create_list($retval, $field ." IN (". $this->string_from_array($value) .")",
+								" $delimiter ", $this->forceSqlQuotes);
 					}
 					else {
 						//if there's already an operator ($separator), don't specify one.
@@ -229,7 +274,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 						if(!is_numeric($value) && isset($separator)) {
 							$value = "'". $value ."'";	
 						}
-						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ");
+						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ", $this->forceSqlQuotes);
 					}
 				}
 				break;
@@ -288,7 +333,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 					if($cleanString) {
 						$value = $this->cleanString($value, $cleanString);
 					}
-					$retval = $this->create_list($retval, $value, $separator);
+					$retval = $this->create_list($retval, $value, $separator, $this->forceSqlQuotes);
 				}
 				//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 			}
@@ -347,6 +392,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 				 */
 				$cleanThis = addslashes(stripslashes($cleanThis));
 				$cleanThis = preg_replace('/\\\\"/', '"', $cleanThis);
+				$cleanThis = preg_replace("/'/", "\\\'", $cleanThis);
+				
 			break;
 			
 			
@@ -519,12 +566,18 @@ class cs_globalFunctions extends cs_versionAbstract {
 	 * Returns a list delimited by the given delimiter.  Does the work of checking if the given variable has data
 	 * in it already, that needs to be added to, vs. setting the variable with the new content.
 	 */
-	public function create_list($string=NULL, $addThis=NULL, $delimiter=", ") {
-		if($string) {
+	public function create_list($string=NULL, $addThis=NULL, $delimiter=", ", $useSqlQuotes=0) {
+		if(strlen($string)) {
+			if($useSqlQuotes && !(preg_match("/^'/", $addThis) && preg_match("/'\$/", $addThis))) {
+				$addThis = "'". $addThis ."'";
+			}
 			$retVal = $string . $delimiter . $addThis;
 		}
 		else {
 			$retVal = $addThis;
+			if($useSqlQuotes && !(preg_match("/^'/", $retVal) && preg_match("/'\$/", $retVal))) {
+				$retVal = "'". $retVal ."'";
+			}
 		}
 	
 		return($retVal);

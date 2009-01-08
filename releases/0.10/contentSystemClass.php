@@ -75,7 +75,7 @@ require_once(dirname(__FILE__) ."/cs_fileSystemClass.php");
 require_once(dirname(__FILE__) ."/cs_sessionClass.php");
 require_once(dirname(__FILE__) ."/cs_genericPageClass.php");
 require_once(dirname(__FILE__) ."/cs_tabsClass.php");
-require_once(dirname(__FILE__) ."/cs_versionAbstract.class.php");
+require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
 class contentSystem extends cs_versionAbstract {
 	
@@ -109,6 +109,7 @@ class contentSystem extends cs_versionAbstract {
 			$this->isTest = TRUE;
 		}
 		else {
+			$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 			$this->get_version();
 			$this->get_project();
 			//make a cs_globalFunctions{} object.
