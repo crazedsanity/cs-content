@@ -17,10 +17,17 @@ class cs_globalFunctions extends cs_versionAbstract {
 	public function __construct() {
 		//These checks have been implemented for pseudo backwards-compatibility 
 		//	(internal vars won't change if GLOBAL vars changed).
-		if(isset($GLOBALS['DEBUGREMOVEHR'])) {
+		if(defined('DEBUGREMOVEHR')) {
+			$this->debugRemoveHr = constant('DEBUGREMOVEHR');
+		}
+		elseif(isset($GLOBALS['DEBUGREMOVEHR'])) {
 			$this->debugRemoveHr = $GLOBALS['DEBUGREMOVEHR'];
 		}
-		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
+		
+		if(defined('DEBUGPRINTOPT')) {
+			$this->debugPrintOpt = constant('DEBUGPRINTOPT');
+		}
+		elseif(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
 		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
