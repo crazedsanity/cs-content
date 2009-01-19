@@ -21,6 +21,9 @@ class TestOfCSContent extends UnitTestCase {
 	function __construct() {
 		require_once(dirname(__FILE__) .'/../cs_globalFunctions.php');
 		require_once(dirname(__FILE__) .'/../cs_siteConfig.class.php');
+		
+		$this->gf = new cs_globalFunctions;
+		$this->gf->debugPrintOpt=1;
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -177,7 +180,8 @@ class TestOfCSContent extends UnitTestCase {
 	//-------------------------------------------------------------------------
 	public function test_siteConfig() {
 		$configFile = dirname(__FILE__) .'/files/sampleConfig.xml';
-		$sc = new cs_siteConfig($configFile);
+		$varPrefix = preg_replace("/:/", "_", __METHOD__ ."-");
+		$sc = new cs_siteConfig($configFile, 'main', $varPrefix);
 		
 		//make sure that specifying the section "main" section works just like NOT specifying it.
 		$this->assertEqual($sc->get_value('SITEROOT'), $sc->get_value('MAIN/SITEROOT'));
@@ -198,6 +202,45 @@ class TestOfCSContent extends UnitTestCase {
 				$sc->get_value('cs-content/tmpldir'),
 				"path replacement for cs-content/tmpldir (". $sc->get_value('cs-content/tmpldir') .") didn't match main/tmpldir (". $sc->get_value('main/tmpldir') .")"
 		);
+		
+		//make sure all of the items that are supposed to be set as globals & constants actually were.
+		
+		//Do some testing of sections....
+		$this->assertTrue(is_array($sc->get_valid_sections()));
+		$this->assertEqual($sc->get_valid_sections(), array('MAIN', 'CS-CONTENT'));
+		
+		//now let's make sure we got all of the proper globals & constants set.... first, get the list of things that should be globals/constants.
+		$setAsGlobals = array();
+		$setAsConstants = array();
+		foreach($sc->get_valid_sections() as $section) {
+			$this->gf->debug_print(__METHOD__ .": evaluating section (". $section .")");
+			$sectionData = $sc->get_section($section);
+			foreach($sectionData as $name=>$value) {
+				if(is_array($value['attributes'])) {
+					if(isset($value['attributes']['SETGLOBAL'])) {
+						$setAsGlobals[$name] = $value['value'];
+					}
+					if(isset($value['attributes']['SETCONSTANT'])) {
+						$setAsConstants[$name] = $value['value'];
+					}
+				}
+			}
+		}
+		
+		foreach($setAsGlobals as $name=>$val) {
+			$index = $varPrefix . $name;
+			$this->assertNotEqual($name, $index);
+			$this->assertTrue(isset($GLOBALS[$index]));
+			$this->assertEqual($GLOBALS[$index], $val);
+		}
+		
+		foreach($setAsConstants as $name=>$val) {
+			$index = $varPrefix . $name;
+			$this->assertNotEqual($name, $index);
+			$this->assertTrue(defined($index));
+			$this->assertEqual(constant($index), $val);
+		}
+		
 	}//end test_siteConfig()
 	//-------------------------------------------------------------------------
 	

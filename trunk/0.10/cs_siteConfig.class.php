@@ -36,6 +36,12 @@ class cs_siteConfig {
 	/** arrayToPath{} object. */
 	private $a2p;
 	
+	/** Prefix to add to every index in GLOBALS and CONSTANTS. */
+	private $setVarPrefix;
+	
+	/** Sections available within the config */
+	private $configSections=array();
+	
 	
 	//-------------------------------------------------------------------------
 	/**
@@ -45,7 +51,9 @@ class cs_siteConfig {
 	 */
 	public function __construct($configFileLocation, $section='MAIN', $setVarPrefix=null) {
 		
-		//TODO: don't use cs_globalFunctions{} if unneeded.
+		$section = strtoupper($section);
+		$this->setVarPrefix=$setVarPrefix;
+		
 		$this->gf = new cs_globalFunctions;
 		$this->gf->debugPrintOpt=1;
 		
@@ -103,11 +111,18 @@ class cs_siteConfig {
 		);
 		$parseThis = array();
 		
+		
+		$this->configSections = array();
+		
 		foreach($data as $section=>$secData) {
 			//only handle UPPERCASE index names; lowercase indexes are special entries (i.e. "type" or "attributes"
 			if($section == strtoupper($section)) {
-				$this->gf->debug_print(__METHOD__ .": handling (". $section .")");
+				$this->configSections[] = $section;
 				foreach($secData as $itemName=>$itemValue) {
+					$attribs = array();
+					if(is_array($itemValue['attributes'])) {
+						$attribs = $itemValue['attributes'];
+					}
 					$itemValue = $itemValue['value'];
 					if(preg_match("/{/", $itemValue)) {
 						$origVal = $itemValue;
@@ -118,6 +133,13 @@ class cs_siteConfig {
 					$parseThis[$itemName] = $itemValue;
 					$parseThis[$section ."/". $itemName] = $itemValue;
 					$data[$section][$itemName]['value'] = $itemValue;
+					
+					if($attribs['SETGLOBAL']) {
+						$GLOBALS[$this->setVarPrefix . $itemName] = $itemValue;
+					}
+					if($attribs['SETCONSTANT']) {
+						define($this->setVarPrefix . $itemName, $itemValue);
+					}
 				}
 			}
 		}
@@ -129,7 +151,6 @@ class cs_siteConfig {
 	
 	//-------------------------------------------------------------------------
 	public function get_section($section) {
-		$this->gf->debug_print(__METHOD__ .": section=(". $section .")");
 		$data = $this->a2p->get_data($section);
 		
 		if(is_array($data) && count($data) && $data['type'] == 'open') {
@@ -155,6 +176,14 @@ class cs_siteConfig {
 		$retval = $this->a2p->get_data($index .'/value');
 		return($retval);
 	}//end get_value()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function get_valid_sections() {
+		return($this->configSections);
+	}//end get_valid_sections()
 	//-------------------------------------------------------------------------
 	
 	
