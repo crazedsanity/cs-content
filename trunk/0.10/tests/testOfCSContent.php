@@ -14,15 +14,13 @@
 
 
 
-
-
-
 //=============================================================================
 class TestOfCSContent extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function __construct() {
 		require_once(dirname(__FILE__) .'/../cs_globalFunctions.php');
+		require_once(dirname(__FILE__) .'/../cs_siteConfig.class.php');
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -172,6 +170,35 @@ class TestOfCSContent extends UnitTestCase {
 		$this->assertEqual($gf->interpret_bool(false, array(0=>'FaLSe',1=>"crap")), 'FaLSe');
 		$this->assertEqual($gf->interpret_bool(false, array(0=>"crap",1=>'FaLSe')), 'crap');
 	}//end test_interpret_bool()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function test_siteConfig() {
+		$configFile = dirname(__FILE__) .'/files/sampleConfig.xml';
+		$sc = new cs_siteConfig($configFile);
+		
+		//make sure that specifying the section "main" section works just like NOT specifying it.
+		$this->assertEqual($sc->get_value('SITEROOT'), $sc->get_value('MAIN/SITEROOT'));
+		$this->assertEqual($sc->get_value('SITEROOT'), $sc->get_value('siteroot'));
+		$this->assertEqual($sc->get_value('SITEROOT'), $sc->get_value('siteRoot'));
+		
+		//make sure if we request an index that doesn't exist, it is returned as null
+		$this->assertTrue(is_null($sc->get_value('NONExISTENT___')));
+		
+		//make sure some values have been replaced.
+		$this->assertTrue(!preg_match("/{/", $sc->get_value('libdir')));
+		$this->assertTrue(
+				preg_match("/^". preg_replace("/\//", "\/", $sc->get_value('siteroot')) ."/", $sc->get_value('libdir')), 
+				"LIBDIR (". $sc->get_value('libdir') .") doesn't contain SITEROOT (". $sc->get_value('siteroot') .")"
+		);
+		$this->assertEqual(
+				$sc->get_value('main/tmpldir'), 
+				$sc->get_value('cs-content/tmpldir'),
+				"path replacement for cs-content/tmpldir (". $sc->get_value('cs-content/tmpldir') .") didn't match main/tmpldir (". $sc->get_value('main/tmpldir') .")"
+		);
+	}//end test_siteConfig()
 	//-------------------------------------------------------------------------
 	
 	
