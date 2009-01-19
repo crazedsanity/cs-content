@@ -20,11 +20,24 @@ require_once(dirname(__FILE__) .'/../cs-phpxml/xmlBuilderClass.php');
 
 class cs_siteConfig {
 	
+	/** XMLParser{} object, for reading XML config file. */
 	private $xmlReader;
+	
+	/** cs_fileSystemClass{} object, for writing/updating XML config file 
+	 * (only available if file is writable)
+	 */
 	private $xmlWriter;
+	
+	/** XMLBuilder{} object, for updating XML. */
 	private $xmlBuilder;
+	
+	/** cs_fileSystemClass{} object, for handling generic file operations (i.e. reading) */
 	private $fs;
+	
+	/** boolean flag indicating if the given config file is readOnly (false=read/write) */
 	private $readOnly;
+	
+	/** Directory for the config file. */
 	private $configDirname;
 	
 	/** Active section of the full site configuration. */
@@ -47,7 +60,12 @@ class cs_siteConfig {
 	/**
 	 * Constructor.
 	 * 
-	 * @$configFileLocation		(str) URI for config file.
+	 * @param $configFileLocation	(str) URI for config file.
+	 * @param $section				(str,optional) set active section (default=MAIN)
+	 * @param $setVarPrefix			(str,optional) prefix to add to all global & constant names.
+	 * 
+	 * @return NULL					(PASS) object successfully created
+	 * @return exception			(FAIL) failed to create object (see exception message)
 	 */
 	public function __construct($configFileLocation, $section='MAIN', $setVarPrefix=null) {
 		
@@ -56,8 +74,6 @@ class cs_siteConfig {
 		
 		$this->gf = new cs_globalFunctions;
 		$this->gf->debugPrintOpt=1;
-		
-		$this->set_active_section($section);
 		
 		if(strlen($configFileLocation) && file_exists($configFileLocation)) {
 			
@@ -68,6 +84,8 @@ class cs_siteConfig {
 			
 			if($this->fs->is_writable($configFileLocation)) {
 				$this->readOnly = false;
+				$this->xmlWriter = new cs_fileSystemClass($this->configDirname);
+				
 			}
 			else {
 				$this->readOnly = true;
@@ -80,6 +98,7 @@ class cs_siteConfig {
 		if(strlen($section)) {
 			try {
 				$this->parse_config();
+				$this->set_active_section($section);
 				$this->config = $this->get_section($section);
 			}
 			catch(exception $e) {
@@ -95,14 +114,38 @@ class cs_siteConfig {
 	
 	
 	//-------------------------------------------------------------------------
+	/** 
+	 * Sets the active section.
+	 * 
+	 * @param $section		(str) section to be set as active.
+	 * 
+	 * @return VOID			(PASS) section was set successfully.
+	 * @return exception	(FAIL) problem encountred setting section. 
+	 */
 	public function set_active_section($section) {
-		$this->activeSection = strtoupper($section);
+		$section = strtoupper($section);
+		if(in_array($section, $this->configSections)) {
+			$this->activeSection = $section;
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid section (". $section .")");
+		}
 	}//end set_active_section($section)
 	//-------------------------------------------------------------------------
 	
 	
 	
 	//-------------------------------------------------------------------------
+	/**
+	 * Parse the configuration file.  Handles replacing {VARIABLES} in values, 
+	 * sets items as global or as constants, and creates array indicating the 
+	 * available sections from the config file.
+	 * 
+	 * @param VOID			(void) no arguments accepted.
+	 * 
+	 * @return NULL			(PASS) successfully parsed configuration
+	 * @return exception	(FAIL) exception indicates problem encountered.
+	 */
 	private function parse_config() {
 		$data = $this->xmlReader->get_path($this->xmlReader->get_root_element());
 		
@@ -150,6 +193,14 @@ class cs_siteConfig {
 	
 	
 	//-------------------------------------------------------------------------
+	/**
+	 * Retrieve all data about the given section.
+	 * 
+	 * @param $section		(str) section to retrieve.
+	 * 
+	 * @return array		(PASS) array contains section data.
+	 * @return exception	(FAIL) exception indicates problem.
+	 */
 	public function get_section($section) {
 		$data = $this->a2p->get_data($section);
 		
@@ -168,6 +219,17 @@ class cs_siteConfig {
 	
 	
 	//-------------------------------------------------------------------------
+	/**
+	 * Retrieves value from the active section, or from another (other sections 
+	 * specified like "SECTION/INDEX").
+	 * 
+	 * @param $index		(str) index name of value to retrieve.
+	 * 
+	 * @return mixed		(PASS) returns value of given index.
+	 * 
+	 * NOTE::: this will return NULL if the given index or section/index does
+	 * not exist.
+	 */
 	public function get_value($index) {
 		if(preg_match("/\//", $index)) {
 			//section NOT given, assume they're looking for something in the active section.
@@ -181,11 +243,26 @@ class cs_siteConfig {
 	
 	
 	//-------------------------------------------------------------------------
+	/**
+	 * Retrieves list of valid configuration sections, as defined by 
+	 * parse_config().
+	 * 
+	 * @param VOID			(void) no parameters accepted.
+	 * 
+	 * @return array		(PASS) array holds list of valid sections.
+	 * @return exception	(FAIL) exception gives error.
+	 */
 	public function get_valid_sections() {
-		return($this->configSections);
+		if(is_array($this->configSections) && count($this->configSections)) {
+			$retval = $this->configSections;
+		}
+		else {
+			throw new exception(__METHOD__ .": no sections defined, probably invalid configuration");
+		}
+		
+		return($retval);
 	}//end get_valid_sections()
 	//-------------------------------------------------------------------------
-	
 	
 }//end cs_siteConfig
 
