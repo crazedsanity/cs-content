@@ -55,6 +55,9 @@ class cs_siteConfig {
 	/** Sections available within the config */
 	private $configSections=array();
 	
+	/** Boolean flag to determine if the object has been properly initialized or not. */
+	private $isInitialized=false;
+	
 	
 	//-------------------------------------------------------------------------
 	/**
@@ -108,6 +111,7 @@ class cs_siteConfig {
 		else {
 			throw new exception(__METHOD__ .": no section given (". $section .")");
 		}
+		
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -123,12 +127,17 @@ class cs_siteConfig {
 	 * @return exception	(FAIL) problem encountred setting section. 
 	 */
 	public function set_active_section($section) {
-		$section = strtoupper($section);
-		if(in_array($section, $this->configSections)) {
-			$this->activeSection = $section;
+		if($this->isInitialized === true) {
+			$section = strtoupper($section);
+			if(in_array($section, $this->configSections)) {
+				$this->activeSection = $section;
+			}
+			else {
+				throw new exception(__METHOD__ .": invalid section (". $section .")");
+			}
 		}
 		else {
-			throw new exception(__METHOD__ .": invalid section (". $section .")");
+			throw new exception(__METHOD__ .": not initialized");
 		}
 	}//end set_active_section($section)
 	//-------------------------------------------------------------------------
@@ -187,6 +196,7 @@ class cs_siteConfig {
 			}
 		}
 		$this->a2p = new arrayToPath($data);
+		$this->isInitialized=true;
 	}//end parse_config()
 	//-------------------------------------------------------------------------
 	
@@ -202,14 +212,19 @@ class cs_siteConfig {
 	 * @return exception	(FAIL) exception indicates problem.
 	 */
 	public function get_section($section) {
-		$data = $this->a2p->get_data($section);
-		
-		if(is_array($data) && count($data) && $data['type'] == 'open') {
-			unset($data['type']);
-			$retval = $data;
+		if($this->isInitialized === true) {
+			$data = $this->a2p->get_data($section);
+			
+			if(is_array($data) && count($data) && $data['type'] == 'open') {
+				unset($data['type']);
+				$retval = $data;
+			}
+			else {
+				throw new exception(__METHOD__ .": invalid section or no data (". $data['type'] .")");
+			}
 		}
 		else {
-			throw new exception(__METHOD__ .": invalid section or no data (". $data['type'] .")");
+			throw new exception(__METHOD__ .": not initialized");
 		}
 		
 		return($retval);
@@ -231,11 +246,16 @@ class cs_siteConfig {
 	 * not exist.
 	 */
 	public function get_value($index) {
-		if(preg_match("/\//", $index)) {
-			//section NOT given, assume they're looking for something in the active section.
-			$index = $this->activeSection ."/". $index;
+		if($this->isInitialized === true) {
+			if(preg_match("/\//", $index)) {
+				//section NOT given, assume they're looking for something in the active section.
+				$index = $this->activeSection ."/". $index;
+			}
+			$retval = $this->a2p->get_data($index .'/value');
 		}
-		$retval = $this->a2p->get_data($index .'/value');
+		else {
+			throw new exception(__METHOD__ .": not initialized");
+		}
 		return($retval);
 	}//end get_value()
 	//-------------------------------------------------------------------------
@@ -253,15 +273,27 @@ class cs_siteConfig {
 	 * @return exception	(FAIL) exception gives error.
 	 */
 	public function get_valid_sections() {
-		if(is_array($this->configSections) && count($this->configSections)) {
-			$retval = $this->configSections;
+		if($this->isInitialized === true) {
+			if(is_array($this->configSections) && count($this->configSections)) {
+				$retval = $this->configSections;
+			}
+			else {
+				throw new exception(__METHOD__ .": no sections defined, probably invalid configuration");
+			}
 		}
 		else {
-			throw new exception(__METHOD__ .": no sections defined, probably invalid configuration");
+			throw new exception(__METHOD__ .": not initialized");
 		}
 		
 		return($retval);
 	}//end get_valid_sections()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function create_site_config() {
+	}//end create_site_config()
 	//-------------------------------------------------------------------------
 	
 }//end cs_siteConfig
