@@ -1,0 +1,22 @@
+<config>
+	<main>
+		<debugprintopt setconstant="1" setglobal="1">0</debugprintopt>
+		<siteroot setconstant="1" setglobal="1">{_DIRNAMEOFFILE_}</siteroot>
+		<pg_host setglobal="1">crazedsanity.com</pg_host>
+		<pg_dbname setglobal="1">cs</pg_dbname>
+		<pg_port setglobal="1">5432</pg_port>
+		<pg_dbuser setglobal="1">postgres</pg_dbuser>
+		<max_idle setglobal="1">8 hours</max_idle>
+		<max_time setglobal="1">24 hours</max_time>
+		<workingonit setconstant="1" setglobal="1">0</workingonit>
+		<libdir>{SITEROOT}/lib</libdir>
+		<tmpldir>{SITEROOT}/templates</tmpldir>
+		<cs_blogrwdir>{SITEROOT}/rw/blogger</cs_blogrwdir>
+		<cs_blogimgurl>/images/blog/</cs_blogimgurl>
+		<cs_blogimgdir>{SITEROOT}/public_html/{CS_BLOGIMGURL}</cs_blogimgdir>
+	</main>
+	
+	<cs-content>
+		<tmpldir>{MAIN/TMPLDIR}</tmpldir>
+	</cs-content>
+</config>
