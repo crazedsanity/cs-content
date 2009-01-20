@@ -15,6 +15,8 @@
  * 
  */
 
+require_once(dirname(__FILE__) .'/cs_globalFunctions.php');
+require_once(dirname(__FILE__) .'/cs_fileSystemClass.php');
 require_once(dirname(__FILE__). '/../cs-phpxml/xmlParserClass.php');
 require_once(dirname(__FILE__) .'/../cs-phpxml/xmlBuilderClass.php');
 
@@ -156,47 +158,58 @@ class cs_siteConfig {
 	 * @return exception	(FAIL) exception indicates problem encountered.
 	 */
 	private function parse_config() {
-		$data = $this->xmlReader->get_path($this->xmlReader->get_root_element());
-		
-		$specialVars = array(
-			'_DIRNAMEOFFILE_'	=> $this->configDirname
-		);
-		$parseThis = array();
-		
-		
-		$this->configSections = array();
-		
-		foreach($data as $section=>$secData) {
-			//only handle UPPERCASE index names; lowercase indexes are special entries (i.e. "type" or "attributes"
-			if($section == strtoupper($section)) {
-				$this->configSections[] = $section;
-				foreach($secData as $itemName=>$itemValue) {
-					$attribs = array();
-					if(is_array($itemValue['attributes'])) {
-						$attribs = $itemValue['attributes'];
-					}
-					$itemValue = $itemValue['value'];
-					if(preg_match("/{/", $itemValue)) {
-						$origVal = $itemValue;
-						$itemValue = $this->gf->mini_parser($itemValue, $specialVars, '{', '}');
-						$itemValue = $this->gf->mini_parser($itemValue, $parseThis, '{', '}');
-						$itemValue = preg_replace("/[\/]{2,}/", "/", $itemValue);
-					}
-					$parseThis[$itemName] = $itemValue;
-					$parseThis[$section ."/". $itemName] = $itemValue;
-					$data[$section][$itemName]['value'] = $itemValue;
-					
-					if($attribs['SETGLOBAL']) {
-						$GLOBALS[$this->setVarPrefix . $itemName] = $itemValue;
-					}
-					if($attribs['SETCONSTANT']) {
-						define($this->setVarPrefix . $itemName, $itemValue);
+		if(is_object($this->xmlReader)) {
+			$data = $this->xmlReader->get_path($this->xmlReader->get_root_element());
+			
+			$specialVars = array(
+				'_DIRNAMEOFFILE_'	=> $this->configDirname
+			);
+			$parseThis = array();
+			
+			
+			$this->configSections = array();
+			
+			foreach($data as $section=>$secData) {
+				//only handle UPPERCASE index names; lowercase indexes are special entries (i.e. "type" or "attributes"
+				if($section == strtoupper($section)) {
+					$this->configSections[] = $section;
+					foreach($secData as $itemName=>$itemValue) {
+						$attribs = array();
+						if(is_array($itemValue['attributes'])) {
+							$attribs = $itemValue['attributes'];
+						}
+						$itemValue = $itemValue['value'];
+						if(preg_match("/{/", $itemValue)) {
+							$origVal = $itemValue;
+							$itemValue = $this->gf->mini_parser($itemValue, $specialVars, '{', '}');
+							$itemValue = $this->gf->mini_parser($itemValue, $parseThis, '{', '}');
+							$itemValue = preg_replace("/[\/]{2,}/", "/", $itemValue);
+						}
+						
+						if($attribs['CLEANPATH']) {
+							$itemValue = $this->fs->resolve_path_with_dots($itemValue);
+						}
+						
+						$parseThis[$itemName] = $itemValue;
+						$parseThis[$section ."/". $itemName] = $itemValue;
+						$data[$section][$itemName]['value'] = $itemValue;
+						
+						$setVarIndex = $this->setVarPrefix . $itemName;
+						if($attribs['SETGLOBAL']) {
+							$GLOBALS[$setVarIndex] = $itemValue;
+						}
+						if($attribs['SETCONSTANT']) {
+							define($setVarIndex, $itemValue);
+						}
 					}
 				}
 			}
+			$this->a2p = new arrayToPath($data);
+			$this->isInitialized=true;
 		}
-		$this->a2p = new arrayToPath($data);
-		$this->isInitialized=true;
+		else {
+			throw new exception(__METHOD__ .": xmlReader not created, object probably not initialized");
+		}
 	}//end parse_config()
 	//-------------------------------------------------------------------------
 	
@@ -287,13 +300,6 @@ class cs_siteConfig {
 		
 		return($retval);
 	}//end get_valid_sections()
-	//-------------------------------------------------------------------------
-	
-	
-	
-	//-------------------------------------------------------------------------
-	public function create_site_config() {
-	}//end create_site_config()
 	//-------------------------------------------------------------------------
 	
 }//end cs_siteConfig

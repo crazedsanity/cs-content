@@ -213,7 +213,6 @@ class TestOfCSContent extends UnitTestCase {
 		$setAsGlobals = array();
 		$setAsConstants = array();
 		foreach($sc->get_valid_sections() as $section) {
-			$this->gf->debug_print(__METHOD__ .": evaluating section (". $section .")");
 			$sectionData = $sc->get_section($section);
 			foreach($sectionData as $name=>$value) {
 				if(is_array($value['attributes'])) {
