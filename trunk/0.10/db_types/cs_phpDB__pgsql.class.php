@@ -136,7 +136,7 @@ class cs_phpDB__pgsql {
 		
 		$requiredCount = 0;
 		foreach($required as $index) {
-			if(isset($params[$index])) {
+			if(isset($params[$index]) || $index == 'password') {
 				$this->$index = $params[$index];
 				$requiredCount++;
 			}
