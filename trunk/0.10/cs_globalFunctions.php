@@ -17,17 +17,10 @@ class cs_globalFunctions extends cs_versionAbstract {
 	public function __construct() {
 		//These checks have been implemented for pseudo backwards-compatibility 
 		//	(internal vars won't change if GLOBAL vars changed).
-		if(defined('DEBUGREMOVEHR')) {
-			$this->debugRemoveHr = constant('DEBUGREMOVEHR');
-		}
-		elseif(isset($GLOBALS['DEBUGREMOVEHR'])) {
+		if(isset($GLOBALS['DEBUGREMOVEHR'])) {
 			$this->debugRemoveHr = $GLOBALS['DEBUGREMOVEHR'];
 		}
-		
-		if(defined('DEBUGPRINTOPT')) {
-			$this->debugPrintOpt = constant('DEBUGPRINTOPT');
-		}
-		elseif(isset($GLOBALS['DEBUGPRINTOPT'])) {
+		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
 		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
@@ -62,13 +55,15 @@ class cs_globalFunctions extends cs_versionAbstract {
 			$this->oldForceSqlQuotes = $this->forceSqlQuotes;
 			$this->forceSqlQuotes = $newSetting;
 			$retval = true;
+			$this->debug_print(__METHOD__ .": swapped (OLD=". $this->oldForceSqlQuotes .", CUR=". $this->forceSqlQuotes .")");
 		}
 		else {
 			$retval = false;
+			$this->debug_print(__METHOD__ .": no swap (OLD=". $this->oldForceSqlQuotes .", CUR=". $this->forceSqlQuotes .")");
 		}
 		
 		return($retval);
-	}//end switch_force_sql_quotes()
+	}//end force_sql_quotes()
 	//=========================================================================
 	
 	
@@ -380,7 +375,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 				*/
 				$evilChars = array("\$", "%", "~", "*",">", "<", "-", "{", "}", "[", "]", ")", "(", "&", "#", "?", ".", "\,","\/","\\","\"","\|","!","^","+","`","\n","\r");
 				$cleanThis = preg_replace("/\|/","",$cleanThis);
-				$cleanThis = preg_replace("/\'/", "", $cleanThis);
 				$cleanThis = str_replace($evilChars,"", $cleanThis);
 				$cleanThis = stripslashes(addslashes($cleanThis));
 			break;
@@ -519,7 +513,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 			
 			case "name":
 			case "names":
-				//allows only things in the "alpha" case and single quotes.
+				//removes everything in the "alpha" case, but allows "'".
 				$cleanThis = preg_replace("/[^a-zA-Z']/", "", $cleanThis);
 			break;
 	
@@ -531,7 +525,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 			case "bool":
 			case "boolean":
 				//makes it either T or F (gotta lower the string & only check the first char to ensure accurate results).
-				$cleanThis = $this->interpret_bool($cleanThis, array('f', 't'));
+				$cleanThis = interpret_bool($cleanThis, array('f', 't'));
 			break;
 			
 			case "varchar":
@@ -776,67 +770,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 		
 		return($retval);
 	}//end array_as_option_list()
-	//##########################################################################
-	
-	
-	
-	//##########################################################################
-	public function interpret_bool($interpretThis, array $trueFalseMapper=null) {
-		$interpretThis = preg_replace('/ /', '', $interpretThis);
-		if(is_array($trueFalseMapper)) {
-			if(count($trueFalseMapper) == 2 && isset($trueFalseMapper[0]) && isset($trueFalseMapper[1])) {
-				$realVals = $trueFalseMapper;
-			}
-			else {
-				throw new exception(__METHOD__ .": invalid true/false map");
-			}
-		}
-		else {
-			//set an array that defines what "0" and "1" return.
-			$realVals = array(
-				0 => false,
-				1 => true
-			);
-		}
-		
-		//now figure out the value to return.
-		if(is_numeric($interpretThis)) {
-			settype($interpretThis, 'integer');
-			if($interpretThis == '0') {
-				$index=0;
-			}
-			else {
-				$index=1;
-			}
-		}
-		elseif(is_bool($interpretThis)) {
-			if($interpretThis == true) {
-				$index=1;
-			}
-			else {
-				$index=0;
-			}
-		}
-		elseif(preg_match('/^true$/i', $interpretThis) || preg_match('/^false$/', $interpretThis) || preg_match("/^[tf]$/", $interpretThis)) {
-			if(preg_match('/^true$/i', $interpretThis) || preg_match('/^t$/', $interpretThis)) {
-				$index=1;
-			}
-			else {
-				$index=0;
-			}
-		}
-		else {
-			//straight-up PHP if/else evaluation.
-			if($interpretThis) {
-				$index=1;
-			}
-			else {
-				$index=0;
-			}
-		}
-		
-		return($realVals[$index]);
-	}//end interpret_bool()
 	//##########################################################################
 
 }//end cs_globalFunctions{}
