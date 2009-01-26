@@ -17,8 +17,8 @@
 
 require_once(dirname(__FILE__) .'/cs_globalFunctions.php');
 require_once(dirname(__FILE__) .'/cs_fileSystemClass.php');
-require_once(dirname(__FILE__). '/../cs-phpxml/xmlParserClass.php');
-require_once(dirname(__FILE__) .'/../cs-phpxml/xmlBuilderClass.php');
+require_once(dirname(__FILE__). '/../cs-phpxml/cs_phpxmlParser.class.php');
+require_once(dirname(__FILE__) .'/../cs-phpxml/cs_phpxmlBuilder.class.php');
 
 class cs_siteConfig {
 	
@@ -48,7 +48,7 @@ class cs_siteConfig {
 	/** The FULL configuration file, instead of just the active section. */
 	private $fullConfig=array();
 	
-	/** arrayToPath{} object. */
+	/** cs_arrayToPath{} object. */
 	private $a2p;
 	
 	/** Prefix to add to every index in GLOBALS and CONSTANTS. */
@@ -85,7 +85,7 @@ class cs_siteConfig {
 			$this->configDirname = dirname($configFileLocation);
 			$this->fs = new cs_fileSystemClass($this->configDirname);
 			
-			$this->xmlReader = new XMLParser($this->fs->read($configFileLocation));
+			$this->xmlReader = new cs_phpxmlParser($this->fs->read($configFileLocation));
 			
 			if($this->fs->is_writable($configFileLocation)) {
 				$this->readOnly = false;
@@ -204,7 +204,7 @@ class cs_siteConfig {
 					}
 				}
 			}
-			$this->a2p = new arrayToPath($data);
+			$this->a2p = new cs_arrayToPath($data);
 			$this->isInitialized=true;
 		}
 		else {
