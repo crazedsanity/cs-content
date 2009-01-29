@@ -1,6 +1,6 @@
 <?php
 
-require_once("../lib/cs-content/contentSystemClass.php");
+require_once("../lib/cs-content/contentSystem.class.php");
 
 //conditionally include files pointing to it...
 $contentObj = new contentSystem();
