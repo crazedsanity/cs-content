@@ -19,7 +19,7 @@ class TestOfCSContent extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function __construct() {
-		require_once(dirname(__FILE__) .'/../cs_globalFunctions.php');
+		require_once(dirname(__FILE__) .'/../cs_globalFunctions.class.php');
 		require_once(dirname(__FILE__) .'/../cs_siteConfig.class.php');
 		
 		$this->gf = new cs_globalFunctions;
