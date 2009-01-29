@@ -71,7 +71,7 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 }
 
 require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
-require_once(dirname(__FILE__) ."/cs_fileSystemClass.php");
+require_once(dirname(__FILE__) ."/cs_fileSystem.class.php");
 require_once(dirname(__FILE__) ."/cs_sessionClass.php");
 require_once(dirname(__FILE__) ."/cs_genericPageClass.php");
 require_once(dirname(__FILE__) ."/cs_tabsClass.php");
@@ -145,7 +145,7 @@ class contentSystem extends cs_contentAbstract {
 		$this->templateObj->add_template_var('CURRENT_URL', $myUrl);
 		
 		//create a fileSystem object.
-		$this->fileSystemObj = new cs_fileSystemClass();
+		$this->fileSystemObj = new cs_fileSystem();
 		
 		//create a tabs object, in case they want to load tabs on the page.
 		$this->tabs = new cs_tabs($this->templateObj);

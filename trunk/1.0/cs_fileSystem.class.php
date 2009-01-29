@@ -11,7 +11,7 @@
 
 require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
-class cs_fileSystemClass extends cs_contentAbstract {
+class cs_fileSystem extends cs_contentAbstract {
 
 	public $root;		//actual root directory.
 	public $cwd;		//current directory; relative to $this->root
