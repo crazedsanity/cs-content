@@ -8,28 +8,28 @@
  * Last Committted Date: $Date$
  * Last Committed Path:: $HeadURL$
  * 
+ * //////////////////////
+ * ORIGINATION INFO:
+ * 		Author: Trevin Chow (with contributions from Lee Pang, wleepang@hotmail.com)
+ * 		Email: t1@mail.com
+ * 		Date: February 21, 2000
+ * 		Last Updated: August 14, 2001
+ * 
+ * 		Description:
+ *  		Abstracts both the php function calls and the server information to POSTGRES
+ *  		databases.  Utilizes class variables to maintain connection information such
+ *  		as number of rows, result id of last operation, etc.
+ * 
+ * /////////////////////
+ * 
+ * TODO: option to not use layered transactions
+ * TODO: rollbackTrans() in layered transaction causes abort when final layer is committed/aborted
+ * TODO: stop sending queries to backend when transction is bad/aborted.
+ * TODO: commit/abort specific layer requests (i.e. if there's 8 layers & the first is named "x", calling commitTrans("x") will cause the whole transaction to commit & all layers to be destroyed.
  */
 
-///////////////////////
-// ORIGINATION INFO:
-// 		Author: Trevin Chow (with contributions from Lee Pang, wleepang@hotmail.com)
-// 		Email: t1@mail.com
-// 		Date: February 21, 2000
-// 		Last Updated: August 14, 2001
-//
-// 		Description:
-//  		Abstracts both the php function calls and the server information to POSTGRES
-//  		databases.  Utilizes class variables to maintain connection information such
-//  		as number of rows, result id of last operation, etc.
-//
-///////////////////////
 
-//TODO: option to not use layered transactions
-//TODO: rollbackTrans() in layered transaction causes abort when final layer is committed/aborted
-//TODO: stop sending queries to backend when transction is bad/aborted.
-//TODO: commit/abort specific layer requests (i.e. if there's 8 layers & the first is named "x", calling commitTrans("x") will cause the whole transaction to commit & all layers to be destroyed.
-
-class cs_phpDB__pgsql {
+class cs_phpDB__pgsql extends cs_phpDBAbstract {
 
 	/** Internal result set pointer. */
 	protected $result = NULL;
@@ -101,27 +101,8 @@ class cs_phpDB__pgsql {
 	
 	//=========================================================================
 	public function __construct() {
-		$this->gfObj = new cs_globalFunctions;
-		
-		if(defined('DEBUGPRINTOPT')) {
-			$this->gfObj->debugPrintOpt = DEBUGPRINTOPT;
-		}
-		
-		$this->isInitialized = TRUE;
+		parent::__construct();
 	}//end __construct()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Make sure the object is sane.
-	 */
-	final protected function sanity_check() {
-		if($this->isInitialized !== TRUE) {
-			throw new exception(__METHOD__ .": not properly initialized");
-		}
-	}//end sanity_check()
 	//=========================================================================
 	
 	
@@ -154,18 +135,6 @@ class cs_phpDB__pgsql {
 				.") does not match required number of fields (". count($required) .")");
 		}
 	}//end set_db_info()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Wrapper for close()
-	 */
-	function disconnect() {
-		//Disconnect from $database
-		return($this->close());
-	}//end disconnect()
 	//=========================================================================
 	
 	
@@ -702,17 +671,6 @@ class cs_phpDB__pgsql {
 	
 	//=========================================================================
 	/**
-	 * Returns the current row number.
-	 */
-	function currRow(){
-		return($this->row);
-	}//end currRow()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
 	 * Get the number of fields in a result.
 	 */
 	// get the number of fields in a result
@@ -877,28 +835,6 @@ class cs_phpDB__pgsql {
 	////////////////////////
 	// SQL String Related
 	////////////////////////
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Gets rid of evil characters that might lead ot SQL injection attacks.
-	 */
-	function querySafe($string) {
-		return($this->gfObj->cleanString($string,"query"));
-	}//end querySafe()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Make it SQL safe.
-	 */
-	function sqlSafe($string) {
-		return($this->gfObj->cleanString($string,"sql"));
-	}//end sqlSafe()
-	//=========================================================================
 	
 	
 	
