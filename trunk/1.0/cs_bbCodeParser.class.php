@@ -18,9 +18,9 @@
  * been converted.
  */
 
-require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
+require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
-class cs_bbCodeParser extends cs_versionAbstract {
+class cs_bbCodeParser extends cs_contentAbstract {
 	
 	/** Array containing all the codes & how to parse them. */
 	private $bbCodeData = NULL;
@@ -30,7 +30,7 @@ class cs_bbCodeParser extends cs_versionAbstract {
 	 * Setup internal structures.
 	 */
 	function __construct() {
-		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
+		parent::__construct(false);
 		# Which BBCode is accepted here
 		$this->bbCodeData = array(
 			'bold' => array(

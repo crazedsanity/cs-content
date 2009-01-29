@@ -15,12 +15,12 @@
  * 
  */
 
-require_once(dirname(__FILE__) .'/cs_globalFunctions.php');
+require_once(dirname(__FILE__) .'/abstract/cs_content.abstract.class.php');
 require_once(dirname(__FILE__) .'/cs_fileSystemClass.php');
 require_once(dirname(__FILE__). '/../cs-phpxml/cs_phpxmlParser.class.php');
 require_once(dirname(__FILE__) .'/../cs-phpxml/cs_phpxmlBuilder.class.php');
 
-class cs_siteConfig {
+class cs_siteConfig extends cs_contentAbstract {
 	
 	/** XMLParser{} object, for reading XML config file. */
 	private $xmlReader;
@@ -77,8 +77,7 @@ class cs_siteConfig {
 		$section = strtoupper($section);
 		$this->setVarPrefix=$setVarPrefix;
 		
-		$this->gf = new cs_globalFunctions;
-		$this->gf->debugPrintOpt=1;
+		parent::__construct();
 		
 		if(strlen($configFileLocation) && file_exists($configFileLocation)) {
 			
@@ -181,8 +180,8 @@ class cs_siteConfig {
 						$itemValue = $itemValue['value'];
 						if(preg_match("/{/", $itemValue)) {
 							$origVal = $itemValue;
-							$itemValue = $this->gf->mini_parser($itemValue, $specialVars, '{', '}');
-							$itemValue = $this->gf->mini_parser($itemValue, $parseThis, '{', '}');
+							$itemValue = $this->gfObj->mini_parser($itemValue, $specialVars, '{', '}');
+							$itemValue = $this->gfObj->mini_parser($itemValue, $parseThis, '{', '}');
 							$itemValue = preg_replace("/[\/]{2,}/", "/", $itemValue);
 						}
 						
