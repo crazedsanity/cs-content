@@ -530,14 +530,14 @@ class cs_genericPage extends cs_contentAbstract {
 		if(strlen($templateContents) >= 31) {
 			//looks good to me.  Run the regex...
 			$flags = PREG_PATTERN_ORDER;
-			$reg = "/<!-- BEGIN (.+) -->/";
+			$reg = "/<!-- BEGIN (\S{1,}) -->/";
 			preg_match_all($reg, $templateContents, $beginArr, $flags);
 			$beginArr = $beginArr[1];
 			
-			$endReg = "/<!-- END (.+) -->/";
+			$endReg = "/<!-- END (\S{1,}) -->/";
 			preg_match_all($endReg, $templateContents, $endArr, $flags);
 			$endArr = $endArr[1];
-	
+			
 			//create a part of the array that shows any orphaned "BEGIN" statements (no matching "END"
 			// statement), and orphaned "END" statements (no matching "BEGIN" statements)
 			// NOTE::: by doing this, should easily be able to tell if the block rows were defined
@@ -577,6 +577,7 @@ class cs_genericPage extends cs_contentAbstract {
 		$rowDefs = $this->get_block_row_defs($templateVar);
 		
 		$useTheseBlockRows = $rowDefs['ordered'];
+		
 		$retval = array();
 		if(is_array($useTheseBlockRows)) {
 			foreach($useTheseBlockRows as $blockRowName)
