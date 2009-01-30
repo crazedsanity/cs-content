@@ -15,17 +15,17 @@
  * 
  */
 
-require_once(dirname(__FILE__) .'/cs_globalFunctions.php');
-require_once(dirname(__FILE__) .'/cs_fileSystemClass.php');
+require_once(dirname(__FILE__) .'/abstract/cs_content.abstract.class.php');
+require_once(dirname(__FILE__) .'/cs_fileSystem.class.php');
 require_once(dirname(__FILE__). '/../cs-phpxml/cs_phpxmlParser.class.php');
 require_once(dirname(__FILE__) .'/../cs-phpxml/cs_phpxmlBuilder.class.php');
 
-class cs_siteConfig {
+class cs_siteConfig extends cs_contentAbstract {
 	
 	/** XMLParser{} object, for reading XML config file. */
 	private $xmlReader;
 	
-	/** cs_fileSystemClass{} object, for writing/updating XML config file 
+	/** cs_fileSystem{} object, for writing/updating XML config file 
 	 * (only available if file is writable)
 	 */
 	private $xmlWriter;
@@ -33,7 +33,7 @@ class cs_siteConfig {
 	/** XMLBuilder{} object, for updating XML. */
 	private $xmlBuilder;
 	
-	/** cs_fileSystemClass{} object, for handling generic file operations (i.e. reading) */
+	/** cs_fileSystem{} object, for handling generic file operations (i.e. reading) */
 	private $fs;
 	
 	/** boolean flag indicating if the given config file is readOnly (false=read/write) */
@@ -77,19 +77,18 @@ class cs_siteConfig {
 		$section = strtoupper($section);
 		$this->setVarPrefix=$setVarPrefix;
 		
-		$this->gf = new cs_globalFunctions;
-		$this->gf->debugPrintOpt=1;
+		parent::__construct();
 		
 		if(strlen($configFileLocation) && file_exists($configFileLocation)) {
 			
 			$this->configDirname = dirname($configFileLocation);
-			$this->fs = new cs_fileSystemClass($this->configDirname);
+			$this->fs = new cs_fileSystem($this->configDirname);
 			
 			$this->xmlReader = new cs_phpxmlParser($this->fs->read($configFileLocation));
 			
 			if($this->fs->is_writable($configFileLocation)) {
 				$this->readOnly = false;
-				$this->xmlWriter = new cs_fileSystemClass($this->configDirname);
+				$this->xmlWriter = new cs_fileSystem($this->configDirname);
 				
 			}
 			else {
@@ -181,8 +180,8 @@ class cs_siteConfig {
 						$itemValue = $itemValue['value'];
 						if(preg_match("/{/", $itemValue)) {
 							$origVal = $itemValue;
-							$itemValue = $this->gf->mini_parser($itemValue, $specialVars, '{', '}');
-							$itemValue = $this->gf->mini_parser($itemValue, $parseThis, '{', '}');
+							$itemValue = $this->gfObj->mini_parser($itemValue, $specialVars, '{', '}');
+							$itemValue = $this->gfObj->mini_parser($itemValue, $parseThis, '{', '}');
 							$itemValue = preg_replace("/[\/]{2,}/", "/", $itemValue);
 						}
 						

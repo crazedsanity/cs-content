@@ -10,7 +10,7 @@
 
 require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
 
-class cs_session extends cs_versionAbstract {
+class cs_session extends cs_contentAbstract {
 
 	protected $db;
 	public $uid;
@@ -26,7 +26,7 @@ class cs_session extends cs_versionAbstract {
 	 * 								used as the session name.
 	 */
 	function __construct($createSession=1) {
-		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
+		parent::__construct(false);
 		if($createSession) {
 			if(!is_null($createSession) && strlen($createSession) && !is_numeric($createSession)) {
 				session_name($createSession);

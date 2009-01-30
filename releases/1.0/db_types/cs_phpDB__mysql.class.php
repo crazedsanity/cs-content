@@ -11,8 +11,7 @@
  */
 
 
-
-class cs_phpDB__mysql {
+class cs_phpDB__mysql extends cs_phpDBAbstract {
 
 	/** Internal result set pointer. */
 	protected $result = NULL;
@@ -84,27 +83,8 @@ class cs_phpDB__mysql {
 	
 	//=========================================================================
 	public function __construct() {
-		$this->gfObj = new cs_globalFunctions;
-		
-		if(defined('DEBUGPRINTOPT')) {
-			$this->gfObj->debugPrintOpt = DEBUGPRINTOPT;
-		}
-		
-		$this->isInitialized = TRUE;
+		parent::__construct();
 	}//end __construct()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Make sure the object is sane.
-	 */
-	final protected function sanity_check() {
-		if($this->isInitialized !== TRUE) {
-			throw new exception(__METHOD__ .": not properly initialized");
-		}
-	}//end sanity_check()
 	//=========================================================================
 	
 	
@@ -137,18 +117,6 @@ class cs_phpDB__mysql {
 				.") does not match required number of fields (". count($required) .")");
 		}
 	}//end set_db_info()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Wrapper for close()
-	 */
-	function disconnect() {
-		//Disconnect from $database
-		return($this->close());
-	}//end disconnect()
 	//=========================================================================
 	
 	
@@ -669,18 +637,6 @@ class cs_phpDB__mysql {
 	function affectedRows(){
 		return($this->numAffected());
 	}//end affectedRows()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Returns the current row number.
-	 */
-	function currRow(){
-		return($this->row);
-	}//end currRow()
-	//=========================================================================
 	
 	
 	
@@ -750,28 +706,6 @@ class cs_phpDB__mysql {
 	
 	//=========================================================================
 	/**
-	 * Gets rid of evil characters that might lead ot SQL injection attacks.
-	 */
-	function querySafe($string) {
-		return($this->gfObj->cleanString($string,"query"));
-	}//end querySafe()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Make it SQL safe.
-	 */
-	function sqlSafe($string) {
-		return($this->gfObj->cleanString($string,"sql"));
-	}//end sqlSafe()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
 	 * Gives textual explanation of the current status of our database 
 	 * connection.
 	 * 
@@ -785,61 +719,7 @@ class cs_phpDB__mysql {
 	 */
 	function get_transaction_status($goodOrBad=TRUE) {
 		//TODO: implement MySQL version..
-		$myStatus = pg_transaction_status($this->connectionID);
-		$text = 'unknown';
-		switch($myStatus) {
-			case PGSQL_TRANSACTION_IDLE: {
-				//No query in progress: it's idle.
-				$goodOrBadValue = 1;
-				$text = 'idle';
-				$this->inTrans = FALSE;
-			}
-			break;
-			
-			
-			case PGSQL_TRANSACTION_ACTIVE: {
-				//there's a command in progress.
-				$goodOrBadValue = 2;
-				$text = 'processing';
-			}
-			break;
-			
-			
-			case PGSQL_TRANSACTION_INTRANS: {
-				//connection idle within a valid transaction block.
-				$goodOrBadValue = 1;
-				$text = 'valid transaction';
-				$this->inTrans = TRUE;
-			}
-			break;
-			
-			
-			case PGSQL_TRANSACTION_INERROR: {
-				//connection idle within a broken transaction.
-				$goodOrBadValue = 0;
-				$text = 'failed transaction';
-				$this->inTrans = TRUE;
-			}
-			break;
-			
-			
-			case PGSQL_TRANSACTION_UNKNOWN:
-			default: {
-				//the connection is bad.
-				$goodOrBadValue = -1;
-				$text = 'bad connection';
-			}
-			break;
-		}
-		
-		//do they want text or the good/bad number?
-		$retval = $text;
-		$this->transactionStatus = $goodOrBadValue;
-		if($goodOrBad) {
-			//they want the number.
-			$retval = $goodOrBadValue;
-		}
-		
+		$retval = false;
 		return($retval);
 	}//end get_transaction_status()
 	//=========================================================================
@@ -861,105 +741,11 @@ class cs_phpDB__mysql {
 	
 	//=========================================================================
 	/**
-	 * Starts a copy command.
-	 * 
-	 * TODO: implement safeguards so they can only put a line until the copy is ended.
-	 */
-	public function start_copy($tableName, array $fields) {
-		//TODO: implement MySQL version..
-		$retval = FALSE;
-		$copyStmt = "COPY ". $tableName ." (". $this->gfObj->string_from_array($fields, NULL, ", ") . ") FROM stdin;";
-		$this->exec($copyStmt);
-		if(!strlen($this->errorMsg())) {
-			//TODO: set something here so that NOTHING ELSE can be done except put_line() and end_copy().
-			$this->copyInProgress = TRUE;
-			$retval = TRUE;
-		}
-		else {
-			$this->end_copy();
-			$retval = FALSE;
-		}
-		
-		return($retval);
-	}//end start_copy()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Used to send a line to the COPY in progress (only if it was initiated by 
-	 * the internal start_copy() method).
-	 * 
-	 * NOTE: the "end-of-copy" line, '\.', should NEVER be sent here.
-	 */
-	public function put_line($line) {
-		//TODO: implement MySQL version..
-		$retval = FALSE;
-		if($this->copyInProgress === TRUE) {
-			$myLine = trim($line);
-			$myLine .= "\n";
-			
-			$retval = pg_put_line($this->connectionID, $myLine);
-		}
-		else {
-			throw new exception(__METHOD__ .": cannot send line if no copy is in progress");
-		}
-		
-		return($retval);
-	}//end put_line()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	public function end_copy() {
-		if($this->copyInProgress === TRUE) {
-			//send the end-of-copy line...
-			$this->put_line("\\.\n");
-		}
-		
-		//TODO: implement MySQL version..
-		$retval = pg_end_copy($this->connectionID);
-		
-		return($retval);
-	}//end end_copy()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
-	 * Determines how many times a transaction has been started.  Starting 
-	 * multiple transactions does NOT protect the outer transaction from 
-	 * problems that occur in the inner transaction.  In fact, it does the 
-	 * opposite: it protects the code from committing too early (which might 
-	 * destroy something that depending on the transaction).
-	 */
-	public function get_transaction_level() {
-		if(is_array($this->transactionTree)) {
-			$retval = count($this->transactionTree);
-		}
-		else {
-			$retval = 0;
-		}
-		
-		return($retval);
-	}//end get_transaction_level()
-	//=========================================================================
-	
-	
-	
-	//=========================================================================
-	/**
 	 * Simple way to determine if the current connection is inside a 
 	 * transaction or not.
 	 */
 	public function is_in_transaction() {
-		$retval = 0;
-		if($this->inTrans || $this->get_transaction_level() != 0) {
-			$retval = TRUE;
-		}
+		$retval=0;
 		return($retval);
 	}//end is_in_transaction()
 	//=========================================================================

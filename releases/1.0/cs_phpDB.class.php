@@ -24,16 +24,16 @@
 //
 ///////////////////////
 
-require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
+require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
+require_once(dirname(__FILE__) ."/abstract/cs_phpDB.abstract.class.php");
 
-class cs_phpDB extends cs_versionAbstract {
+class cs_phpDB extends cs_contentAbstract {
 	
 	private $dbLayerObj;
 	private $dbType;
 	
 	//=========================================================================
 	public function __construct($type='pgsql') {
-		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		
 		if(strlen($type)) {
 			
@@ -42,11 +42,7 @@ class cs_phpDB extends cs_versionAbstract {
 			$this->dbLayerObj = new $className;
 			$this->dbType = $type;
 			
-			$this->gfObj = new cs_globalFunctions;
-			
-			if(defined('DEBUGPRINTOPT')) {
-				$this->gfObj->debugPrintOpt = DEBUGPRINTOPT;
-			}
+			parent::__construct();
 			
 			$this->isInitialized = TRUE;
 		}

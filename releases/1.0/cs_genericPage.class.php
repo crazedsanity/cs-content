@@ -7,10 +7,10 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-require_once(dirname(__FILE__) ."/template.inc");
-require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
+require_once(dirname(__FILE__) ."/required/template.inc");
+require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
-class cs_genericPage extends cs_versionAbstract {
+class cs_genericPage extends cs_contentAbstract {
 	var $templateObj;					//template object to parse the pages
 	var $templateVars	= array();	//our copy of the global templateVars
 	var $mainTemplate;				//the default layout of the site
@@ -32,13 +32,14 @@ class cs_genericPage extends cs_versionAbstract {
 		//handle some configuration.
 		$this->allowRedirect = $allowRedirect;
 		
+		//initialize stuff from our parent...
+		parent::__construct();
+		
 		//initialize some internal stuff.
-		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 		$this->initialize_locals($mainTemplateFile);
 		
 		//if they need to be logged-in... 
 		$this->check_login($restrictedAccess);
-		$this->gfObj = new cs_globalFunctions;
 		
 		if(!defined('CS-CONTENT_SESSION_NAME')) {
 			define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
