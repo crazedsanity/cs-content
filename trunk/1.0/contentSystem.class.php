@@ -72,7 +72,7 @@ if(!isset($GLOBALS['SITE_ROOT'])) {
 
 require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 require_once(dirname(__FILE__) ."/cs_fileSystem.class.php");
-require_once(dirname(__FILE__) ."/cs_sessionClass.php");
+require_once(dirname(__FILE__) ."/cs_session.class.php");
 require_once(dirname(__FILE__) ."/cs_genericPage.class.php");
 require_once(dirname(__FILE__) ."/cs_tabs.class.php");
 
