@@ -103,12 +103,12 @@ class contentSystem extends cs_contentAbstract {
 	 * The CONSTRUCTOR.  Duh.
 	 */
 	public function __construct($testOnly=FALSE) {
+		parent::__construct();
 		if($testOnly === 'unit_test') {
 			//It's just a test, don't do anything we might regret later.
 			$this->isTest = TRUE;
 		}
 		else {
-			parent::__construct();
 			
 			//setup the section stuff...
 			$repArr = array($_SERVER['SCRIPT_NAME'], "/");
