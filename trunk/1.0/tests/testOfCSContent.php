@@ -22,8 +22,8 @@ class TestOfCSContent extends UnitTestCase {
 		require_once(dirname(__FILE__) .'/../cs_globalFunctions.class.php');
 		require_once(dirname(__FILE__) .'/../cs_siteConfig.class.php');
 		
-		$this->gf = new cs_globalFunctions;
-		$this->gf->debugPrintOpt=1;
+		$this->gfObj = new cs_globalFunctions;
+		$this->gfObj->debugPrintOpt=1;
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -241,6 +241,63 @@ class TestOfCSContent extends UnitTestCase {
 		}
 		
 	}//end test_siteConfig()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	function test_genericPage() {
+		$filesDir = dirname(__FILE__) .'/files';
+		
+		$page = new cs_genericPage(false, $filesDir .'/templates/main.shared.tmpl', false);
+		$fs = new cs_fileSystem($filesDir .'/templates');
+		
+		$lsData = $fs->ls();
+		
+		foreach($lsData as $index=>$value) {
+			$filenameBits = explode('.', $index);
+			$page->add_template_var($filenameBits[0], $page->file_to_string($index));
+		}
+		
+		$page->add_template_var('blockRowTestVal', 3);
+		$page->add_template_var('date', '2009-01-01');
+		
+		$checkThis = $page->return_printed_page();
+		
+		
+		$this->assertEqual($checkThis, file_get_contents($filesDir .'/gptest_all-together.txt'));
+		
+		//now let's rip all the template rows out & add them back in.
+		$rowDefs = $page->get_block_row_defs('content');
+		$rippedRows = $page->rip_all_block_rows('content');
+		
+		$this->assertEqual($rowDefs['ordered'], array_keys($rippedRows));
+		$remainingRows = $page->rip_all_block_rows('content');
+		$this->assertEqual(array(), $remainingRows, "ERROR: some block rows exist after ripping: ". 
+				$this->gfObj->string_from_array(array_keys($remainingRows), 'null', ','));
+		
+		
+		foreach($rippedRows as $name=>$data) {
+			$page->add_template_var($name, $data);
+		}
+		$checkThis2 = $page->return_printed_page();
+		
+		$this->assertEqual($checkThis, $checkThis2);
+		
+		$checkThis = $page->return_printed_page(0);
+		$this->assertTrue(preg_match('/\{.\S+?\}/', $checkThis));
+		
+		//clone the page object so we can change stuff & not affect the original.
+		$page2 = clone $page;
+		unset($page2->templateVars);
+		$this->assertNotEqual($page->templateVars, $page2->templateVars);
+		$page2 = clone $page;
+		
+		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars('content'));
+		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars('content'));
+		$page2->templateVars['content'] = $page2->strip_undef_template_vars('content');
+		$this->assertEqual($page->return_printed_page(1), $page2->return_printed_page(1));
+	}//end test_genericPage
 	//-------------------------------------------------------------------------
 	
 	
