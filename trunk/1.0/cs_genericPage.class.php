@@ -640,32 +640,40 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//-------------------------------------------------------------------------
-	public function strip_undef_template_vars($section='content') {
+	public function strip_undef_template_vars($templateContents) {
 		$numLoops = 0;
-		if(isset($this->templateVars[$section])) {
-			$templateContents = $this->templateVars[$section];
-			while(preg_match_all('/\{.\S+?\}/', $templateContents, $tags) && $numLoops < 50) {
-				$tags = $tags[0];
-				
-				//TODO: figure out why this works when running it twice.
-				foreach($tags as $key=>$str) {
-					$str2 = str_replace("{", "", $str);
-					$str2 = str_replace("}", "", $str2);
-					if(!$this->templateVars[$str2]) {
-						//TODO: set an internal pointer or something to use here, so they can see what was missed.
-						$templateContents = str_replace($str, '', $templateContents);
-					}
+		while(preg_match_all('/\{.\S+?\}/', $templateContents, $tags) && $numLoops < 50) {
+			$tags = $tags[0];
+			
+			//TODO: figure out why this works when running it twice.
+			foreach($tags as $key=>$str) {
+				$str2 = str_replace("{", "", $str);
+				$str2 = str_replace("}", "", $str2);
+				if(!$this->templateVars[$str2]) {
+					//TODO: set an internal pointer or something to use here, so they can see what was missed.
+					$templateContents = str_replace($str, '', $templateContents);
 				}
-				$this->templateObj->parse("out", "out");
-				$numLoops++;
 			}
+			$numLoops++;
+		}
+		return($templateContents);
+	}//end strip_undef_template_vars()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function strip_undef_template_vars_from_section($section='content') {
+		if(isset($this->templateVars[$section])) {
+			$this->templateVars[$section] = $this->strip_undef_template_vars($this->templateVars[$section]);
 		}
 		else {
 			throw new exception(__METHOD__ .": section (". $section .") does not exist");
 		}
-		return($templateContents);
+		
+		return($this->templateVars[$section]);
+	}//strip_undef_template_vars_from_section()
 	//-------------------------------------------------------------------------
-	}
 
 }//end cs_genericPage{}
 ?>

@@ -293,9 +293,9 @@ class TestOfCSContent extends UnitTestCase {
 		$this->assertNotEqual($page->templateVars, $page2->templateVars);
 		$page2 = clone $page;
 		
-		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars('content'));
-		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars('content'));
-		$page2->templateVars['content'] = $page2->strip_undef_template_vars('content');
+		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars($page2->templateVars['content']));
+		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars($page2->templateVars['content']));
+		$page2->templateVars['content'] = $page2->strip_undef_template_vars($page2->templateVars['content']);
 		$this->assertEqual($page->return_printed_page(1), $page2->return_printed_page(1));
 	}//end test_genericPage
 	//-------------------------------------------------------------------------
