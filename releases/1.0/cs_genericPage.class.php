@@ -11,9 +11,10 @@ require_once(dirname(__FILE__) ."/required/template.inc");
 require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
 class cs_genericPage extends cs_contentAbstract {
-	var $templateObj;					//template object to parse the pages
-	var $templateVars	= array();	//our copy of the global templateVars
-	var $mainTemplate;				//the default layout of the site
+	public $templateObj;					//template object to parse the pages
+	public $templateVars	= array();	//our copy of the global templateVars
+	public $mainTemplate;				//the default layout of the site
+	public $unhandledVars=array();
 	
 	private $tmplDir;
 	private $libDir;
@@ -60,9 +61,15 @@ class cs_genericPage extends cs_contentAbstract {
 	 */
 	protected function initialize_locals($mainTemplateFile) {
 		
-		//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
-		$this->siteRoot = preg_replace('/\/public_html/', '', $_SERVER['DOCUMENT_ROOT']);
-		$this->tmplDir = $this->siteRoot .'/templates';
+		
+		if(strlen(dirname($mainTemplateFile)) && dirname($mainTemplateFile) !== '/') {
+			$this->tmplDir = dirname($mainTemplateFile);
+		}
+		else {
+			//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
+			$this->siteRoot = preg_replace('/\/public_html/', '', $_SERVER['DOCUMENT_ROOT']);
+		}
+		$this->siteRoot = preg_replace('/\/templates$/', '', $this->tmplDir);
 		$this->libDir = $this->siteRoot .'/lib';
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
@@ -81,7 +88,7 @@ class cs_genericPage extends cs_contentAbstract {
 		//build a new instance of the template library (from PHPLib)
 		$this->templateObj=new Template($this->tmplDir,"keep"); //initialize a new template parser
 
-		if(preg_match('/^\//', $mainTemplateFile)) {
+		if(!preg_match('/^\//', $mainTemplateFile)) {
 			$mainTemplateFile = $this->tmplDir ."/". $mainTemplateFile;
 		}
 		$this->mainTemplate=$mainTemplateFile; //load the default layout
@@ -199,7 +206,7 @@ class cs_genericPage extends cs_contentAbstract {
 		$name = $handle;
 		$str = $this->templateVars[$parent];
 
-		$reg = "/<!-- BEGIN $handle -->.+<!-- END $handle -->/sU";
+		$reg = "/<!-- BEGIN $handle -->(.+){0,}<!-- END $handle -->/sU";
 		preg_match_all($reg, $str, $m);
 		if(!is_string($m[0][0])) {
 			#exit("set_block_row(): couldn't find '$handle' in var '$parent'");
@@ -273,6 +280,7 @@ class cs_genericPage extends cs_contentAbstract {
 					if(!$this->templateVars[$str2] && $stripUndefVars) {
 						//TODO: set an internal pointer or something to use here, so they can see what was missed.
 						$this->templateObj->varvals[out] = str_replace($str, '', $this->templateObj->varvals[out]);
+						$this->unhandledVars[$str2]++;
 					}
 				}
 				$this->templateObj->parse("out", "out");
@@ -524,10 +532,10 @@ class cs_genericPage extends cs_contentAbstract {
 		//cast $retArr as an array, so it's clean.
 		$retArr = array();
 		
-		//NOTE: the value 31 isn't just a randomly chosen length; it's the minimum
-		// number of characters to have a block row.  EG: "<!-- BEGIN x -->o<!-- END x -->"
+		//NOTE: the value 30 isn't just a randomly chosen length; it's the minimum
+		// number of characters to have a block row.  EG: "<!-- BEGIN x --><!-- END x -->"
 		$templateContents = $this->templateVars[$templateVar];
-		if(strlen($templateContents) >= 31) {
+		if(strlen($templateContents) >= 30) {
 			//looks good to me.  Run the regex...
 			$flags = PREG_PATTERN_ORDER;
 			$reg = "/<!-- BEGIN (\S{1,}) -->/";
@@ -615,6 +623,48 @@ class cs_genericPage extends cs_contentAbstract {
 		return($this->allowInvalidUrls);
 	}//end allow_invalid_urls()
 	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function return_printed_page($stripUndefVars=1) {
+		ob_start();
+		$this->print_page($stripUndefVars);
+		$retval = ob_get_contents();
+		ob_end_clean();
+		return($retval);
+	}//end return_printed_page()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function strip_undef_template_vars($section='content') {
+		$numLoops = 0;
+		if(isset($this->templateVars[$section])) {
+			$templateContents = $this->templateVars[$section];
+			while(preg_match_all('/\{.\S+?\}/', $templateContents, $tags) && $numLoops < 50) {
+				$tags = $tags[0];
+				
+				//TODO: figure out why this works when running it twice.
+				foreach($tags as $key=>$str) {
+					$str2 = str_replace("{", "", $str);
+					$str2 = str_replace("}", "", $str2);
+					if(!$this->templateVars[$str2]) {
+						//TODO: set an internal pointer or something to use here, so they can see what was missed.
+						$templateContents = str_replace($str, '', $templateContents);
+					}
+				}
+				$this->templateObj->parse("out", "out");
+				$numLoops++;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": section (". $section .") does not exist");
+		}
+		return($templateContents);
+	//-------------------------------------------------------------------------
+	}
 
 }//end cs_genericPage{}
 ?>
