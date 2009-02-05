@@ -61,6 +61,12 @@ class cs_genericPage extends cs_contentAbstract {
 	 */
 	protected function initialize_locals($mainTemplateFile) {
 		
+		//replace multiple slashes with a single one to avoid confusing other logic...
+		$mainTemplateFile = preg_replace('/(\/){2,}/', '/', $mainTemplateFile);
+		if(preg_match('/\//', $mainTemplateFile) == 1 && preg_match('/^/', $mainTemplateFile)) {
+			$mainTemplateFile = preg_replace('/^\//', '', $mainTemplateFile);
+		}
+		
 		
 		if(strlen(dirname($mainTemplateFile)) && dirname($mainTemplateFile) !== '/' && !preg_match('/^\./', dirname($mainTemplateFile))) {
 			$this->tmplDir = dirname($mainTemplateFile);

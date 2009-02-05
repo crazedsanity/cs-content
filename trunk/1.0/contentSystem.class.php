@@ -262,6 +262,8 @@ class contentSystem extends cs_contentAbstract {
 	 * Rips apart the "section" string, setting $this->section and $this->sectionArr.
 	 */
 	private function parse_section() {
+		
+		//TODO::: this should be an OPTIONAL THING as to how to handle "/" (i.e. CSCONTENT_HANDLE_ROOTURL='content/index')
 		if($this->section === 0 || is_null($this->section) || !strlen($this->section)) {
 			$this->section = "content/index";
 		}
@@ -652,7 +654,16 @@ class contentSystem extends cs_contentAbstract {
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
 		if(($this->fileSystemObj->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
-			foreach($this->sectionArr as $mySection) {
+			
+			//if the last item in the array is "index", disregard it...
+			$loopThis = $this->sectionArr;
+			$lastSection = $this->sectionArr[(count($this->sectionArr) -1)];
+			if($lastSection == 'index') {
+				array_pop($loopThis);
+			}
+			
+			
+			foreach($loopThis as $mySection) {
 				//Run includes.
 				$this->load_dir_includes($mySection);
 				
@@ -664,6 +675,14 @@ class contentSystem extends cs_contentAbstract {
 			}
 		}
 		
+		//include the final shared & index files.
+		$lsData = $this->fileSystemObj->ls();
+		if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
+			$this->add_include('shared.inc');
+		}
+		if(isset($lsData['index.inc']) && is_array($lsData['index.inc'])) {
+			$this->add_include('index.inc');
+		}
 	}//end load_includes()
 	//------------------------------------------------------------------------
 	
@@ -679,13 +698,13 @@ class contentSystem extends cs_contentAbstract {
 		
 		//attempt to load the shared includes file.
 		if(isset($lsData['shared.inc']) && $lsData['shared.inc']['type'] == 'file') {
-			$this->includesList[] = $this->fileSystemObj->realcwd .'/shared.inc';
+			$this->add_include('shared.inc');
 		}
 		
 		//attempt to load the section's includes file.
 		$myFile = $section .'.inc';
 		if(isset($lsData[$myFile]) && $lsData[$myFile]['type'] == 'file') {
-			$this->includesList[] = $this->fileSystemObj->realcwd .'/'. $myFile;
+			$this->add_include($myFile);
 		}
 		
 		if(isset($lsData[$section]) && !count($this->sectionArr)) {
@@ -847,6 +866,26 @@ class contentSystem extends cs_contentAbstract {
 	 */
 	public function __destruct() {
 	}//end __destruct()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	private final function add_include($file) {
+		$myFile = $this->fileSystemObj->realcwd .'/'. $file;
+		if(array_search($myFile, $this->includesList)) {
+			$this->gfObj->debug_print("<h1><font color='red'>". __METHOD__ .": file (". $myFile .") already exists... </h1>". cs_debug_backtrace(0) ."</font>");
+			#exit;
+		}
+		else {
+			$this->includesList[] = $myFile;
+			
+			$this->gfObj->debug_print("<h1>". __METHOD__ .": included (". $myFile .")</h1>");
+		}
+		if($file == 'index.inc') {
+			cs_debug_backtrace(1);
+		}
+	}//end add_include()
 	//------------------------------------------------------------------------
 	
 	
