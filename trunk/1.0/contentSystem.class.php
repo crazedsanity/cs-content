@@ -871,19 +871,13 @@ class contentSystem extends cs_contentAbstract {
 	
 	
 	//------------------------------------------------------------------------
+	/**
+	 * Method that appends filenames to the list of include scripts.
+	 */
 	private final function add_include($file) {
 		$myFile = $this->fileSystemObj->realcwd .'/'. $file;
-		if(array_search($myFile, $this->includesList)) {
-			$this->gfObj->debug_print("<h1><font color='red'>". __METHOD__ .": file (". $myFile .") already exists... </h1>". cs_debug_backtrace(0) ."</font>");
-			#exit;
-		}
-		else {
+		if(!array_search($myFile, $this->includesList)) {
 			$this->includesList[] = $myFile;
-			
-			$this->gfObj->debug_print("<h1>". __METHOD__ .": included (". $myFile .")</h1>");
-		}
-		if($file == 'index.inc') {
-			cs_debug_backtrace(1);
 		}
 	}//end add_include()
 	//------------------------------------------------------------------------
