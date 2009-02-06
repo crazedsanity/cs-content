@@ -883,7 +883,6 @@ class contentSystem extends cs_contentAbstract {
 	private final function add_include($file) {
 		$myFile = $this->fileSystemObj->realcwd .'/'. $file;
 		if(!array_search($myFile, $this->includesList)) {
-			$this->gfObj->debug_print(__METHOD__ .": adding (". $myFile .")");
 			$this->includesList[] = $myFile;
 		}
 	}//end add_include()
