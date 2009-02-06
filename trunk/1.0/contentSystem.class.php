@@ -652,6 +652,7 @@ class contentSystem extends cs_contentAbstract {
 		$this->load_dir_includes($this->baseDir);
 		
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
+		$addIndex=false;
 		if(($this->fileSystemObj->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
 			
@@ -670,7 +671,12 @@ class contentSystem extends cs_contentAbstract {
 				//attempt to cd() into the next directory, or die if we can't.
 				if(!$this->fileSystemObj->cd($mySection)) {
 					//no dice.  Break the loop.
+					$addIndex = false;
 					break;
+				}
+				else {
+					//okay, we made it to the final directory; add the magic "index.inc" file if it exists.
+					$addIndex = true;
 				}
 			}
 		}
@@ -680,7 +686,7 @@ class contentSystem extends cs_contentAbstract {
 		if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 			$this->add_include('shared.inc');
 		}
-		if(isset($lsData['index.inc']) && is_array($lsData['index.inc'])) {
+		if(isset($lsData['index.inc']) && is_array($lsData['index.inc']) && $addIndex==true) {
 			$this->add_include('index.inc');
 		}
 	}//end load_includes()
@@ -877,6 +883,7 @@ class contentSystem extends cs_contentAbstract {
 	private final function add_include($file) {
 		$myFile = $this->fileSystemObj->realcwd .'/'. $file;
 		if(!array_search($myFile, $this->includesList)) {
+			$this->gfObj->debug_print(__METHOD__ .": adding (". $myFile .")");
 			$this->includesList[] = $myFile;
 		}
 	}//end add_include()
