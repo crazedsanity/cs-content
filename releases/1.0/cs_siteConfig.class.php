@@ -180,9 +180,18 @@ class cs_siteConfig extends cs_contentAbstract {
 						$itemValue = $itemValue['value'];
 						if(preg_match("/{/", $itemValue)) {
 							$origVal = $itemValue;
+							
+							//remove double-slashes (//)
+							$itemValue = preg_replace('/[\/]{2,}/', '\/', $itemValue);
+							
+							//remove leading slash for string replaces (i.e. "{/MAIN/SITE_ROOT}" becomes "{MAIN/SITE_ROOT}")
+							$itemValue = preg_replace('/{\//', '{', $itemValue);
+							
+							//replace special vars.
 							$itemValue = $this->gfObj->mini_parser($itemValue, $specialVars, '{', '}');
+							
+							//replace internal vars.
 							$itemValue = $this->gfObj->mini_parser($itemValue, $parseThis, '{', '}');
-							$itemValue = preg_replace("/[\/]{2,}/", "/", $itemValue);
 						}
 						
 						if($attribs['CLEANPATH']) {

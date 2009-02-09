@@ -262,6 +262,8 @@ class contentSystem extends cs_contentAbstract {
 	 * Rips apart the "section" string, setting $this->section and $this->sectionArr.
 	 */
 	private function parse_section() {
+		
+		//TODO::: this should be an OPTIONAL THING as to how to handle "/" (i.e. CSCONTENT_HANDLE_ROOTURL='content/index')
 		if($this->section === 0 || is_null($this->section) || !strlen($this->section)) {
 			$this->section = "content/index";
 		}
@@ -650,20 +652,43 @@ class contentSystem extends cs_contentAbstract {
 		$this->load_dir_includes($this->baseDir);
 		
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
+		$addIndex=false;
 		if(($this->fileSystemObj->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
-			foreach($this->sectionArr as $mySection) {
+			
+			//if the last item in the array is "index", disregard it...
+			$loopThis = $this->sectionArr;
+			$lastSection = $this->sectionArr[(count($this->sectionArr) -1)];
+			if($lastSection == 'index') {
+				array_pop($loopThis);
+			}
+			
+			
+			foreach($loopThis as $mySection) {
 				//Run includes.
 				$this->load_dir_includes($mySection);
 				
 				//attempt to cd() into the next directory, or die if we can't.
 				if(!$this->fileSystemObj->cd($mySection)) {
 					//no dice.  Break the loop.
+					$addIndex = false;
 					break;
+				}
+				else {
+					//okay, we made it to the final directory; add the magic "index.inc" file if it exists.
+					$addIndex = true;
 				}
 			}
 		}
 		
+		//include the final shared & index files.
+		$lsData = $this->fileSystemObj->ls();
+		if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
+			$this->add_include('shared.inc');
+		}
+		if(isset($lsData['index.inc']) && is_array($lsData['index.inc']) && $addIndex==true) {
+			$this->add_include('index.inc');
+		}
 	}//end load_includes()
 	//------------------------------------------------------------------------
 	
@@ -679,13 +704,13 @@ class contentSystem extends cs_contentAbstract {
 		
 		//attempt to load the shared includes file.
 		if(isset($lsData['shared.inc']) && $lsData['shared.inc']['type'] == 'file') {
-			$this->includesList[] = $this->fileSystemObj->realcwd .'/shared.inc';
+			$this->add_include('shared.inc');
 		}
 		
 		//attempt to load the section's includes file.
 		$myFile = $section .'.inc';
 		if(isset($lsData[$myFile]) && $lsData[$myFile]['type'] == 'file') {
-			$this->includesList[] = $this->fileSystemObj->realcwd .'/'. $myFile;
+			$this->add_include($myFile);
 		}
 		
 		if(isset($lsData[$section]) && !count($this->sectionArr)) {
@@ -847,6 +872,20 @@ class contentSystem extends cs_contentAbstract {
 	 */
 	public function __destruct() {
 	}//end __destruct()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
+	 * Method that appends filenames to the list of include scripts.
+	 */
+	private final function add_include($file) {
+		$myFile = $this->fileSystemObj->realcwd .'/'. $file;
+		if(!array_search($myFile, $this->includesList)) {
+			$this->includesList[] = $myFile;
+		}
+	}//end add_include()
 	//------------------------------------------------------------------------
 	
 	
