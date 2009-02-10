@@ -63,7 +63,10 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		//replace multiple slashes with a single one to avoid confusing other logic...
 		$mainTemplateFile = preg_replace('/(\/){2,}/', '/', $mainTemplateFile);
-		if(preg_match('/\//', $mainTemplateFile) == 1 && preg_match('/^/', $mainTemplateFile)) {
+		
+		$showMatches=array();
+		$numMatches = preg_match_all('/\//', $mainTemplateFile, $showMatches);
+		if($numMatches == 1 && preg_match('/^/', $mainTemplateFile)) {
 			$mainTemplateFile = preg_replace('/^\//', '', $mainTemplateFile);
 		}
 		
