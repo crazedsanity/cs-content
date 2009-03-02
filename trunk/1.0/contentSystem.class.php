@@ -81,7 +81,12 @@ class contentSystem extends cs_contentAbstract {
 	protected $baseDir			= NULL;			//base directory for templates & includes.			
 	protected $section			= NULL;			//section string, derived from the URL.		
 	protected $sectionArr		= array();		//array of items, for figuring out where templates & includes are.
-	protected $fileSystemObj	= NULL;			//the object used to access the filesystem.
+	
+	
+	protected $tmplFs			= NULL;			//Object used to access the TEMPLATES filesystem
+	protected $incFs 			= NULL;			//Object used to access the INCLUDES filesystem
+	
+	
 	protected $ignoredList		= array(		//array of files & folders that are implicitely ignored.
 									'file'	=> array('.htaccess'),
 									'dir'	=> array('.svn','CVS'
@@ -109,6 +114,10 @@ class contentSystem extends cs_contentAbstract {
 			$this->isTest = TRUE;
 		}
 		else {
+			
+			if(!defined('SITE_ROOT')) {
+				throw new exception(__METHOD__ .": must set required constant 'SITE_ROOT'");
+			}
 			
 			//setup the section stuff...
 			$repArr = array($_SERVER['SCRIPT_NAME'], "/");
@@ -144,8 +153,21 @@ class contentSystem extends cs_contentAbstract {
 		}
 		$this->templateObj->add_template_var('CURRENT_URL', $myUrl);
 		
-		//create a fileSystem object.
-		$this->fileSystemObj = new cs_fileSystem();
+		//create a fileSystem object for templates.
+		$tmplBaseDir = constant('SITE_ROOT') .'/templates';
+		if(defined('TMPLDIR')) {
+			$tmplBaseDir = constant('TMPLDIR');
+		}
+		$this->tmplFs = new cs_fileSystem($tmplBaseDir);
+		
+		
+		//create a fileSystem object for includes
+		$incBaseDir = constant('SITE_ROOT') .'/includes';
+		if(defined('INCLUDES_DIR')) {
+			$incBaseDir = constant('INCLUDES_DIR');
+		}
+		$this->incFs = new cs_fileSystem($incBaseDir);
+		
 		
 		//create a tabs object, in case they want to load tabs on the page.
 		$this->tabs = new cs_tabs($this->templateObj);
@@ -155,8 +177,8 @@ class contentSystem extends cs_contentAbstract {
 		if($this->templateObj->get_version() !== $myVersion) {
 			throw new exception(__METHOD__ .": ". get_class($this->templateObj) ." has mismatched version (". $this->templateObj->get_version() ." does not equal ". $myVersion .")");
 		}
-		if($this->fileSystemObj->get_version() !== $myVersion) {
-			throw new exception(__METHOD__ .": ". get_class($this->fileSystemObj) ." has mismatched version (". $this->fileSystemObj->get_version() ." does not equal ". $myVersion .")");
+		if($this->tmplFs->get_version() !== $myVersion) {
+			throw new exception(__METHOD__ .": ". get_class($this->tmplFs) ." has mismatched version (". $this->tmplFs->get_version() ." does not equal ". $myVersion .")");
 		}
 		if($this->gfObj->get_version() !== $myVersion) {
 			throw new exception(__METHOD__ .": ". get_class($this->gfObj) ." has mismatched version (". $this->gfObj->get_version() ." does not equal ". $myVersion .")");
@@ -178,12 +200,12 @@ class contentSystem extends cs_contentAbstract {
 	//------------------------------------------------------------------------
 	private function get_template_dirs() {
 		if(is_array($this->sectionArr)) {
-			$this->fileSystemObj->cd("/templates/". $this->baseDir);
+			$this->tmplFs->cd('/'. $this->baseDir);
 			$retval = array();
-			$retval[] = $this->fileSystemObj->cwd;
+			$retval[] = $this->tmplFs->cwd;
 			foreach($this->sectionArr as $index=>$name) {
-				if($this->fileSystemObj->cd($name)) {
-					$retval[] = $this->fileSystemObj->cwd;
+				if($this->tmplFs->cd($name)) {
+					$retval[] = $this->tmplFs->cwd;
 				}
 				else {
 					break;
@@ -340,13 +362,9 @@ class contentSystem extends cs_contentAbstract {
 	 */
 	private function prepare() {
 		//attempt to load any includes...
-		if($this->fileSystemObj->cd('/includes')) {
-			$this->load_includes();
-		}
+		$this->load_includes();
 		$foundIncludes = count($this->includesList);
 		
-		//cd() in to the templates directory.
-		$cdResult = $this->fileSystemObj->cd('/templates');
 		$validatePageRes = $this->validate_page();
 		if($foundIncludes || ($cdResult && $validatePageRes)) {
 			
@@ -366,7 +384,8 @@ class contentSystem extends cs_contentAbstract {
 			$this->load_page_templates();
 			
 			//now cd() all the way back.
-			$this->fileSystemObj->cd('/');
+			$this->tmplFs->cd('/');
+			$this->incFs->cd('/');
 		}
 		else {
 			//couldn't find the templates directory, and no includes... it's dead.
@@ -389,13 +408,13 @@ class contentSystem extends cs_contentAbstract {
 		if((count($this->sectionArr) > 0) && !((count($this->sectionArr) == 1) && ($this->sectionArr[0] == 'index'))) {
 			//got more than just a baseDir url... see if the template is good.
 			$finalLink = $this->gfObj->string_from_array($this->sectionArr, NULL, '/');
-			$this->fileSystemObj->cd($this->baseDir);
+			$this->tmplFs->cd('/');
 			$mySectionArr = $this->sectionArr;
 			$finalSection = array_pop($mySectionArr);
 			$this->finalSection = $finalSection;
 			if(count($mySectionArr) > 0) {
 				foreach($mySectionArr as $dir) {
-					if(!$this->fileSystemObj->cd($dir)) {
+					if(!$this->tmplFs->cd($dir)) {
 						break;
 					}
 				}
@@ -407,9 +426,9 @@ class contentSystem extends cs_contentAbstract {
 				$indexFilename = 'index.content.tmpl';
 			}
 			
-			$lsDir  = $this->fileSystemObj->ls($indexFilename);
+			$lsDir  = $this->tmplFs->ls($indexFilename);
 			$lsDirVals = array_values($lsDir);
-			$lsFile = $this->fileSystemObj->ls("$finalSection.content.tmpl");
+			$lsFile = $this->tmplFs->ls("$finalSection.content.tmpl");
 			
 			if(is_array(array_values($lsFile)) && is_array($lsFile[$finalSection .".content.tmpl"])) {
 				//it's the file ("{finalSection}.content.tmpl", like "mySection.content.tmpl")
@@ -424,14 +443,14 @@ class contentSystem extends cs_contentAbstract {
 			}
 			
 			//check the index file for validity... this is kind of a dirty hack... but it works.
-			$checkMe = $this->fileSystemObj->ls($myIndex);
+			$checkMe = $this->tmplFs->ls($myIndex);
 			if(!is_array($checkMe[$myIndex])) {
 				unset($myIndex);
 			}
 			
 			if(isset($myIndex)) {
 				$valid = TRUE;
-				$this->fileSystemObj->cd('/templates');
+				$this->tmplFs->cd('/');
 			}
 			else {
 				$this->reason = __METHOD__ .": couldn't find page template for ". $this->section;
@@ -440,11 +459,11 @@ class contentSystem extends cs_contentAbstract {
 		else {
 			//if the baseDir is "help", this would try to use "/help/index.content.tmpl"
 			$myFile = $this->baseDir .'/index.content.tmpl';
-			$sectionLsData = $this->fileSystemObj->ls($myFile);
+			$sectionLsData = $this->tmplFs->ls($myFile);
 			
 			//if the baseDir is "help", this would try to use "/help.content.tmpl"
 			$sectionFile = $this->baseDir .'.content.tmpl';
-			$lsData = $this->fileSystemObj->ls();
+			$lsData = $this->tmplFs->ls();
 			
 			if(isset($lsData[$sectionFile]) && is_array($lsData[$sectionFile])) {
 				$valid = TRUE;
@@ -485,7 +504,7 @@ class contentSystem extends cs_contentAbstract {
 					$this->templateList[$mySection] = $myTmpl;
 				}
 			}
-			if(!$this->fileSystemObj->cd($value)) {
+			if(!$this->tmplFs->cd($value)) {
 				break;
 			}
 		}
@@ -504,7 +523,7 @@ class contentSystem extends cs_contentAbstract {
 				}
 			}
 		}
-		if($this->fileSystemObj->cd($finalSection)) {
+		if($this->tmplFs->cd($finalSection)) {
 			//load the index stuff.
 			$tmplList = $this->arrange_directory_contents('name', 'section');
 			if(isset($tmplList['index'])) {
@@ -527,9 +546,8 @@ class contentSystem extends cs_contentAbstract {
 	 * loads templates for the main section they're on.
 	 */
 	private function load_main_templates() {
-		$this->fileSystemObj->cd('/templates');
 		//check to see if the present section is valid.
-		$this->fileSystemObj->cd($this->baseDir);
+		$this->tmplFs->cd('/');
 		$dirContents = $this->arrange_directory_contents('name', 'section');
 		if(is_array($dirContents)) {
 			foreach($dirContents as $mySection => $subArr) {
@@ -550,10 +568,10 @@ class contentSystem extends cs_contentAbstract {
 	private function load_shared_templates($path=NULL) {
 		
 		if(!is_null($path)) {
-			$this->fileSystemObj->cd($path);
+			$this->tmplFs->cd($path);
 		}
 		else {
-			$this->fileSystemObj->cd('/templates');
+			$this->tmplFs->cd('/');
 		}
 		
 		//pull a list of the files.
@@ -575,13 +593,13 @@ class contentSystem extends cs_contentAbstract {
 	 * 	name, or vice-versa.
 	 */
 	private function arrange_directory_contents($primaryIndex='section', $secondaryIndex='name') {
-		$directoryInfo = $this->fileSystemObj->ls();
+		$directoryInfo = $this->tmplFs->ls();
 		$arrangedArr = array();
 		if(is_array($directoryInfo)) {
 			foreach($directoryInfo as $index=>$data) {
 				$myType = $data['type'];
 				if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
-					$filename = $this->gfObj->create_list($this->fileSystemObj->cwd, $index, '/');
+					$filename = $this->gfObj->create_list($this->tmplFs->cwd, $index, '/');
 					$filename = preg_replace('/^\/templates/', '', $filename);
 					$filename = preg_replace('/^\/\//', '/', $filename);
 					//call another method to rip the filename apart properly, then arrange things as needed.
@@ -653,7 +671,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
 		$addIndex=false;
-		if(($this->fileSystemObj->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
+		if(($this->incFs->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
 			
 			//if the last item in the array is "index", disregard it...
@@ -669,7 +687,7 @@ class contentSystem extends cs_contentAbstract {
 				$this->load_dir_includes($mySection);
 				
 				//attempt to cd() into the next directory, or die if we can't.
-				if(!$this->fileSystemObj->cd($mySection)) {
+				if(!$this->incFs->cd($mySection)) {
 					//no dice.  Break the loop.
 					$addIndex = false;
 					break;
@@ -682,7 +700,7 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		//include the final shared & index files.
-		$lsData = $this->fileSystemObj->ls();
+		$lsData = $this->incFs->ls();
 		if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 			$this->add_include('shared.inc');
 		}
@@ -700,7 +718,7 @@ class contentSystem extends cs_contentAbstract {
 	 * 	solely by load_includes().
 	 */
 	private function load_dir_includes($section) {
-		$lsData = $this->fileSystemObj->ls();
+		$lsData = $this->incFs->ls();
 		
 		//attempt to load the shared includes file.
 		if(isset($lsData['shared.inc']) && $lsData['shared.inc']['type'] == 'file') {
@@ -714,10 +732,10 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		if(isset($lsData[$section]) && !count($this->sectionArr)) {
-			$this->fileSystemObj->cd($section);
-			$lsData = $this->fileSystemObj->ls();
+			$this->incFs->cd($section);
+			$lsData = $this->incFs->ls();
 			if(isset($lsData['index.inc'])) {
-				$this->includesList[] = $this->fileSystemObj->realcwd .'/index.inc';
+				$this->includesList[] = $this->incFs->realcwd .'/index.inc';
 			}
 		}
 	}//end load_dir_includes()
@@ -798,7 +816,7 @@ class contentSystem extends cs_contentAbstract {
 				}
 			}
 			catch(exception $e) {
-				$myRoot = preg_replace('/\//', '\\\/', $this->fileSystemObj->root);
+				$myRoot = preg_replace('/\//', '\\\/', $this->incFs->root);
 				$displayableInclude = preg_replace('/^'. $myRoot .'/', '', $this->myLastInclude);
 				$this->templateObj->set_message_wrapper(array(
 					'title'		=> "Fatal Error",
@@ -881,7 +899,7 @@ class contentSystem extends cs_contentAbstract {
 	 * Method that appends filenames to the list of include scripts.
 	 */
 	private final function add_include($file) {
-		$myFile = $this->fileSystemObj->realcwd .'/'. $file;
+		$myFile = $this->incFs->realcwd .'/'. $file;
 		if(!array_search($myFile, $this->includesList)) {
 			$this->includesList[] = $myFile;
 		}
