@@ -24,6 +24,9 @@ class TestOfCSContent extends UnitTestCase {
 		
 		$this->gfObj = new cs_globalFunctions;
 		$this->gfObj->debugPrintOpt=1;
+		
+		$filesDir = dirname(__FILE__) ."/files";
+		define('TEST_FILESDIR', $filesDir);
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -179,7 +182,7 @@ class TestOfCSContent extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	public function test_siteConfig() {
-		$configFile = dirname(__FILE__) .'/files/sampleConfig.xml';
+		$configFile = constant('TEST_FILESDIR') .'/sampleConfig.xml';
 		$varPrefix = preg_replace("/:/", "_", __METHOD__ ."-");
 		$sc = new cs_siteConfig($configFile, 'main', $varPrefix);
 		
@@ -247,7 +250,7 @@ class TestOfCSContent extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function test_genericPage() {
-		$filesDir = dirname(__FILE__) .'/files';
+		$filesDir = constant('TEST_FILESDIR');
 		
 		$page = new cs_genericPage(false, $filesDir .'/templates/main.shared.tmpl', false);
 		$fs = new cs_fileSystem($filesDir .'/templates');
@@ -298,6 +301,36 @@ class TestOfCSContent extends UnitTestCase {
 		$page2->templateVars['content'] = $page2->strip_undef_template_vars($page2->templateVars['content']);
 		$this->assertEqual($page->return_printed_page(1), $page2->return_printed_page(1));
 	}//end test_genericPage
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	function test_cs_fileSystem() {
+		$fs = new cs_fileSystem(constant('TEST_FILESDIR'));
+		
+		$list = array(
+			'slashTest'		=> array('/sampleConfig.xml', 'sampleConfig.xml'),
+			'slashtest2'	=> array('/templates/content.shared.tmpl', 'templates/content.shared.tmpl'),
+			'pathWithDots'	=> array('templates/.././sampleConfig.xml', '/templates/.././sampleConfig.xml'),
+			'multiSlashes'	=> array('////sampleConfig.xml', '///sampleConfig.xml', '/templates///////content.shared.tmpl/../templates/content.shared.tmpl')
+		);
+		
+		foreach($list as $testName=>$files) {
+			foreach($files as $filename) {
+				$gotException=false;
+				try {
+					$data = $fs->ls('/sampleConfig.xml');
+				}
+				catch(exception $e) {
+					$gotException=true;
+				}
+				
+				$this->assertFalse($gotException, "Failed test '". $testName ."'");
+			}
+		}
+		
+	}//end test_cs_fileSystem()
 	//-------------------------------------------------------------------------
 	
 	

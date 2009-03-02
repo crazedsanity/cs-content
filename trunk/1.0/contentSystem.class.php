@@ -264,8 +264,8 @@ class contentSystem extends cs_contentAbstract {
 	private function parse_section() {
 		
 		//TODO::: this should be an OPTIONAL THING as to how to handle "/" (i.e. CSCONTENT_HANDLE_ROOTURL='content/index')
-		if($this->section === 0 || is_null($this->section) || !strlen($this->section)) {
-			$this->section = "content/index";
+		if(($this->section === 0 || is_null($this->section) || !strlen($this->section)) && defined('DEFAULT_SECTION')) {
+			$this->section = constant('DEFAULT_SECTION');
 		}
 		$myArr = split('/', $this->section);
 		
