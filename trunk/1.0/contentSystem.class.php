@@ -287,7 +287,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//TODO::: this should be an OPTIONAL THING as to how to handle "/" (i.e. CSCONTENT_HANDLE_ROOTURL='content/index')
 		if(($this->section === 0 || is_null($this->section) || !strlen($this->section)) && defined('DEFAULT_SECTION')) {
-			$this->section = constant('DEFAULT_SECTION');
+			$this->section = preg_replace('/^\//', '', constant('DEFAULT_SECTION'));
 		}
 		$myArr = split('/', $this->section);
 		
@@ -366,7 +366,7 @@ class contentSystem extends cs_contentAbstract {
 		$foundIncludes = count($this->includesList);
 		
 		$validatePageRes = $this->validate_page();
-		if($foundIncludes || ($cdResult && $validatePageRes)) {
+		if($foundIncludes || $validatePageRes) {
 			
 			//okay, get template directories & start loading
 			$tmplDirs = $this->get_template_dirs();
@@ -670,7 +670,6 @@ class contentSystem extends cs_contentAbstract {
 		$this->load_dir_includes($this->baseDir);
 		
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
-		$addIndex=false;
 		if(($this->incFs->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
 			
@@ -689,12 +688,7 @@ class contentSystem extends cs_contentAbstract {
 				//attempt to cd() into the next directory, or die if we can't.
 				if(!$this->incFs->cd($mySection)) {
 					//no dice.  Break the loop.
-					$addIndex = false;
 					break;
-				}
-				else {
-					//okay, we made it to the final directory; add the magic "index.inc" file if it exists.
-					$addIndex = true;
 				}
 			}
 		}
@@ -704,7 +698,7 @@ class contentSystem extends cs_contentAbstract {
 		if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 			$this->add_include('shared.inc');
 		}
-		if(isset($lsData['index.inc']) && is_array($lsData['index.inc']) && $addIndex==true) {
+		if(isset($lsData['index.inc']) && is_array($lsData['index.inc'])) {
 			$this->add_include('index.inc');
 		}
 	}//end load_includes()
