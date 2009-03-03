@@ -292,9 +292,14 @@ class contentSystem extends cs_contentAbstract {
 		$myArr = split('/', $this->section);
 		
 		//if we've got something in the array, keep going.
-		if(is_array($myArr) && count($myArr) && ($myArr[0] !== 0)) {
+		if(is_array($myArr) && count($myArr) > 0) {
+			
+			//TODO: if there's only one section here, sectionArr becomes BLANK... does that cause unexpected behaviour?
 			$this->baseDir = array_shift($myArr);
 			$this->sectionArr = $myArr;
+		}
+		else {
+			throw new exception(__METHOD__ .": failed to get an array from section (". $this->section .")");
 		}
 	}//end parse_section()
 	//------------------------------------------------------------------------
@@ -400,83 +405,35 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * Ensures the page we're on would actually load, so other methods don't have to do
 	 * 	so much extra checking.
+	 * 
+	 * TODO: the if & else should be consolidated as much as possible...
 	 */
 	private function validate_page() {
-		$valid = FALSE;
-		//if we've got a non-basedir page, (instead of "/whatever", we have "/whatever/x"), see
-		//	if there are templates that make it good... or just check the base template.
+		
+		$this->tmplFs->cd('/');
+		
+		$valid = false;
+		
 		if((count($this->sectionArr) > 0) && !((count($this->sectionArr) == 1) && ($this->sectionArr[0] == 'index'))) {
-			//got more than just a baseDir url... see if the template is good.
-			$finalLink = $this->gfObj->string_from_array($this->sectionArr, NULL, '/');
-			$this->tmplFs->cd('/');
 			$mySectionArr = $this->sectionArr;
-			$finalSection = array_pop($mySectionArr);
-			$this->finalSection = $finalSection;
-			if(count($mySectionArr) > 0) {
-				foreach($mySectionArr as $dir) {
-					if(!$this->tmplFs->cd($dir)) {
-						break;
-					}
-				}
-			}
-			
-			//check for the file & the directory...
-			$indexFilename = $finalSection ."/index.content.tmpl";
-			if(!strlen($finalSection)) {
-				$indexFilename = 'index.content.tmpl';
-			}
-			
-			$lsDir  = $this->tmplFs->ls($indexFilename);
-			$lsDirVals = array_values($lsDir);
-			$lsFile = $this->tmplFs->ls("$finalSection.content.tmpl");
-			
-			if(is_array(array_values($lsFile)) && is_array($lsFile[$finalSection .".content.tmpl"])) {
-				//it's the file ("{finalSection}.content.tmpl", like "mySection.content.tmpl")
-				$myIndex = $finalSection .".content.tmpl";
-			}
-			elseif(is_array(array_values($lsDir)) && (is_array($lsDir[$indexFilename]))) {
-				$myIndex = $indexFilename;
-			}
-			else {
-				//nothin' doin'.
-				$myIndex = NULL;
-			}
-			
-			//check the index file for validity... this is kind of a dirty hack... but it works.
-			$checkMe = $this->tmplFs->ls($myIndex);
-			if(!is_array($checkMe[$myIndex])) {
-				unset($myIndex);
-			}
-			
-			if(isset($myIndex)) {
-				$valid = TRUE;
-				$this->tmplFs->cd('/');
-			}
-			else {
-				$this->reason = __METHOD__ .": couldn't find page template for ". $this->section;
-			}
+			$this->finalSection = array_pop($mySectionArr);
+			$reasonText = "page template";
 		}
 		else {
-			//if the baseDir is "help", this would try to use "/help/index.content.tmpl"
-			$myFile = $this->baseDir .'/index.content.tmpl';
-			$sectionLsData = $this->tmplFs->ls($myFile);
-			
-			//if the baseDir is "help", this would try to use "/help.content.tmpl"
-			$sectionFile = $this->baseDir .'.content.tmpl';
-			$lsData = $this->tmplFs->ls();
-			
-			if(isset($lsData[$sectionFile]) && is_array($lsData[$sectionFile])) {
-				$valid = TRUE;
-				$this->finalSection = $this->baseDir;
-			}
-			elseif(isset($sectionLsData[$myFile]) && $sectionLsData[$myFile]['type'] == 'file') {
-				//we're good.
-				$valid = TRUE;
-				$this->finalSection = $this->baseDir;
-			}
-			else {
-				$this->reason = __METHOD__ .": couldn't find base template.";
-			}
+			$this->finalSection = $this->baseDir;
+			$reasonText = "base template";
+		}
+		
+		$tmplFile1 = $this->section .".content.tmpl";
+		$tmplFile2 = $this->section ."/index.content.tmpl";
+		
+		if(file_exists($this->tmplFs->realcwd ."/". $tmplFile2) || file_exists($this->tmplFs->realcwd ."/". $tmplFile1)) {
+			$valid = true;
+			$this->reason=null;
+		}
+		else {
+			$valid = false;
+			$this->reason=__METHOD__ .": couldn't find ". $reasonText;
 		}
 		$this->isValid = $valid;
 		
@@ -495,7 +452,7 @@ class contentSystem extends cs_contentAbstract {
 		//	looking for templates.
 		$mySectionArr = $this->sectionArr;
 		
-		$finalSection = $this->sectionArr[(count($this->sectionArr) -1)];
+		$finalSection = $this->finalSection;
 		foreach($mySectionArr as $index=>$value) {
 			$tmplList = $this->arrange_directory_contents('name', 'section');
 			if(isset($tmplList[$value])) {
@@ -509,20 +466,20 @@ class contentSystem extends cs_contentAbstract {
 			}
 		}
 		
-		//load the final template(s).
 		$finalTmplList = $this->arrange_directory_contents('name', 'section');
+		foreach($finalTmplList as $mySection => $subArr) {
+			foreach($subArr as $internalSection => $myTmpl) {
+				$this->templateList[$mySection] = $myTmpl;
+			}
+		}
+		
+		//go through the final section, if set, so the templates defined there are used.
 		if(isset($finalTmplList[$finalSection])) {
 			foreach($finalTmplList[$finalSection] as $mySection => $myTmpl) {
 				$this->templateList[$mySection] = $myTmpl;
 			}
 		}
-		elseif(is_array($finalTmplList)) {
-			foreach($finalTmplList as $mySection => $subArr) {
-				foreach($subArr as $internalSection => $myTmpl) {
-					$this->templateList[$mySection] = $myTmpl;
-				}
-			}
-		}
+		
 		if($this->tmplFs->cd($finalSection)) {
 			//load the index stuff.
 			$tmplList = $this->arrange_directory_contents('name', 'section');
@@ -549,6 +506,7 @@ class contentSystem extends cs_contentAbstract {
 		//check to see if the present section is valid.
 		$this->tmplFs->cd('/');
 		$dirContents = $this->arrange_directory_contents('name', 'section');
+		$this->tmplFs->cd($this->baseDir);
 		if(is_array($dirContents)) {
 			foreach($dirContents as $mySection => $subArr) {
 				foreach($subArr as $subIndex=>$templateFilename) {
@@ -694,12 +652,14 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		//include the final shared & index files.
-		$lsData = $this->incFs->ls();
-		if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
-			$this->add_include('shared.inc');
-		}
-		if(isset($lsData['index.inc']) && is_array($lsData['index.inc'])) {
-			$this->add_include('index.inc');
+		if($this->incFs->cd($this->finalSection)) {
+			$lsData = $this->incFs->ls();
+			if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
+				$this->add_include('shared.inc');
+			}
+			if(isset($lsData['index.inc']) && is_array($lsData['index.inc'])) {
+				$this->add_include('index.inc');
+			}
 		}
 	}//end load_includes()
 	//------------------------------------------------------------------------
@@ -893,8 +853,8 @@ class contentSystem extends cs_contentAbstract {
 	 * Method that appends filenames to the list of include scripts.
 	 */
 	private final function add_include($file) {
-		$myFile = $this->incFs->realcwd .'/'. $file;
-		if(!array_search($myFile, $this->includesList)) {
+		$myFile = preg_replace('/\/{2,}/', '/', $this->incFs->realcwd .'/'. $file);
+		if(!is_numeric(array_search($myFile, $this->includesList))) {
 			$this->includesList[] = $myFile;
 		}
 	}//end add_include()
