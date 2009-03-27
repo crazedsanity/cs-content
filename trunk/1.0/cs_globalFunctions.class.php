@@ -838,6 +838,19 @@ class cs_globalFunctions extends cs_versionAbstract {
 		return($realVals[$index]);
 	}//end interpret_bool()
 	//##########################################################################
+	
+	
+	//##########################################################################
+	public function debug_var_dump($data, $printItForMe=null, $removeHr=null) {
+		
+		ob_start();
+		var_dump($data);
+		$printThis = ob_get_contents();
+		ob_end_clean();
+		
+		return($this->debug_print($printThis, $printItForMe, $removeHr));
+	}//end debug_var_dump()
+	//##########################################################################
 
 }//end cs_globalFunctions{}
 
