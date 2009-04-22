@@ -15,6 +15,7 @@ class cs_genericPage extends cs_contentAbstract {
 	public $templateVars	= array();	//our copy of the global templateVars
 	public $mainTemplate;				//the default layout of the site
 	public $unhandledVars=array();
+	public $printOnFinish=true;
 	
 	private $tmplDir;
 	private $libDir;
@@ -78,6 +79,7 @@ class cs_genericPage extends cs_contentAbstract {
 		else {
 			//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
 			$this->siteRoot = preg_replace('/\/public_html/', '', $_SERVER['DOCUMENT_ROOT']);
+			$this->siteRoot = preg_replace('/\/htdocs/', '', $_SERVER['DOCUMENT_ROOT']);
 			$this->tmplDir = $this->siteRoot .'/templates';
 		}
 		$this->libDir = $this->siteRoot .'/lib';
@@ -218,7 +220,7 @@ class cs_genericPage extends cs_contentAbstract {
 
 		$reg = "/<!-- BEGIN $handle -->(.+){0,}<!-- END $handle -->/sU";
 		preg_match_all($reg, $str, $m);
-		if(!is_string($m[0][0])) {
+		if(!is_array($m) || !isset($m[0][0]) ||  !is_string($m[0][0])) {
 			#exit("set_block_row(): couldn't find '$handle' in var '$parent'");
 			$retval = FALSE;
 		} else {
@@ -287,9 +289,9 @@ class cs_genericPage extends cs_contentAbstract {
 				foreach($tags as $key=>$str) {
 					$str2 = str_replace("{", "", $str);
 					$str2 = str_replace("}", "", $str2);
-					if(!$this->templateVars[$str2] && $stripUndefVars) {
+					if(!isset($this->templateVars[$str2]) && $stripUndefVars) {
 						//TODO: set an internal pointer or something to use here, so they can see what was missed.
-						$this->templateObj->varvals[out] = str_replace($str, '', $this->templateObj->varvals[out]);
+						$this->templateObj->varvals['out'] = str_replace($str, '', $this->templateObj->varvals['out']);
 						$this->unhandledVars[$str2]++;
 					}
 				}
@@ -594,17 +596,20 @@ class cs_genericPage extends cs_contentAbstract {
 	function rip_all_block_rows($templateVar="content", $exceptionArr=array()) {
 		$rowDefs = $this->get_block_row_defs($templateVar);
 		
-		$useTheseBlockRows = $rowDefs['ordered'];
 		
 		$retval = array();
-		if(is_array($useTheseBlockRows)) {
-			foreach($useTheseBlockRows as $blockRowName)
-			{
-				if(!in_array($blockRowName, $exceptionArr))
+		
+		if(is_array($rowDefs) && isset($rowDefs['ordered'])) {
+			$useTheseBlockRows = $rowDefs['ordered'];
+			if(is_array($useTheseBlockRows)) {
+				foreach($useTheseBlockRows as $blockRowName)
 				{
-					//remove the block row.
-					$rowData = $this->set_block_row($templateVar, $blockRowName);
-					$retval[$blockRowName] = $rowData;
+					if(!in_array($blockRowName, $exceptionArr))
+					{
+						//remove the block row.
+						$rowData = $this->set_block_row($templateVar, $blockRowName);
+						$retval[$blockRowName] = $rowData;
+					}
 				}
 			}
 		}

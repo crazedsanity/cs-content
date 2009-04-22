@@ -793,7 +793,9 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		if($this->isValid === TRUE) {
-			$page->print_page();
+			if($this->templateObj->printOnFinish === true) {
+				$page->print_page();
+			}
 		}
 		else {
 			$this->die_gracefully($this->reason);
