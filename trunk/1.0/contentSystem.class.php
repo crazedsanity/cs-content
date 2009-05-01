@@ -103,6 +103,8 @@ class contentSystem extends cs_contentAbstract {
 	private $isValid=FALSE;
 	private $reason=NULL;
 	
+	private $injectVars=array();
+	
 	//------------------------------------------------------------------------
 	/**
 	 * The CONSTRUCTOR.  Duh.
@@ -737,6 +739,19 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		$page =& $this->templateObj;
+		
+		if(is_array($this->injectVars) && count($this->injectVars)) {
+			$definedVars = get_defined_vars();
+			foreach($this->injectVars as $myVarName=>$myVarVal) {
+				if(!isset($definedVars[$myVarName])) {
+					$$myVarName = $myVarVal;
+				}
+				else {
+					throw new exception(__METHOD__ .": attempt to inject already defined var '". $myVarName ."'");
+				}
+			}
+		}
+		
 		if(is_object($this->session)) {
 			$page->session =& $this->session;
 		}
@@ -860,6 +875,14 @@ class contentSystem extends cs_contentAbstract {
 			$this->includesList[] = $myFile;
 		}
 	}//end add_include()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	public function inject_var($varName, $value) {
+		$this->injectVars[$varName] = $value;
+	}//end inject_var()
 	//------------------------------------------------------------------------
 	
 	

@@ -234,6 +234,7 @@ class cs_siteConfig extends cs_contentAbstract {
 	 */
 	public function get_section($section) {
 		if($this->isInitialized === true) {
+			$section = strtoupper($section);
 			$data = $this->a2p->get_data($section);
 			
 			if(is_array($data) && count($data) && $data['type'] == 'open') {
