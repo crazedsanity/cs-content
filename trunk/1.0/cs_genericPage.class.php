@@ -419,7 +419,7 @@ class cs_genericPage extends cs_contentAbstract {
 		);
 		if(!isset($type) || !isset($priorityArr[$type])) {
 			//set a default type.
-			$arrayKeys = array_keys();
+			$arrayKeys = array_keys($priorityArr);
 			$type = $arrayKeys[0];
 		}
 		
@@ -593,7 +593,7 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
-	function rip_all_block_rows($templateVar="content", $exceptionArr=array()) {
+	function rip_all_block_rows($templateVar="content", $exceptionArr=array(), $removeDefs=0) {
 		$rowDefs = $this->get_block_row_defs($templateVar);
 		
 		
@@ -604,10 +604,10 @@ class cs_genericPage extends cs_contentAbstract {
 			if(is_array($useTheseBlockRows)) {
 				foreach($useTheseBlockRows as $blockRowName)
 				{
-					if(!in_array($blockRowName, $exceptionArr))
+					if(!is_array($exceptionArr) || !in_array($blockRowName, $exceptionArr))
 					{
 						//remove the block row.
-						$rowData = $this->set_block_row($templateVar, $blockRowName);
+						$rowData = $this->set_block_row($templateVar, $blockRowName, $removeDefs);
 						$retval[$blockRowName] = $rowData;
 					}
 				}
@@ -621,9 +621,9 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function set_all_block_rows($templateVar="content", $exceptionArr=array())
+	public function set_all_block_rows($templateVar="content", $exceptionArr=array(), $removeDefs=0)
 	{
-		$retval = $this->rip_all_block_rows($templateVar, $exceptionArr);
+		$retval = $this->rip_all_block_rows($templateVar, $exceptionArr, $removeDefs);
 		return($retval);
 	}//end set_all_block_rows()
 	//---------------------------------------------------------------------------------------------
