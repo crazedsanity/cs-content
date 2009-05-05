@@ -292,7 +292,12 @@ class cs_genericPage extends cs_contentAbstract {
 					if(!isset($this->templateVars[$str2]) && $stripUndefVars) {
 						//TODO: set an internal pointer or something to use here, so they can see what was missed.
 						$this->templateObj->varvals['out'] = str_replace($str, '', $this->templateObj->varvals['out']);
-						$this->unhandledVars[$str2]++;
+						if(isset($this->unhandledVars[$str2])) {
+							$this->unhandledVars[$str2]++;
+						}
+						else {
+							$this->unhandledVars[$str2] = 1;
+						}
 					}
 				}
 				$this->templateObj->parse("out", "out");
