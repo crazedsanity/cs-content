@@ -551,8 +551,8 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		//NOTE: the value 30 isn't just a randomly chosen length; it's the minimum
 		// number of characters to have a block row.  EG: "<!-- BEGIN x --><!-- END x -->"
-		$templateContents = $this->templateVars[$templateVar];
-		if(strlen($templateContents) >= 30) {
+		if(isset($this->templateVars[$templateVar]) && strlen($this->templateVars[$templateVar]) >= 30) {
+			$templateContents = $this->templateVars[$templateVar];
 			//looks good to me.  Run the regex...
 			$flags = PREG_PATTERN_ORDER;
 			$reg = "/<!-- BEGIN (\S{1,}) -->/";

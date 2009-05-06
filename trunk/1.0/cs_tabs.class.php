@@ -8,17 +8,14 @@ require_once(dirname(__FILE__) .'/abstract/cs_content.abstract.class.php');
 
 
 class cs_tabs extends cs_contentAbstract {
-	private $tabsArr;
+	private $tabsArr=array();
 	private $selectedTab;
 	
 	private $csPageObj;
 	private $templateVar;
 	
-	/** Block row with the "selected" tab */
-	private $selectedTabContent;
-	
-	/** Block row with the "unselected" tab */
-	private $unselectedTabContent;
+	/** This is the default suffix to use when none is given during the add_tab() call. */
+	private $defaultSuffix='tab';
 	
 	//---------------------------------------------------------------------------------------------
 	/**
@@ -64,26 +61,21 @@ class cs_tabs extends cs_contentAbstract {
 		//now let's parse it for the proper block rows.
 		$blockRows = $this->csPageObj->rip_all_block_rows($this->templateVar);
 		
-		if(count($blockRows) < 2 || !isset($blockRows['selected_tab']) || !isset($blockRows['unselected_tab'])) {
-			//not enough blocks, or they're not properly named.
-			throw new exception("cs_tabs::load_tabs_template(): failed to retrieve the required block rows");
-		}
-		else {
-			//got the rows.  Yay!
-			$this->selectedTabContent = $blockRows['selected_tab'];
-			$this->unselectedTabContent = $blockRows['unselected_tab'];
-		}
+		#if(count($blockRows) < 2) {
+		#	//not enough blocks, or they're not properly named.
+		#	throw new exception("cs_tabs::load_tabs_template(): failed to retrieve the required block rows");
+		#}
 	}//end load_tabs_template()
 	//---------------------------------------------------------------------------------------------
 	
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function add_tab_array(array $tabs) {
+	public function add_tab_array(array $tabs, $useSuffix=null) {
 		$retval = 0;
 		foreach($tabs as $name=>$url) {
 			//call an internal method to do it.
-			$retval += $this->add_tab($name, $url);
+			$retval += $this->add_tab($name, $url, $useSuffix);
 		}
 		
 		return($retval);
@@ -107,9 +99,18 @@ class cs_tabs extends cs_contentAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function add_tab($tabName, $url) {
+	public function add_tab($tabName, $url, $useSuffix=null) {
+		
+		//set the default suffix.
+		if(is_null($useSuffix)) {
+			$useSuffix = $this->defaultSuffix;
+		}
+		
 		//add it to an array.
-		$this->tabsArr[$tabName] = $url;
+		$this->tabsArr[$tabName] = array(
+			'url'		=> $url,
+			'suffix'	=> $useSuffix
+		);
 	}//end add_tab()
 	//---------------------------------------------------------------------------------------------
 	
@@ -120,16 +121,33 @@ class cs_tabs extends cs_contentAbstract {
 	 * Call this to add the parsed tabs into the page.
 	 */
 	public function display_tabs() {
+		
+		if(!strlen($this->selectedTab)) {
+			$keys = array_keys($this->tabsArr);
+			$this->select_tab($keys[0]);
+		}
+		
 		if(is_array($this->tabsArr) && count($this->tabsArr)) {
 			$this->load_tabs_template();
 			$finalString = "";
 			//loop through the array.
-			foreach($this->tabsArr as $tabName=>$url) {
-				$useTabContent = $this->unselectedTabContent;
-				if(strtolower($tabName) === strtolower($this->selectedTab)) {
-					//it's selected.
-					$useTabContent = $this->selectedTabContent;
+			foreach($this->tabsArr as $tabName=>$tabData) {
+				
+				$url = $tabData['url'];
+				$suffix = $tabData['suffix'];
+				
+				$blockRowName = 'unselected_'. $suffix;
+				if(strtolower($tabName) == strtolower($this->selectedTab)) {
+					$blockRowName = 'selected_'. $suffix;
 				}
+				
+				if(isset($this->csPageObj->templateRows[$blockRowName])) {
+					$useTabContent = $this->csPageObj->templateRows[$blockRowName];
+				}
+				else {
+					throw new exception(__METHOD__ ."(): failed to load block row (". $blockRowName .") for tab (". $tabName .")". $this->csPageObj->gfObj->debug_print($this->csPageObj->templateRows,0));
+				}
+				
 				$parseThis = array(
 					'title'	=> $tabName,
 					'url'	=> $url
@@ -142,10 +160,39 @@ class cs_tabs extends cs_contentAbstract {
 		}
 		else {
 			//something bombed.
-			throw new exception("cs_tabs::display_tabs(): no tabs to add");
+			throw new exception(__METHOD__ ."(): no tabs to add");
 		}
 		
 	}//end display_tabs()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Determine if the given named tab exists (returns boolean true/false)
+	 */
+	public function tab_exists($tabName) {
+		$retval = false;
+		if(isset($this->tabsArr[$tabName])) {
+			$retval = true;
+		}
+		return($retval);
+	}//end tab_exists()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function rename_tab($tabName, $newTabName) {
+		if($this->tab_exists($tabName) && !$this->tab_exists($newTabName)) {
+			$tabContents = $this->tabsArr[$tabName];
+			unset($this->tabsArr[$tabName]);
+			$this->tabsArr[$newTabName] = $tabContents;
+		}
+		else {
+			throw new exception(__METHOD__ .": tried to rename non-existent tab (". $tabName .") to (". $newTabName .")");
+		}
+	}//end rename_tab();
 	//---------------------------------------------------------------------------------------------
 	
 }
