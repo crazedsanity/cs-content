@@ -72,16 +72,13 @@ class cs_genericPage extends cs_contentAbstract {
 		}
 		
 		
-		if(strlen(dirname($mainTemplateFile)) && dirname($mainTemplateFile) !== '/' && !preg_match('/^\./', dirname($mainTemplateFile))) {
-			$this->tmplDir = dirname($mainTemplateFile);
-			$this->siteRoot = preg_replace('/\/templates$/', '', $this->tmplDir);
+		if(defined('SITE_ROOT')) {
+			$this->siteRoot = constant('SITE_ROOT');
 		}
 		else {
-			//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
-			$this->siteRoot = preg_replace('/\/public_html/', '', $_SERVER['DOCUMENT_ROOT']);
-			$this->siteRoot = preg_replace('/\/htdocs/', '', $_SERVER['DOCUMENT_ROOT']);
-			$this->tmplDir = $this->siteRoot .'/templates';
+			throw new exception(__METHOD__ .": required constant 'SITE_ROOT' not set");
 		}
+		$this->tmplDir = $this->siteRoot .'/templates';
 		$this->libDir = $this->siteRoot .'/lib';
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
