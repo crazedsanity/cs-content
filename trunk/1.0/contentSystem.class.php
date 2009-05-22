@@ -94,6 +94,7 @@ class contentSystem extends cs_contentAbstract {
 								);
 	protected $templateList		= array();
 	protected $includesList		= array();
+	protected $afterIncludesList= array();
 	public $templateObj		= NULL;
 	protected $gfObj			= NULL;
 	protected $tabs				= NULL;
@@ -659,6 +660,9 @@ class contentSystem extends cs_contentAbstract {
 			if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 				$this->add_include('shared.inc');
 			}
+			if(isset($lsData['shared.after.inc']) && is_array($lsData['shared.after.inc'])) {
+				$this->add_include('shared.after.inc',true);
+			}
 			if(isset($lsData['index.inc']) && is_array($lsData['index.inc'])) {
 				$this->add_include('index.inc');
 			}
@@ -676,9 +680,16 @@ class contentSystem extends cs_contentAbstract {
 	private function load_dir_includes($section) {
 		$lsData = $this->incFs->ls();
 		
+		$addThese = array();
+		
 		//attempt to load the shared includes file.
 		if(isset($lsData['shared.inc']) && $lsData['shared.inc']['type'] == 'file') {
 			$this->add_include('shared.inc');
+		}
+		
+		//add the shared "after" script.
+		if(isset($lsData['shared.after.inc'])) {
+			$addThese [] = 'shared.after.inc';
 		}
 		
 		//attempt to load the section's includes file.
@@ -687,11 +698,14 @@ class contentSystem extends cs_contentAbstract {
 			$this->add_include($myFile);
 		}
 		
-		if(isset($lsData[$section]) && !count($this->sectionArr)) {
-			$this->incFs->cd($section);
-			$lsData = $this->incFs->ls();
-			if(isset($lsData['index.inc'])) {
-				$this->includesList[] = $this->incFs->realcwd .'/index.inc';
+		//add the section "after" script.
+		if(isset($lsData[$section .'.after.inc'])) {
+			$addThese [] = $section .'.after.inc';
+		}
+		
+		if(is_array($addThese) && count($addThese)) {
+			foreach($addThese as $f) {
+				$this->add_include($f,true);
 			}
 		}
 	}//end load_dir_includes()
@@ -783,6 +797,14 @@ class contentSystem extends cs_contentAbstract {
 					$this->myLastInclude = $myInternalScriptName;
 					include_once($this->myLastInclude);
 				}
+				
+				//now load the "after" includes.
+				if(is_array($this->afterIncludesList)) {
+					foreach($this->afterIncludesList as $myInternalIndex=>$myInternalScriptName) {
+						$this->myLastInclude = $myInternalScriptName;
+						include_once($this->myLastInclude);
+					}
+				}
 			}
 			catch(exception $e) {
 				$myRoot = preg_replace('/\//', '\\\/', $this->incFs->root);
@@ -869,10 +891,15 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * Method that appends filenames to the list of include scripts.
 	 */
-	private final function add_include($file) {
+	private final function add_include($file, $addAfter=false) {
 		$myFile = preg_replace('/\/{2,}/', '/', $this->incFs->realcwd .'/'. $file);
 		if(!is_numeric(array_search($myFile, $this->includesList))) {
-			$this->includesList[] = $myFile;
+			if($addAfter === true) {
+				array_unshift($this->afterIncludesList, $myFile);
+			}
+			else {
+				$this->includesList[] = $myFile;
+			}
 		}
 	}//end add_include()
 	//------------------------------------------------------------------------
