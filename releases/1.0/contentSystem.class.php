@@ -339,6 +339,17 @@ class contentSystem extends cs_contentAbstract {
 	 * Retrieves the list of templates & includes in preparation for later work.
 	 */
 	private function prepare() {
+		
+		//Set the final section... 
+		if(count($this->sectionArr)) {
+			$mySectionArr = $this->sectionArr;
+			$this->finalSection = array_pop($mySectionArr);
+		}
+		else {
+			throw new exception(__METHOD__ .": FATAL - section array is empty");
+		}
+		
+		
 		//attempt to load any includes...
 		if($this->fileSystemObj->cd('/includes')) {
 			$this->load_includes();
@@ -448,12 +459,10 @@ class contentSystem extends cs_contentAbstract {
 			
 			if(isset($lsData[$sectionFile]) && is_array($lsData[$sectionFile])) {
 				$valid = TRUE;
-				$this->finalSection = $this->baseDir;
 			}
 			elseif(isset($sectionLsData[$myFile]) && $sectionLsData[$myFile]['type'] == 'file') {
 				//we're good.
 				$valid = TRUE;
-				$this->finalSection = $this->baseDir;
 			}
 			else {
 				$this->reason = __METHOD__ .": couldn't find base template.";
@@ -653,6 +662,9 @@ class contentSystem extends cs_contentAbstract {
 		
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
 		$addIndex=false;
+		if($this->finalSection == 'index') {
+			$addIndex = true;
+		}
 		if(($this->fileSystemObj->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
 			
@@ -672,6 +684,9 @@ class contentSystem extends cs_contentAbstract {
 				if(!$this->fileSystemObj->cd($mySection)) {
 					//no dice.  Break the loop.
 					$addIndex = false;
+					if($this->finalSection == 'index') {
+						$addIndex = true;
+					}
 					break;
 				}
 				else {
