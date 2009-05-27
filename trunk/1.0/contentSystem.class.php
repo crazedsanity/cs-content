@@ -327,7 +327,15 @@ class contentSystem extends cs_contentAbstract {
 			return(NULL);
 		}
 		else {
-			//check the string to make sure it doesn't begin or end with a "/"
+			
+			//if there's an "APPURL" constant, drop that from the section.
+			if(defined('APPURL') && strlen(constant('APPURL'))) {
+				$dropThis = preg_replace('/^\//', '', constant('APPURL'));
+				$dropThis = preg_replace('/\//', '\\/', $dropThis);
+				$section = preg_replace('/^'. $dropThis .'/', '', $section);
+			}
+			
+			//check the string to make sure it doesn't begin with a "/"
 			if($section[0] == '/') {
 				$section = substr($section, 1, strlen($section));
 			}
