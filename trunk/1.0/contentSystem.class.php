@@ -378,17 +378,6 @@ class contentSystem extends cs_contentAbstract {
 	 * Retrieves the list of templates & includes in preparation for later work.
 	 */
 	private function prepare() {
-		
-		//Set the final section... 
-		if(count($this->sectionArr)) {
-			$mySectionArr = $this->sectionArr;
-			$this->finalSection = array_pop($mySectionArr);
-		}
-		else {
-			throw new exception(__METHOD__ .": FATAL - section array is empty");
-		}
-		
-		
 		//attempt to load any includes...
 		$this->load_includes();
 		$foundIncludes = count($this->includesList);
@@ -443,24 +432,8 @@ class contentSystem extends cs_contentAbstract {
 			$reasonText = "page template";
 		}
 		else {
-			//if the baseDir is "help", this would try to use "/help/index.content.tmpl"
-			$myFile = $this->baseDir .'/index.content.tmpl';
-			$sectionLsData = $this->fileSystemObj->ls($myFile);
-			
-			//if the baseDir is "help", this would try to use "/help.content.tmpl"
-			$sectionFile = $this->baseDir .'.content.tmpl';
-			$lsData = $this->fileSystemObj->ls();
-			
-			if(isset($lsData[$sectionFile]) && is_array($lsData[$sectionFile])) {
-				$valid = TRUE;
-			}
-			elseif(isset($sectionLsData[$myFile]) && $sectionLsData[$myFile]['type'] == 'file') {
-				//we're good.
-				$valid = TRUE;
-			}
-			else {
-				$this->reason = __METHOD__ .": couldn't find base template.";
-			}
+			$this->finalSection = $this->baseDir;
+			$reasonText = "base template";
 		}
 		
 		$tmplFile1 = $this->section .".content.tmpl";
@@ -667,10 +640,6 @@ class contentSystem extends cs_contentAbstract {
 		$this->load_dir_includes($this->baseDir);
 		
 		//okay, now loop through $this->sectionArr & see if we can include anything else.
-		$addIndex=false;
-		if($this->finalSection == 'index') {
-			$addIndex = true;
-		}
 		if(($this->incFs->cd($this->baseDir)) && is_array($this->sectionArr) && count($this->sectionArr) > 0) {
 			
 			
@@ -689,9 +658,6 @@ class contentSystem extends cs_contentAbstract {
 				//attempt to cd() into the next directory, or die if we can't.
 				if(!$this->incFs->cd($mySection)) {
 					//no dice.  Break the loop.
-					if($this->finalSection == 'index') {
-						$addIndex = true;
-					}
 					break;
 				}
 			}
