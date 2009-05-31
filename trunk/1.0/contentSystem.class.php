@@ -469,8 +469,7 @@ class contentSystem extends cs_contentAbstract {
 			$tmplList = $this->arrange_directory_contents('name', 'section');
 			if(isset($tmplList[$value])) {
 				foreach($tmplList[$value] as $mySection=>$myTmpl) {
-					// 
-					$this->templateList[$mySection] = $myTmpl;
+					$this->add_template($mySection, $myTmpl);
 				}
 			}
 			if(!$this->tmplFs->cd($value)) {
@@ -481,14 +480,14 @@ class contentSystem extends cs_contentAbstract {
 		$finalTmplList = $this->arrange_directory_contents('name', 'section');
 		foreach($finalTmplList as $mySection => $subArr) {
 			foreach($subArr as $internalSection => $myTmpl) {
-				$this->templateList[$mySection] = $myTmpl;
+				$this->add_template($mySection, $myTmpl);
 			}
 		}
 		
 		//go through the final section, if set, so the templates defined there are used.
 		if(isset($finalTmplList[$finalSection])) {
 			foreach($finalTmplList[$finalSection] as $mySection => $myTmpl) {
-				$this->templateList[$mySection] = $myTmpl;
+				$this->add_template($mySection, $myTmpl);
 			}
 		}
 		
@@ -497,12 +496,12 @@ class contentSystem extends cs_contentAbstract {
 			$tmplList = $this->arrange_directory_contents('name', 'section');
 			if(isset($tmplList['index'])) {
 				foreach($tmplList['index'] as $mySection => $myTmpl) {
-					$this->templateList[$mySection] = $myTmpl;
+					$this->add_template($mySection, $myTmpl);
 				}
 			}
 			if(isset($tmplList[$this->baseDir]['content'])) {
 				//load template for the main page (if $this->baseDir == "help", this would load "/help.content.tmpl" as content)
-				$this->templateList['content'] = $tmplList[$this->baseDir]['content'];
+				$this->add_template('content', $tmplList[$this->baseDir]['content']);
 			}
 		}
 	}//end load_page_templates()
@@ -522,7 +521,7 @@ class contentSystem extends cs_contentAbstract {
 		if(is_array($dirContents)) {
 			foreach($dirContents as $mySection => $subArr) {
 				foreach($subArr as $subIndex=>$templateFilename) {
-					$this->templateList[$mySection] = $templateFilename;
+					$this->add_template($mySection, $templateFilename);
 				}
 			}
 		}
@@ -549,7 +548,7 @@ class contentSystem extends cs_contentAbstract {
 		if(count($dirContents['shared'])) {
 			
 			foreach($dirContents['shared'] as $section => $template) {
-				$this->templateList[$section] = $template;
+				$this->add_template($section, $template);
 			}
 		}
 	}//end load_shared_templates()
@@ -782,7 +781,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//if we loaded an index, but there is no "content", then move 'em around so we have content.
 		if(isset($this->templateList['index']) && !isset($this->templateList['content'])) {
-			$this->templateList['content'] = $this->templateList['index'];
+			$this->add_template('content', $this->templateList['index']);
 			unset($this->templateList['index']);
 		}
 		
@@ -911,6 +910,22 @@ class contentSystem extends cs_contentAbstract {
 			}
 		}
 	}//end add_include()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	private final function add_template($var, $file, $allowIndex=false) {
+		if($var == 'index' && $allowIndex !== true) {
+			$this->gfObj->debug_print(__METHOD__ .": set index invalidly (". $file ."), IGNORED");
+		}
+		else {
+			if(isset($this->templateList[$var])) {
+				$this->gfObj->debug_print(__METHOD__ .": REPLACING [". $var ."], was (". $this->templateList[$var] .") with (". $file .")");
+			}
+			$this->templateList[$var] = $file;
+		}
+	}//end add_template()
 	//------------------------------------------------------------------------
 	
 	
