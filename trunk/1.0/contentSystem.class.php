@@ -63,13 +63,6 @@
  * 													|--> /includes/content/members/test.inc
  */
 
-//TODO: remove this terrible little hack.
-if(!isset($GLOBALS['SITE_ROOT'])) {
-	//define where our scripts are located.
-	$GLOBALS['SITE_ROOT'] = $_SERVER['DOCUMENT_ROOT'];
-	$GLOBALS['SITE_ROOT'] = str_replace("/public_html", "", $GLOBALS['SITE_ROOT']);
-}
-
 require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 require_once(dirname(__FILE__) ."/cs_fileSystem.class.php");
 require_once(dirname(__FILE__) ."/cs_session.class.php");
@@ -156,6 +149,11 @@ class contentSystem extends cs_contentAbstract {
 			$myUrl = '/'. $this->section;
 		}
 		$this->templateObj->add_template_var('CURRENT_URL', $myUrl);
+		
+		if(defined('APPURL')) {
+			//set the APPURL as a template var.
+			$this->templateObj->add_template_var('APPURL', constant('APPURL'));
+		}
 		
 		//create a fileSystem object for templates.
 		$tmplBaseDir = constant('SITE_ROOT') .'/templates';
@@ -730,7 +728,14 @@ class contentSystem extends cs_contentAbstract {
 		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
 			//Simple "Page Not Found" error... show 'em.
 			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
-			$this->templateObj->add_template_var('details', $details);
+			
+			//add the message box & required template vars to display the error.
+			$this->templateObj->add_template_var('content', $this->templateObj->file_to_string('system/message_box.tmpl'));
+			$this->templateObj->add_template_var('messageType', 'fatal');
+			$this->templateObj->add_template_var('title', "Fatal Error");
+			$this->templateObj->add_template_var('message', $details);
+			
+			
 			$this->templateObj->add_template_var('datetime', date('m-d-Y H:i:s'));
 			$this->templateObj->print_page();
 			exit;
@@ -917,12 +922,9 @@ class contentSystem extends cs_contentAbstract {
 	//------------------------------------------------------------------------
 	private final function add_template($var, $file, $allowIndex=false) {
 		if($var == 'index' && $allowIndex !== true) {
-			$this->gfObj->debug_print(__METHOD__ .": set index invalidly (". $file ."), IGNORED");
+			//$this->gfObj->debug_print(__METHOD__ .": set index invalidly (". $file ."), IGNORED");
 		}
 		else {
-			if(isset($this->templateList[$var])) {
-				$this->gfObj->debug_print(__METHOD__ .": REPLACING [". $var ."], was (". $this->templateList[$var] .") with (". $file .")");
-			}
 			$this->templateList[$var] = $file;
 		}
 	}//end add_template()
