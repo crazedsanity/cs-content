@@ -20,14 +20,14 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(defined('DEBUGREMOVEHR')) {
 			$this->debugRemoveHr = constant('DEBUGREMOVEHR');
 		}
-		elseif(isset($GLOBALS['DEBUGREMOVEHR'])) {
+		if(isset($GLOBALS['DEBUGREMOVEHR'])) {
 			$this->debugRemoveHr = $GLOBALS['DEBUGREMOVEHR'];
 		}
 		
 		if(defined('DEBUGPRINTOPT')) {
 			$this->debugPrintOpt = constant('DEBUGPRINTOPT');
 		}
-		elseif(isset($GLOBALS['DEBUGPRINTOPT'])) {
+		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
 		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
