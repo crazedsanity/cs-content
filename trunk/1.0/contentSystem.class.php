@@ -779,7 +779,7 @@ class contentSystem extends cs_contentAbstract {
 			}
 		}
 		
-		if(is_object($this->session)) {
+		if(isset($this->session) && is_object($this->session)) {
 			$page->session =& $this->session;
 		}
 		
