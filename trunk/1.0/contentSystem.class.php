@@ -920,13 +920,8 @@ class contentSystem extends cs_contentAbstract {
 	
 	
 	//------------------------------------------------------------------------
-	private final function add_template($var, $file, $allowIndex=false) {
-		if($var == 'index' && $allowIndex !== true) {
-			//$this->gfObj->debug_print(__METHOD__ .": set index invalidly (". $file ."), IGNORED");
-		}
-		else {
-			$this->templateList[$var] = $file;
-		}
+	private final function add_template($var, $file) {
+		$this->templateList[$var] = $file;
 	}//end add_template()
 	//------------------------------------------------------------------------
 	
