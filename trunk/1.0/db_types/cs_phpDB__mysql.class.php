@@ -384,6 +384,9 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	function set_row($row){
 		if(is_numeric($row)) {
 			$this->row = $row;
+			if(!mysql_data_seek($this->result, $this->row)) {
+				throw new exception(__METHOD__ .": failed to seek row (". $this->row .")");
+			}
 		}
 		else {
 			throw new exception(__METHOD__ .": invalid data for row (". $row .")");
@@ -430,10 +433,7 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			$retval = NULL;
 		}
 		else {
-			if($this->row == 0) {
-				$this->row = 1;
-			}
-			$retval = mysql_fetch_array($this->result,$this->row);
+			$retval = mysql_fetch_array($this->result);
 		}
 		
 		return($retval);
