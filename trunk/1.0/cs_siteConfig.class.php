@@ -161,10 +161,7 @@ class cs_siteConfig extends cs_contentAbstract {
 	private function parse_config() {
 		if(is_object($this->xmlReader)) {
 			$data = $this->xmlReader->get_path($this->xmlReader->get_root_element());
-			
-			$specialVars = array(
-				'_DIRNAMEOFFILE_'	=> $this->configDirname
-			);
+			$specialVars = $this->build_special_vars();
 			$parseThis = array();
 			
 			
@@ -347,6 +344,36 @@ class cs_siteConfig extends cs_contentAbstract {
 		
 		return($retval);
 	}//end get_valid_sections()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	private function build_special_vars() {
+		//determine the current "APPURL" (current URL minus hostname and current filename)
+		{
+			$appUrl = $_SERVER['SCRIPT_NAME'];
+			$bits = explode('/', $appUrl);
+			if(!strlen($bits[0])) {
+				array_shift($bits);
+			}
+			if(count($bits)) {
+				array_pop($bits);
+			}
+			if(!count($bits)) {
+				$appUrl = '/';
+			}
+			else {
+				$appUrl = '/'. $this->gfObj->string_from_array($bits, null, '/');
+			}
+		}
+		
+		$specialVars = array(
+			'_DIRNAMEOFFILE_'	=> $this->configDirname,
+			'_APPURL_'			=> $appUrl
+		);
+		return($specialVars);	
+	}//end build_special_vars()
 	//-------------------------------------------------------------------------
 	
 }//end cs_siteConfig
