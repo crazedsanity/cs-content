@@ -156,9 +156,14 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			
 			//start output buffer for displaying error.
 			ob_start();
-			$connID = mysql_connect($this->host, $this->user, $this->pass, $forceNewConnection);
-			mysql_select_db($this->dbname);
-			$connectError = ob_get_contents();
+			$connID = mysql_connect($this->host, $this->user, $this->password, $forceNewConnection);
+			if(!$connID) {
+				$connectError = mysql_error();
+			}
+			else {
+				mysql_select_db($this->dbname);
+				$connectError = ob_get_contents();
+			}
 			ob_end_clean();
 			
 			if(is_resource($connID)) {
@@ -168,6 +173,9 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 				$retval = $this->connectionID;
 			}
 			else {
+				if(is_bool($connID) && !strlen($connectError)) {
+					$connectError = "generic connection failure";
+				}
 				throw new exception(__METHOD__ .": FATAL ERROR: ". $connectError);
 			}
 		}
@@ -376,6 +384,9 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	function set_row($row){
 		if(is_numeric($row)) {
 			$this->row = $row;
+			if(!mysql_data_seek($this->result, $this->row)) {
+				throw new exception(__METHOD__ .": failed to seek row (". $this->row .")");
+			}
 		}
 		else {
 			throw new exception(__METHOD__ .": invalid data for row (". $row .")");
@@ -422,8 +433,7 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			$retval = NULL;
 		}
 		else {
-			//TODO: implement MySQL version..
-			$retval = mysql_fetch_array($this->result,$this->row);
+			$retval = mysql_fetch_array($this->result);
 		}
 		
 		return($retval);
@@ -478,16 +488,23 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			ob_start();
 			
 			$x = 0;
+			$newArr = array();
+			$tArr = array();
 			do {
 				$temp = $this->farray();
-				foreach($temp as $key=>$value) {
-					//remove the numbered indexes.
-					if(is_string($key)) {
-						$tArr[$key] = $value;
+				if(is_array($temp) && count($temp)) {
+					foreach($temp as $key=>$value) {
+						//remove the numbered indexes.
+						if(is_string($key)) {
+							$tArr[$key] = $value;
+						}
 					}
+					$newArr[$x] = $tArr;
+					$x++;
 				}
-				$newArr[$x] = $tArr;
-				$x++;
+				else {
+					throw new exception(__METHOD__ .": no data retrieved from farray()...");
+				}
 			}
 			while($this->next_row());
 			

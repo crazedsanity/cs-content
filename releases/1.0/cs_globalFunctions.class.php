@@ -20,14 +20,14 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(defined('DEBUGREMOVEHR')) {
 			$this->debugRemoveHr = constant('DEBUGREMOVEHR');
 		}
-		elseif(isset($GLOBALS['DEBUGREMOVEHR'])) {
+		if(isset($GLOBALS['DEBUGREMOVEHR'])) {
 			$this->debugRemoveHr = $GLOBALS['DEBUGREMOVEHR'];
 		}
 		
 		if(defined('DEBUGPRINTOPT')) {
 			$this->debugPrintOpt = constant('DEBUGPRINTOPT');
 		}
-		elseif(isset($GLOBALS['DEBUGPRINTOPT'])) {
+		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
 		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
@@ -837,6 +837,19 @@ class cs_globalFunctions extends cs_versionAbstract {
 		
 		return($realVals[$index]);
 	}//end interpret_bool()
+	//##########################################################################
+	
+	
+	//##########################################################################
+	public function debug_var_dump($data, $printItForMe=null, $removeHr=null) {
+		
+		ob_start();
+		var_dump($data);
+		$printThis = ob_get_contents();
+		ob_end_clean();
+		
+		return($this->debug_print($printThis, $printItForMe, $removeHr));
+	}//end debug_var_dump()
 	//##########################################################################
 
 }//end cs_globalFunctions{}

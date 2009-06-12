@@ -413,14 +413,19 @@ class cs_fileSystem extends cs_contentAbstract {
 		
 		$filename = $this->resolve_path_with_dots($filename);
 		
-		//see if it starts with a "/"...
+		//If it's a single filename beginning with a slash, strip the slash.
+		$x = array();
+		$numSlashes  = preg_match_all('/\//', $filename, $x);
+		if(preg_match('/^\/[\w]/', $filename) && !preg_match('/^\/\./', $filename) && $numSlashes == 1) {
+			$filename = preg_replace('/^\//', '', $filename);
+		}
+		
+		
 		if(preg_match("/^\//", $filename)) {
 			$retval = $filename;
 		} else {
 			$retval=$this->realcwd .'/'. $filename;
 			$retval = $this->resolve_path_with_dots($retval);
-			#debug_print(__METHOD__ .": realcwd=(". $this->realcwd .")");
-			#$this->resolve_path_with_dots($retval);
 		}
 		
 		if(!$this->check_chroot($retval, FALSE)) {

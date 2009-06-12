@@ -60,6 +60,8 @@ class cs_siteConfig extends cs_contentAbstract {
 	/** Boolean flag to determine if the object has been properly initialized or not. */
 	private $isInitialized=false;
 	
+	/** Store a list of items that need to be pushed into $GLOBALS on a given path. */
+	private $setGlobalArrays=array();
 	
 	//-------------------------------------------------------------------------
 	/**
@@ -159,10 +161,7 @@ class cs_siteConfig extends cs_contentAbstract {
 	private function parse_config() {
 		if(is_object($this->xmlReader)) {
 			$data = $this->xmlReader->get_path($this->xmlReader->get_root_element());
-			
-			$specialVars = array(
-				'_DIRNAMEOFFILE_'	=> $this->configDirname
-			);
+			$specialVars = $this->build_special_vars();
 			$parseThis = array();
 			
 			
@@ -172,6 +171,25 @@ class cs_siteConfig extends cs_contentAbstract {
 				//only handle UPPERCASE index names; lowercase indexes are special entries (i.e. "type" or "attributes"
 				if($section == strtoupper($section)) {
 					$this->configSections[] = $section;
+					
+					unset($secData['type']);
+					
+					if(is_array($secData['attributes'])) {
+						$sectionAttribs = $secData['attributes'];
+						unset($secData['attributes']);
+						
+						//put stuff into the globals scope...
+						if(isset($sectionAttribs['SETGLOBAL'])) {
+							$path = $section;
+							
+							$setPath = $path;
+							if(strlen($sectionAttribs['GLOBALARRAYLOCATION'])) {
+								$setPath = $sectionAttribs['GLOBALARRAYLOCATION'];
+							}
+							$this->setGlobalArrays[$path] = $setPath;
+						}
+					}
+					
 					foreach($secData as $itemName=>$itemValue) {
 						$attribs = array();
 						if(is_array($itemValue['attributes'])) {
@@ -212,8 +230,25 @@ class cs_siteConfig extends cs_contentAbstract {
 					}
 				}
 			}
+			
 			$this->a2p = new cs_arrayToPath($data);
 			$this->isInitialized=true;
+			
+			if(count($this->setGlobalArrays)) {
+				$globA2p = new cs_arrayToPath(&$GLOBALS);
+				foreach($this->setGlobalArrays as $configPath=>$globalsPath) {
+					if($this->a2p->get_data($configPath)) {
+						$setMe = array();
+						foreach($this->a2p->get_data($configPath) as $i=>$v) {
+							$setMe[$i] = $v['value'];
+						}
+						$globA2p->set_data($globalsPath, $setMe);
+					}
+					else {
+						throw new exception(__METHOD__ .": attempted to set global array from non-existent path (". $configPath .")");
+					}
+				}
+			}
 		}
 		else {
 			throw new exception(__METHOD__ .": xmlReader not created, object probably not initialized");
@@ -234,6 +269,7 @@ class cs_siteConfig extends cs_contentAbstract {
 	 */
 	public function get_section($section) {
 		if($this->isInitialized === true) {
+			$section = strtoupper($section);
 			$data = $this->a2p->get_data($section);
 			
 			if(is_array($data) && count($data) && $data['type'] == 'open') {
@@ -308,6 +344,36 @@ class cs_siteConfig extends cs_contentAbstract {
 		
 		return($retval);
 	}//end get_valid_sections()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	private function build_special_vars() {
+		//determine the current "APPURL" (current URL minus hostname and current filename)
+		{
+			$appUrl = $_SERVER['SCRIPT_NAME'];
+			$bits = explode('/', $appUrl);
+			if(!strlen($bits[0])) {
+				array_shift($bits);
+			}
+			if(count($bits)) {
+				array_pop($bits);
+			}
+			if(!count($bits)) {
+				$appUrl = '/';
+			}
+			else {
+				$appUrl = '/'. $this->gfObj->string_from_array($bits, null, '/');
+			}
+		}
+		
+		$specialVars = array(
+			'_DIRNAMEOFFILE_'	=> $this->configDirname,
+			'_APPURL_'			=> $appUrl
+		);
+		return($specialVars);	
+	}//end build_special_vars()
 	//-------------------------------------------------------------------------
 	
 }//end cs_siteConfig

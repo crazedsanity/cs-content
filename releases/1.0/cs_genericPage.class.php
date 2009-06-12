@@ -15,6 +15,7 @@ class cs_genericPage extends cs_contentAbstract {
 	public $templateVars	= array();	//our copy of the global templateVars
 	public $mainTemplate;				//the default layout of the site
 	public $unhandledVars=array();
+	public $printOnFinish=true;
 	
 	private $tmplDir;
 	private $libDir;
@@ -63,20 +64,21 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		//replace multiple slashes with a single one to avoid confusing other logic...
 		$mainTemplateFile = preg_replace('/(\/){2,}/', '/', $mainTemplateFile);
-		if(preg_match('/\//', $mainTemplateFile) == 1 && preg_match('/^/', $mainTemplateFile)) {
+		
+		$showMatches=array();
+		$numMatches = preg_match_all('/\//', $mainTemplateFile, $showMatches);
+		if($numMatches == 1 && preg_match('/^/', $mainTemplateFile)) {
 			$mainTemplateFile = preg_replace('/^\//', '', $mainTemplateFile);
 		}
 		
 		
-		if(strlen(dirname($mainTemplateFile)) && dirname($mainTemplateFile) !== '/' && !preg_match('/^\./', dirname($mainTemplateFile))) {
-			$this->tmplDir = dirname($mainTemplateFile);
-			$this->siteRoot = preg_replace('/\/templates$/', '', $this->tmplDir);
+		if(defined('SITE_ROOT')) {
+			$this->siteRoot = constant('SITE_ROOT');
 		}
 		else {
-			//NOTE: this **requires** that the global variable "SITE_ROOT" is already set.
-			$this->siteRoot = preg_replace('/\/public_html/', '', $_SERVER['DOCUMENT_ROOT']);
-			$this->tmplDir = $this->siteRoot .'/templates';
+			throw new exception(__METHOD__ .": required constant 'SITE_ROOT' not set");
 		}
+		$this->tmplDir = $this->siteRoot .'/templates';
 		$this->libDir = $this->siteRoot .'/lib';
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
@@ -215,7 +217,7 @@ class cs_genericPage extends cs_contentAbstract {
 
 		$reg = "/<!-- BEGIN $handle -->(.+){0,}<!-- END $handle -->/sU";
 		preg_match_all($reg, $str, $m);
-		if(!is_string($m[0][0])) {
+		if(!is_array($m) || !isset($m[0][0]) ||  !is_string($m[0][0])) {
 			#exit("set_block_row(): couldn't find '$handle' in var '$parent'");
 			$retval = FALSE;
 		} else {
@@ -284,10 +286,15 @@ class cs_genericPage extends cs_contentAbstract {
 				foreach($tags as $key=>$str) {
 					$str2 = str_replace("{", "", $str);
 					$str2 = str_replace("}", "", $str2);
-					if(!$this->templateVars[$str2] && $stripUndefVars) {
+					if(!isset($this->templateVars[$str2]) && $stripUndefVars) {
 						//TODO: set an internal pointer or something to use here, so they can see what was missed.
-						$this->templateObj->varvals[out] = str_replace($str, '', $this->templateObj->varvals[out]);
-						$this->unhandledVars[$str2]++;
+						$this->templateObj->varvals['out'] = str_replace($str, '', $this->templateObj->varvals['out']);
+						if(isset($this->unhandledVars[$str2])) {
+							$this->unhandledVars[$str2]++;
+						}
+						else {
+							$this->unhandledVars[$str2] = 1;
+						}
 					}
 				}
 				$this->templateObj->parse("out", "out");
@@ -414,7 +421,7 @@ class cs_genericPage extends cs_contentAbstract {
 		);
 		if(!isset($type) || !isset($priorityArr[$type])) {
 			//set a default type.
-			$arrayKeys = array_keys();
+			$arrayKeys = array_keys($priorityArr);
 			$type = $arrayKeys[0];
 		}
 		
@@ -541,8 +548,8 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		//NOTE: the value 30 isn't just a randomly chosen length; it's the minimum
 		// number of characters to have a block row.  EG: "<!-- BEGIN x --><!-- END x -->"
-		$templateContents = $this->templateVars[$templateVar];
-		if(strlen($templateContents) >= 30) {
+		if(isset($this->templateVars[$templateVar]) && strlen($this->templateVars[$templateVar]) >= 30) {
+			$templateContents = $this->templateVars[$templateVar];
 			//looks good to me.  Run the regex...
 			$flags = PREG_PATTERN_ORDER;
 			$reg = "/<!-- BEGIN (\S{1,}) -->/";
@@ -588,20 +595,23 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
-	function rip_all_block_rows($templateVar="content", $exceptionArr=array()) {
+	function rip_all_block_rows($templateVar="content", $exceptionArr=array(), $removeDefs=0) {
 		$rowDefs = $this->get_block_row_defs($templateVar);
 		
-		$useTheseBlockRows = $rowDefs['ordered'];
 		
 		$retval = array();
-		if(is_array($useTheseBlockRows)) {
-			foreach($useTheseBlockRows as $blockRowName)
-			{
-				if(!in_array($blockRowName, $exceptionArr))
+		
+		if(is_array($rowDefs) && isset($rowDefs['ordered'])) {
+			$useTheseBlockRows = $rowDefs['ordered'];
+			if(is_array($useTheseBlockRows)) {
+				foreach($useTheseBlockRows as $blockRowName)
 				{
-					//remove the block row.
-					$rowData = $this->set_block_row($templateVar, $blockRowName);
-					$retval[$blockRowName] = $rowData;
+					if(!is_array($exceptionArr) || !in_array($blockRowName, $exceptionArr))
+					{
+						//remove the block row.
+						$rowData = $this->set_block_row($templateVar, $blockRowName, $removeDefs);
+						$retval[$blockRowName] = $rowData;
+					}
 				}
 			}
 		}
@@ -613,9 +623,9 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function set_all_block_rows($templateVar="content", $exceptionArr=array())
+	public function set_all_block_rows($templateVar="content", $exceptionArr=array(), $removeDefs=0)
 	{
-		$retval = $this->rip_all_block_rows($templateVar, $exceptionArr);
+		$retval = $this->rip_all_block_rows($templateVar, $exceptionArr, $removeDefs);
 		return($retval);
 	}//end set_all_block_rows()
 	//---------------------------------------------------------------------------------------------
