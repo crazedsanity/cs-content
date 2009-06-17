@@ -1115,6 +1115,22 @@ class cs_phpDB__pgsql extends cs_phpDBAbstract {
 	
 	
 	
+	//=========================================================================
+	public function lastID($sequence) {
+		
+		if(strlen($sequence)) {
+			$retval = $this->get_currval($sequence);
+		}
+		else {
+			throw new exception(__METHOD__ .": no sequence specified (required by ". $this->dbType .")");
+		}
+		
+		return($retval);
+	}//end lastID()
+	//=========================================================================
+	
+	
+	
 } // end class phpDB
 
 ?>
