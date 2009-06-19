@@ -129,7 +129,10 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 		$this->isConnected = FALSE;
 		$retval = null;
 		if($this->connectionID != -1) {
-			$retval = mysqlclose($this->connectionID);
+			$retval = mysql_close($this->connectionID);
+			$this->transStatus = null;
+			$this->inTrans=null;
+			$this->transactionTree=null;
 		}
 		else {
 			throw new exception(__METHOD__ .": Failed to close connection: connection is invalid");
@@ -152,7 +155,7 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			$this->set_db_info($dbParams);
 		}
 		
-		if($this->paramsAreSet === TRUE && $this->isConnected === FALSE) {
+		if($this->paramsAreSet === TRUE) {
 			
 			//start output buffer for displaying error.
 			ob_start();
