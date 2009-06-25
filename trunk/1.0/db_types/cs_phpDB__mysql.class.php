@@ -772,6 +772,19 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	
 	
 	
+	//=========================================================================
+	public function select_db($dbName) {
+		if(mysql_select_db($dbName, $this->connectionID)) { 
+			$this->dbname = $dbName;
+		}
+		else {
+			throw new exception(__METHOD__ .": failed to select db (". $dbName .")");
+		}
+	}//end select_db()
+	//=========================================================================
+	
+	
+	
 } // end class phpDB
 
 ?>
