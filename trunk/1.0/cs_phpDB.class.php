@@ -77,6 +77,80 @@ class cs_phpDB extends cs_contentAbstract {
 	}//end get_dbtype()
 	//=========================================================================
 	
+	
+	
+	//=========================================================================
+	/**
+	 * Performs queries which require results.  Passing $indexField returns a 
+	 * complex array indexed from that field; passing $valueField will change 
+	 * it to a name=>value formatted array.
+	 * 
+	 * NOTE:: when using an index field, be sure it is guaranteed to be unique, 
+	 * 	i.e. it is a primary key!  If duplicates are found, the database class 
+	 * 	will throw an exception!
+	 */
+	public function run_query($sql, $indexField=null, $valueField=null) {
+		
+		$retval = array();
+		
+		//length must be 19 as that's about the shortest valid SQL:  "select * from table"
+		if(strlen($sql) >= 19) {
+			$this->exec($sql);
+			
+			$numRows = $this->numRows();
+			$dbError = $this->errorMsg();
+			if($numRows > 0 && !strlen($dbError)) {
+				if(strlen($indexField) && (is_null($valueField) || !strlen($valueField))) {
+					//return a complex array based on a given field.
+					$retval = $this->farray_fieldnames($indexField, null, 0);
+				}
+				elseif(strlen($indexField) && strlen($valueField)) {
+					//return an array as name=>value pairs.
+					$retval = $this->farray_nvp($indexField, $valueField);
+				}
+				else {
+					$retval = $this->farray_fieldnames();
+				}
+			}
+			elseif($numRows == 0 && !strlen($dbError)) {
+				$retval = false;
+			}
+			else {
+				$this->exception_handler(__METHOD__ .": no rows (". $numRows .") or dbError::: ". $dbError ."<BR>\nSQL::: ". $sql);
+			}
+		}
+		else {
+			$this->exception_handler(__METHOD__ .": invalid length SQL (". $sql .")");
+		}
+		
+		return($retval);
+	}//end run_query()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	/**
+	 * Handles performing the insert statement & returning the last inserted ID.
+	 */
+	protected function run_insert($sql) {
+		
+		$this->exec($sql);
+		
+		if($this->numAffected() == 1 && !strlen($this->errorMsg())) {
+			//retrieve the ID just created.
+			$retval = $this->lastID();
+		}
+		else {
+			//something broke...
+			$this->exception_handler(__METHOD__ .": failed to insert, rows=(". $this->numRows .")... "
+				."ERROR::: ". $this->errorMsg() ."\n -- SQL:::: ". $sql);
+		}
+		
+		return($retval);
+	}//end run_insert()
+	//=========================================================================
+	
 } // end class phpDB
 
 ?>

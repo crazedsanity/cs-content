@@ -692,9 +692,9 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	 * get last ID of last INSERT statement
 	 */
 	function lastID() {
-		$retval = mysql_insert_id();
+		$retval = mysql_insert_id($this->connectionID);
 		return($retval);
-	}//end lastOID()
+	}//end lastID()
 	//=========================================================================
 	
 	
