@@ -277,7 +277,7 @@ class cs_siteConfig extends cs_contentAbstract {
 				$retval = $data;
 			}
 			else {
-				throw new exception(__METHOD__ .": invalid section or no data (". $data['type'] .")");
+				throw new exception(__METHOD__ .": invalid section (". $section .") or no data (". $data['type'] .")");
 			}
 		}
 		else {
