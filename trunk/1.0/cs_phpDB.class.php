@@ -116,11 +116,11 @@ class cs_phpDB extends cs_contentAbstract {
 				$retval = false;
 			}
 			else {
-				$this->exception_handler(__METHOD__ .": no rows (". $numRows .") or dbError::: ". $dbError ."<BR>\nSQL::: ". $sql);
+				throw new exception(__METHOD__ .": no rows (". $numRows .") or dbError::: ". $dbError ."<BR>\nSQL::: ". $sql);
 			}
 		}
 		else {
-			$this->exception_handler(__METHOD__ .": invalid length SQL (". $sql .")");
+			throw new exception(__METHOD__ .": invalid length SQL (". $sql .")");
 		}
 		
 		return($retval);
@@ -143,7 +143,7 @@ class cs_phpDB extends cs_contentAbstract {
 		}
 		else {
 			//something broke...
-			$this->exception_handler(__METHOD__ .": failed to insert, rows=(". $this->numRows .")... "
+			throw new exception(__METHOD__ .": failed to insert, rows=(". $this->numRows .")... "
 				."ERROR::: ". $this->errorMsg() ."\n -- SQL:::: ". $sql);
 		}
 		
