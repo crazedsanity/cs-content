@@ -133,7 +133,7 @@ class cs_phpDB extends cs_contentAbstract {
 	/**
 	 * Handles performing the insert statement & returning the last inserted ID.
 	 */
-	protected function run_insert($sql) {
+	public function run_insert($sql) {
 		
 		$this->exec($sql);
 		
