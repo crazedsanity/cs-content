@@ -283,6 +283,14 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	
 	
 	
+	//=========================================================================
+	public function ping() {
+		return(mysql_ping($this->connectionID));
+	}//end ping()
+	//=========================================================================
+	
+	
+	
 	
 	////////////////////
 	// Cursor movement

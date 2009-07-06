@@ -305,6 +305,14 @@ class cs_phpDB__pgsql extends cs_phpDBAbstract {
 	
 	
 	
+	//=========================================================================
+	public function ping() {
+		return(pg_ping($this->connectionID));
+	}//end ping()
+	//=========================================================================
+	
+	
+	
 	
 	////////////////////
 	// Cursor movement
