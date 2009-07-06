@@ -151,6 +151,25 @@ class cs_phpDB extends cs_contentAbstract {
 	}//end run_insert()
 	//=========================================================================
 	
+	
+	
+	//=========================================================================
+	/**
+	 * Performs the update & returns how many rows were affected.
+	 */
+	public function run_update($sql, $zeroIsOk=false) {
+		$this->exec($sql);
+		
+		$numAffected = $this->numAffected();
+		
+		if($numAffected==0 && $zeroIsOk == false) {
+			throw new exception(__METHOD__ .": no rows updated (". $numAffected .")");
+		}
+		
+		return($numAffected);
+	}//end run_update()
+	//=========================================================================
+	
 } // end class phpDB
 
 ?>

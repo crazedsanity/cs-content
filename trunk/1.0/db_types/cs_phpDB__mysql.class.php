@@ -635,11 +635,10 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	 * Returns the number of rows in a result (from a SELECT query).
 	 */
 	function numRows() {
-		if ($this->result == null) {
+		if ($this->result == null || !is_resource($this->result)) {
 			$retval = 0;
 		}
 		else {
-			//TODO: implement MySQL version..
 			$this->numrows = mysql_num_rows($this->result);
 			$retval = $this->numrows;
 		}
@@ -670,7 +669,6 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			$retval = 0;
 		}
 		else {
-			//TODO: implement MySQL version..
 			$retval = mysql_num_fields($this->result);
 		}
 		return($retval);	
