@@ -42,6 +42,9 @@ class cs_siteConfig extends cs_contentAbstract {
 	/** Directory for the config file. */
 	private $configDirname;
 	
+	/** Location of the configuration file itself. */
+	private $configFile;
+	
 	/** Active section of the full site configuration. */
 	private $activeSection;
 	
@@ -84,6 +87,7 @@ class cs_siteConfig extends cs_contentAbstract {
 		if(strlen($configFileLocation) && file_exists($configFileLocation)) {
 			
 			$this->configDirname = dirname($configFileLocation);
+			$this->configFile = $configFileLocation;
 			$this->fs = new cs_fileSystem($this->configDirname);
 			
 			$this->xmlReader = new cs_phpxmlParser($this->fs->read($configFileLocation));
@@ -370,6 +374,8 @@ class cs_siteConfig extends cs_contentAbstract {
 		
 		$specialVars = array(
 			'_DIRNAMEOFFILE_'	=> $this->configDirname,
+			'_CONFIGFILE_'		=> $this->configFile,
+			'_THISFILE_'		=> $this->configFile,
 			'_APPURL_'			=> $appUrl
 		);
 		return($specialVars);	
