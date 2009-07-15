@@ -791,6 +791,31 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	
 	
 	
+	//=========================================================================
+	public function beginTrans() {
+		$this->exec('BEGIN');
+		return(true);
+	}//end beginTrans()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function commitTrans() {
+		$this->exec('COMMIT');
+		return(true);
+	}//end commitTrans()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function rollbackTrans() {
+		$this->exec('ROLLBACK');
+		return(true);
+	}//end rollbackTrans()
+	//=========================================================================
+	
 } // end class phpDB
 
 ?>
