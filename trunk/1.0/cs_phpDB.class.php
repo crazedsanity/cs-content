@@ -138,13 +138,13 @@ class cs_phpDB extends cs_contentAbstract {
 	/**
 	 * Handles performing the insert statement & returning the last inserted ID.
 	 */
-	public function run_insert($sql) {
+	public function run_insert($sql, $sequence='null') {
 		
 		$this->exec($sql);
 		
 		if($this->numAffected() == 1 && !strlen($this->errorMsg())) {
 			//retrieve the ID just created.
-			$retval = $this->lastID();
+			$retval = $this->lastID($sequence);
 		}
 		else {
 			//something broke...
