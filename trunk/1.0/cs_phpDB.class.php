@@ -31,6 +31,7 @@ class cs_phpDB extends cs_contentAbstract {
 	
 	private $dbLayerObj;
 	private $dbType;
+	public $connectParams = array();
 	
 	//=========================================================================
 	public function __construct($type='pgsql') {
@@ -60,6 +61,10 @@ class cs_phpDB extends cs_contentAbstract {
 	 */
 	public function __call($methodName, $args) {
 		if(method_exists($this->dbLayerObj, $methodName)) {
+			if($methodName == 'connect' && is_array($args[0])) {
+				//capture the connection parameters.
+				$this->connectParams = $args[0];
+			}
 			$retval = call_user_func_array(array($this->dbLayerObj, $methodName), $args);
 		}
 		else {
@@ -133,13 +138,13 @@ class cs_phpDB extends cs_contentAbstract {
 	/**
 	 * Handles performing the insert statement & returning the last inserted ID.
 	 */
-	public function run_insert($sql, $sequence='null') {
+	public function run_insert($sql) {
 		
 		$this->exec($sql);
 		
 		if($this->numAffected() == 1 && !strlen($this->errorMsg())) {
 			//retrieve the ID just created.
-			$retval = $this->lastID($sequence);
+			$retval = $this->lastID();
 		}
 		else {
 			//something broke...
@@ -163,11 +168,24 @@ class cs_phpDB extends cs_contentAbstract {
 		$numAffected = $this->numAffected();
 		
 		if($numAffected==0 && $zeroIsOk == false) {
-			throw new exception(__METHOD__ .": no rows updated (". $numAffected .")");
+			throw new exception(__METHOD__ .": no rows updated (". $numAffected ."), SQL::: ". $sql);
 		}
 		
 		return($numAffected);
 	}//end run_update()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function reconnect() {
+		if(is_array($this->connectParams) && count($this->connectParams)) {
+			$this->dbLayerObj->connect($this->connectParams, true);
+		}
+		else {
+			throw new exception(__METHOD__ .": no connection parameters stored");
+		}
+	}//end reconnect()
 	//=========================================================================
 	
 } // end class phpDB

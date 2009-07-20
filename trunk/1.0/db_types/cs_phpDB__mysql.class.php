@@ -793,7 +793,7 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	
 	//=========================================================================
 	public function beginTrans() {
-		$this->exec('BEGIN');
+		$this->exec('BEGIN;SET autocommit=0;');
 		return(true);
 	}//end beginTrans()
 	//=========================================================================
