@@ -54,6 +54,9 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$newSetting = 0;
 			}
 		}
+		elseif(!is_bool($newSetting) && is_bool($this->oldForceSqlQuotes)) {
+			$newSetting = $this->oldForceSqlQuotes;
+		}
 		else {
 			throw new exception(__METHOD__ .": invalid new setting (". $newSetting .")");
 		}
@@ -191,13 +194,13 @@ class cs_globalFunctions extends cs_versionAbstract {
 				foreach($array as $key=>$value) {
 					@$tmp[0] = $this->create_list($tmp[0], $key);
 					//clean the string, if required.
-					if($cleanString) {
+					if(is_null($value)) {
+						$value = "NULL";
+					}
+					elseif($cleanString) {
 						//make sure it's not full of poo...
 						$value = $this->cleanString($value, "sql");
 						#$value = "'". $value ."'";
-					}
-					if((is_null($value)) OR ($value == "")) {
-						$value = "NULL";
 					}
 					@$tmp[1] = $this->create_list($tmp[1], $value, ",", 1);
 				}

@@ -165,9 +165,13 @@ class cs_phpDB extends cs_contentAbstract {
 	public function run_update($sql, $zeroIsOk=false) {
 		$this->exec($sql);
 		
+		$dberror = $this->errorMsg();
 		$numAffected = $this->numAffected();
 		
-		if($numAffected==0 && $zeroIsOk == false) {
+		if(strlen($dberror)) {
+			throw new exception(__METHOD__ .": error while running update::: ". $dberror ." -- SQL::: ". $sql);
+		}
+		elseif($numAffected==0 && $zeroIsOk == false) {
 			throw new exception(__METHOD__ .": no rows updated (". $numAffected ."), SQL::: ". $sql);
 		}
 		
