@@ -282,7 +282,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 						if(!is_numeric($value) && isset($separator)) {
 							$value = "'". $value ."'";	
 						}
-						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ", $this->forceSqlQuotes);
+						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ");
 					}
 				}
 				break;
