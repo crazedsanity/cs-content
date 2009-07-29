@@ -149,8 +149,9 @@ class cs_tabs extends cs_contentAbstract {
 				}
 				
 				$parseThis = array(
-					'title'	=> $tabName,
-					'url'	=> $url
+					'title'			=> $tabName,
+					'url'			=> $url,
+					'cleanTitle'	=> preg_replace('/[^a-zA-Z0-9]/', '_', $tabName)
 				);
 				$finalString .= $this->csPageObj->mini_parser($useTabContent, $parseThis, '%%', '%%');
 			}
