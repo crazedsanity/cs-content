@@ -195,6 +195,7 @@ class cs_fileSystem extends cs_contentAbstract {
 	 */
 	public function get_fileinfo($tFile) {
 		
+		//TODO: shouldn't require putting the "@" in front of these calls!
 		$retval = array(
 			"size"		=> @filesize($tFile),
 			"type"		=> @filetype($tFile),
