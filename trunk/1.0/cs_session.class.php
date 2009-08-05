@@ -13,10 +13,9 @@ require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.p
 
 class cs_session extends cs_contentAbstract {
 
-	protected $db;
-	public $uid;
-	public $sid;
-	public $sid_check = 1;
+	protected $uid;
+	protected $sid;
+	protected $sid_check = 1;
 	
 	//-------------------------------------------------------------------------
 	/**
@@ -27,7 +26,7 @@ class cs_session extends cs_contentAbstract {
 	 * 								used as the session name.
 	 */
 	function __construct($createSession=1) {
-		parent::__construct(false);
+		parent::__construct(true);
 		if($createSession) {
 			if(!is_null($createSession) && strlen($createSession) && !is_numeric($createSession)) {
 				session_name($createSession);
@@ -138,6 +137,19 @@ class cs_session extends cs_contentAbstract {
 		}
 		return($retval);
 	}//end drop_cookie()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * PHP5 magic method for retrieving the value of internal vars; this allows 
+	 * code to find the value of these variables, but not modify them (modifying 
+	 * requires the "__set($var,$val)" method).
+	 */
+	public function __get($var) {
+		return($this->$var);
+	}//end __get()
 	//-------------------------------------------------------------------------
 
 
