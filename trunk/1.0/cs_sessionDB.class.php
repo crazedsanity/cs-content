@@ -93,7 +93,7 @@ class cs_sessionDB extends cs_session {
 	
 	//-------------------------------------------------------------------------
 	private function load_table() {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
+		$filename = dirname(__FILE__) .'/schema/db_session_schema.'. $this->db->get_dbtype() .'.sql';
 		if(file_exists($filename)) {
 			try {
 				$this->db->run_update(file_get_contents($filename),true);
