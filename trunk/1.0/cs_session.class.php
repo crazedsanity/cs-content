@@ -25,10 +25,10 @@ class cs_session extends cs_contentAbstract {
 	 * 								this parameter is non-null and non-numeric, the value will be 
 	 * 								used as the session name.
 	 */
-	function __construct($createSession=1) {
+	function __construct($createSession=true) {
 		parent::__construct(true);
 		if($createSession) {
-			if(!is_null($createSession) && strlen($createSession) && !is_numeric($createSession)) {
+			if(is_string($createSession) && strlen($createSession) >2) {
 				session_name($createSession);
 			}
 			

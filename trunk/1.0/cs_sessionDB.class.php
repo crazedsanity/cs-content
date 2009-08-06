@@ -26,21 +26,6 @@ class cs_sessionDB extends cs_session {
 	function __construct() {
 		
 		
-		require_once(dirname(__FILE__) .'/cs_fileSystem.class.php');
-		$this->logger = new cs_fileSystem(constant('RWDIR'));
-		$this->logger->create_file('session.log',true);
-		$this->logger->openFile('session.log');
-		
-		//now tell PHP to use this class's methods for saving the session.
-		session_set_save_handler(
-			array(&$this, 'sessdb_open'),
-			array(&$this, 'sessdb_close'),
-			array(&$this, 'sessdb_read'),
-			array(&$this, 'sessdb_write'),
-			array(&$this, 'sessdb_destroy'),
-			array(&$this, 'sessdb_gc')
-		);
-		
 		//map some constants to connection parameters.
 		//NOTE::: all constants should be prefixed...
 		$constantPrefix = 'SESSION_DB_';
@@ -64,6 +49,16 @@ class cs_sessionDB extends cs_session {
 			$this->load_table();
 		}
 		
+		//now tell PHP to use this class's methods for saving the session.
+		session_set_save_handler(
+			array(&$this, 'sessdb_open'),
+			array(&$this, 'sessdb_close'),
+			array(&$this, 'sessdb_read'),
+			array(&$this, 'sessdb_write'),
+			array(&$this, 'sessdb_destroy'),
+			array(&$this, 'sessdb_gc')
+		);
+		
 		parent::__construct(true);
 		
 		//Stop things from going into an audit log... see 
@@ -81,7 +76,6 @@ class cs_sessionDB extends cs_session {
 	 * Determines if the appropriate table exists in the database.
 	 */
 	public function sessdb_table_exists() {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
 		try {
 			$test = $this->db->run_query("SELECT * FROM ". $this->tableName .
 					" ORDER BY ". $this->tablePKey ." LIMIT 1");
@@ -90,7 +84,6 @@ class cs_sessionDB extends cs_session {
 		catch(exception $e) {
 			$exists = false;
 		}
-		$this->logger->append_to_file(__METHOD__ .": result=(". $exists .")". microtime(true));
 		
 		return($exists);
 	}//end sessdb_table_exists()
@@ -101,7 +94,6 @@ class cs_sessionDB extends cs_session {
 	//-------------------------------------------------------------------------
 	private function load_table() {
 		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
-		$filename = dirname(__FILE__) .'/schema/db_session_schema.'. $this->db->get_dbtype() .'.sql';
 		if(file_exists($filename)) {
 			try {
 				$this->db->run_update(file_get_contents($filename),true);
@@ -124,32 +116,24 @@ class cs_sessionDB extends cs_session {
 	
 	//-------------------------------------------------------------------------
 	protected function is_valid_sid($sid) {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
 		$isValid = false;
 		if(strlen($sid) == 32) {
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 			try {
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 				$sql = "SELECT * FROM ". $this->tableName ." WHERE session_id='". 
 						$sid ."'";
 				$this->db->run_query($sql);
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 				$numrows = $this->db->numRows();
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 				if($numrows == 1) {
 					$isValid = true;
 				}
 				elseif($numrows > 0 || $numrows < 0) {
 					throw new exception(__METHOD__ .": invalid numrows returned (". $numrows .")");
 				}
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ ."), numrows=(". $numrows ."), SQL::: ". $sql ." ". microtime(true));
 			}
 			catch(exception $e) {
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 				//well... do nothing I guess.
 			}
 		}
-		$this->logger->append_to_file(__METHOD__ .": result=(". $isValid .")". microtime(true));
 		
 		return($isValid);
 	}//end is_valid_sid()
@@ -162,8 +146,6 @@ class cs_sessionDB extends cs_session {
 	 * Open the session (doesn't really do anything)
 	 */
 	public function sessdb_open($savePath, $sessionName) {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
-		$this->logger->append_to_file(__METHOD__ .": done". microtime(true));
 		return(true);
 	}//end sessdb_open()
 	//-------------------------------------------------------------------------
@@ -175,8 +157,6 @@ class cs_sessionDB extends cs_session {
 	 * Close the session (call the "gc" method)
 	 */
 	public function sessdb_close() {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
-		$this->logger->append_to_file(__METHOD__ .": done". microtime(true));
 		return($this->sessdb_gc(0));
 	}//end sessdb_close()
 	//-------------------------------------------------------------------------
@@ -189,7 +169,6 @@ class cs_sessionDB extends cs_session {
 	 * an empty string instead of NULL.
 	 */
 	public function sessdb_read($sid) {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
 		$retval = '';
 		try {
 			$sql = "SELECT * FROM ". $this->tableName ." WHERE session_id='". 
@@ -203,7 +182,6 @@ class cs_sessionDB extends cs_session {
 		catch(exception $e) {
 			//no throwing exceptions...
 		}
-		$this->logger->append_to_file(__METHOD__ .": result=(". $retval .")". microtime(true));
 		return($retval);
 	}//end sessdb_read()
 	//-------------------------------------------------------------------------
@@ -212,36 +190,33 @@ class cs_sessionDB extends cs_session {
 	
 	//-------------------------------------------------------------------------
 	public function sessdb_write($sid, $data) {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
 		$data = array(
 			'session_data'	=> $data,
 			'user_id'		=> null
 		);
+		$cleanString = array(
+			'session_data'		=> 'sql',
+			'user_id'			=> 'numeric'
+		);
 		
 		
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 		
 		//pull the uid out of the session...
 		if(defined('SESSION_DBSAVE_UIDPATH')) {
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 			$a2p = new cs_arrayToPath($_SESSION);
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 			$uidVal = $a2p->get_data(constant('SESSION_DBSAVE_UIDPATH'));
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 			
 			if(is_string($uidVal) || is_numeric($uidVal)) {
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 				$data['user_id'] = $uidVal;
 			}
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 		}
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 		
 		$afterSql = "";
 		if($this->is_valid_sid($sid)) {
 			$type = 'update';
 			$sql = "UPDATE ". $this->tableName ." SET ";
 			$afterSql = "WHERE session_id='". $sid ."'";
+			$data['last_updated'] = 'NOW()';
 			$secondArg = false;
 		}
 		else {
@@ -250,19 +225,15 @@ class cs_sessionDB extends cs_session {
 			$data['session_id'] = $sid;
 			$secondArg = $this->sequenceName;
 		}
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ .") ". microtime(true));
 		
-		$sql .= $this->gfObj->string_from_array($data, $type, null, 'sql') . $afterSql;
+		$sql .= $this->gfObj->string_from_array($data, $type, null, $cleanString) .' '. $afterSql;
 		try {
 			$funcName = 'run_'. $type;
 			$res = $this->db->$funcName($sql, $secondArg);
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ ."), SQL::: ". $sql ." ". microtime(true));
 		}
 		catch(exception $e) {
 			//umm... yeah.
-		$this->logger->append_to_file(__METHOD__ .": still going, line=(". __LINE__ ."), EXCEPTION::: ". $e->getMessage() ."\n ". microtime(true));
 		}
-		$this->logger->append_to_file(__METHOD__ .": done". microtime(true));
 		
 		return(true);
 	}//end sessdb_write()
@@ -272,7 +243,6 @@ class cs_sessionDB extends cs_session {
 	
 	//-------------------------------------------------------------------------
 	public function sessdb_destroy($sid) {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
 		try {
 			$sql = "DELETE FROM ". $this->tableName ." WHERE session_id='". $sid ."'";
 			$this->db->run_update($sql, true);
@@ -280,7 +250,6 @@ class cs_sessionDB extends cs_session {
 		catch(exception $e) {
 			//do... nothing?
 		}
-		$this->logger->append_to_file(__METHOD__ .": done". microtime(true));
 		return(true);
 	}//end sessdb_destroy()
 	//-------------------------------------------------------------------------
@@ -293,7 +262,6 @@ class cs_sessionDB extends cs_session {
 	 * Anything that is older than that time will be purged (gc='garbage collector').
 	 */
 	public function sessdb_gc($maxLifetime=null) {
-		$this->logger->append_to_file(__METHOD__ .": starting... ". microtime(true));
 		
 		$nowTime = date('Y-m-d H:i:s');
 		if(is_null($maxLifetime) || !is_numeric($maxLifetime) || $maxLifetime < 0) {
@@ -306,8 +274,6 @@ class cs_sessionDB extends cs_session {
 		$dt2 = date('Y-m-d H:i:s', $dt1);
 		
 		
-		$this->logger->append_to_file(__METHOD__ .": still going, dt2=(". $dt2 .").. ". microtime(true));
-		
 		
 		try {
 			//destroy old sessions, but don't complain if nothing is deleted.
@@ -317,7 +283,6 @@ class cs_sessionDB extends cs_session {
 		catch(exception $e) {
 			//probably should do something here.
 		}
-		$this->logger->append_to_file(__METHOD__ .": done". microtime(true));
 		
 		return(true);
 		

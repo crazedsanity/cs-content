@@ -134,6 +134,14 @@ class contentSystem extends cs_contentAbstract {
 	 * Creates internal objects & prepares for later usage.
 	 */
 	private function initialize_locals() {
+		
+		//create a session that gets stored in a database if they so desire...
+		if(defined('SESSION_DBSAVE')) {
+			require_once(dirname(__FILE__) .'/cs_sessionDB.class.php');
+			$obj = new cs_sessionDB();
+			$this->handle_session($obj);
+		}
+		
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
