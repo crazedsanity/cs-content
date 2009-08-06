@@ -216,7 +216,7 @@ class cs_siteConfig extends cs_contentAbstract {
 							$itemValue = $this->gfObj->mini_parser($itemValue, $parseThis, '{', '}');
 						}
 						
-						if($attribs['CLEANPATH']) {
+						if(isset($attribs['CLEANPATH'])) {
 							$itemValue = $this->fs->resolve_path_with_dots($itemValue);
 						}
 						
@@ -225,10 +225,20 @@ class cs_siteConfig extends cs_contentAbstract {
 						$data[$section][$itemName]['value'] = $itemValue;
 						
 						$setVarIndex = $this->setVarPrefix . $itemName;
-						if($attribs['SETGLOBAL']) {
+						if(isset($attribs['SETGLOBAL'])) {
 							$GLOBALS[$setVarIndex] = $itemValue;
 						}
-						if($attribs['SETCONSTANT']) {
+						if(isset($attribs['SETCONSTANT'])) {
+							if(isset($attribs['SETCONSTANTPREFIX'])) {
+								//did they give a specific prefix, or just a number/true?
+								if(strlen($attribs['SETCONSTANTPREFIX']) == 1) {
+									$setVarIndex = $section ."-". $setVarIndex;
+								}
+								else {
+									//use the prefix they gave.
+									$setVarIndex = $attribs['SETCONSTANTPREFIX'] ."-". $setVarIndex;
+								}
+							}
 							define($setVarIndex, $itemValue);
 						}
 					}
