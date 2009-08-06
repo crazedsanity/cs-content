@@ -195,17 +195,18 @@ class cs_fileSystem extends cs_contentAbstract {
 	 */
 	public function get_fileinfo($tFile) {
 		
+		//TODO: shouldn't require putting the "@" in front of these calls!
 		$retval = array(
-			"size"		=> filesize($tFile),
+			"size"		=> @filesize($tFile),
 			"type"		=> @filetype($tFile),
-			"accessed"	=> fileatime($tFile),
-			"modified"	=> filemtime($tFile),
-			"owner"		=> $this->my_getuser_group(fileowner($tFile), 'uid'),
-			"uid"		=> fileowner($tFile),
-			"group"		=> $this->my_getuser_group(filegroup($tFile), 'gid'),
-			"gid"		=> filegroup($tFile),
-			"perms"		=> $this->translate_perms(fileperms($tFile)),
-			"perms_num"	=> substr(sprintf('%o', fileperms($tFile)), -4)
+			"accessed"	=> @fileatime($tFile),
+			"modified"	=> @filemtime($tFile),
+			"owner"		=> @$this->my_getuser_group(fileowner($tFile), 'uid'),
+			"uid"		=> @fileowner($tFile),
+			"group"		=> @$this->my_getuser_group(filegroup($tFile), 'gid'),
+			"gid"		=> @filegroup($tFile),
+			"perms"		=> @$this->translate_perms(fileperms($tFile)),
+			"perms_num"	=> @substr(sprintf('%o', fileperms($tFile)), -4)
 		);
 		
 		return($retval);

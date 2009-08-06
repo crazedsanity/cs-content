@@ -42,6 +42,9 @@ class cs_siteConfig extends cs_contentAbstract {
 	/** Directory for the config file. */
 	private $configDirname;
 	
+	/** Location of the configuration file itself. */
+	private $configFile;
+	
 	/** Active section of the full site configuration. */
 	private $activeSection;
 	
@@ -84,6 +87,7 @@ class cs_siteConfig extends cs_contentAbstract {
 		if(strlen($configFileLocation) && file_exists($configFileLocation)) {
 			
 			$this->configDirname = dirname($configFileLocation);
+			$this->configFile = $configFileLocation;
 			$this->fs = new cs_fileSystem($this->configDirname);
 			
 			$this->xmlReader = new cs_phpxmlParser($this->fs->read($configFileLocation));
@@ -212,7 +216,7 @@ class cs_siteConfig extends cs_contentAbstract {
 							$itemValue = $this->gfObj->mini_parser($itemValue, $parseThis, '{', '}');
 						}
 						
-						if($attribs['CLEANPATH']) {
+						if(isset($attribs['CLEANPATH'])) {
 							$itemValue = $this->fs->resolve_path_with_dots($itemValue);
 						}
 						
@@ -221,10 +225,20 @@ class cs_siteConfig extends cs_contentAbstract {
 						$data[$section][$itemName]['value'] = $itemValue;
 						
 						$setVarIndex = $this->setVarPrefix . $itemName;
-						if($attribs['SETGLOBAL']) {
+						if(isset($attribs['SETGLOBAL'])) {
 							$GLOBALS[$setVarIndex] = $itemValue;
 						}
-						if($attribs['SETCONSTANT']) {
+						if(isset($attribs['SETCONSTANT'])) {
+							if(isset($attribs['SETCONSTANTPREFIX'])) {
+								//did they give a specific prefix, or just a number/true?
+								if(strlen($attribs['SETCONSTANTPREFIX']) == 1) {
+									$setVarIndex = $section ."-". $setVarIndex;
+								}
+								else {
+									//use the prefix they gave.
+									$setVarIndex = $attribs['SETCONSTANTPREFIX'] ."-". $setVarIndex;
+								}
+							}
 							define($setVarIndex, $itemValue);
 						}
 					}
@@ -277,7 +291,7 @@ class cs_siteConfig extends cs_contentAbstract {
 				$retval = $data;
 			}
 			else {
-				throw new exception(__METHOD__ .": invalid section or no data (". $data['type'] .")");
+				throw new exception(__METHOD__ .": invalid section (". $section .") or no data (". $data['type'] .")");
 			}
 		}
 		else {
@@ -370,6 +384,8 @@ class cs_siteConfig extends cs_contentAbstract {
 		
 		$specialVars = array(
 			'_DIRNAMEOFFILE_'	=> $this->configDirname,
+			'_CONFIGFILE_'		=> $this->configFile,
+			'_THISFILE_'		=> $this->configFile,
 			'_APPURL_'			=> $appUrl
 		);
 		return($specialVars);	

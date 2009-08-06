@@ -129,7 +129,10 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 		$this->isConnected = FALSE;
 		$retval = null;
 		if($this->connectionID != -1) {
-			$retval = mysqlclose($this->connectionID);
+			$retval = mysql_close($this->connectionID);
+			$this->transStatus = null;
+			$this->inTrans=null;
+			$this->transactionTree=null;
 		}
 		else {
 			throw new exception(__METHOD__ .": Failed to close connection: connection is invalid");
@@ -152,7 +155,7 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			$this->set_db_info($dbParams);
 		}
 		
-		if($this->paramsAreSet === TRUE && $this->isConnected === FALSE) {
+		if($this->paramsAreSet === TRUE) {
 			
 			//start output buffer for displaying error.
 			ob_start();
@@ -276,6 +279,14 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 
 		return($retVal);
 	}//end errorMsg()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function ping() {
+		return(mysql_ping($this->connectionID));
+	}//end ping()
 	//=========================================================================
 	
 	
@@ -632,11 +643,10 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	 * Returns the number of rows in a result (from a SELECT query).
 	 */
 	function numRows() {
-		if ($this->result == null) {
+		if ($this->result == null || !is_resource($this->result)) {
 			$retval = 0;
 		}
 		else {
-			//TODO: implement MySQL version..
 			$this->numrows = mysql_num_rows($this->result);
 			$retval = $this->numrows;
 		}
@@ -667,7 +677,6 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 			$retval = 0;
 		}
 		else {
-			//TODO: implement MySQL version..
 			$retval = mysql_num_fields($this->result);
 		}
 		return($retval);	
@@ -689,9 +698,9 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	 * get last ID of last INSERT statement
 	 */
 	function lastID() {
-		$retval = mysql_insert_id();
+		$retval = mysql_insert_id($this->connectionID);
 		return($retval);
-	}//end lastOID()
+	}//end lastID()
 	//=========================================================================
 	
 	
@@ -768,6 +777,44 @@ class cs_phpDB__mysql extends cs_phpDBAbstract {
 	//=========================================================================
 	
 	
+	
+	//=========================================================================
+	public function select_db($dbName) {
+		if(mysql_select_db($dbName, $this->connectionID)) { 
+			$this->dbname = $dbName;
+		}
+		else {
+			throw new exception(__METHOD__ .": failed to select db (". $dbName .")");
+		}
+	}//end select_db()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function beginTrans() {
+		$this->exec('BEGIN;SET autocommit=0;');
+		return(true);
+	}//end beginTrans()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function commitTrans() {
+		$this->exec('COMMIT');
+		return(true);
+	}//end commitTrans()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function rollbackTrans() {
+		$this->exec('ROLLBACK');
+		return(true);
+	}//end rollbackTrans()
+	//=========================================================================
 	
 } // end class phpDB
 

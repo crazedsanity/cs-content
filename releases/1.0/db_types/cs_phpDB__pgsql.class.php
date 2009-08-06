@@ -305,6 +305,14 @@ class cs_phpDB__pgsql extends cs_phpDBAbstract {
 	
 	
 	
+	//=========================================================================
+	public function ping() {
+		return(pg_ping($this->connectionID));
+	}//end ping()
+	//=========================================================================
+	
+	
+	
 	
 	////////////////////
 	// Cursor movement
@@ -1111,6 +1119,22 @@ class cs_phpDB__pgsql extends cs_phpDBAbstract {
 		
 		return($retval);
 	}//end get_currval()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function lastID($sequence) {
+		
+		if(strlen($sequence)) {
+			$retval = $this->get_currval($sequence);
+		}
+		else {
+			throw new exception(__METHOD__ .": no sequence specified (required by ". $this->dbType .")");
+		}
+		
+		return($retval);
+	}//end lastID()
 	//=========================================================================
 	
 	

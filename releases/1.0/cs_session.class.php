@@ -13,12 +13,11 @@ require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.p
 
 class cs_session extends cs_contentAbstract {
 
-	protected $db;
-	public $uid;
-	public $sid;
-	public $sid_check = 1;
+	protected $uid;
+	protected $sid;
+	protected $sid_check = 1;
 	
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	/**
 	 * The constructor.
 	 * 
@@ -26,10 +25,10 @@ class cs_session extends cs_contentAbstract {
 	 * 								this parameter is non-null and non-numeric, the value will be 
 	 * 								used as the session name.
 	 */
-	function __construct($createSession=1) {
-		parent::__construct(false);
+	function __construct($createSession=true) {
+		parent::__construct(true);
 		if($createSession) {
-			if(!is_null($createSession) && strlen($createSession) && !is_numeric($createSession)) {
+			if(is_string($createSession) && strlen($createSession) >2) {
 				session_name($createSession);
 			}
 			
@@ -49,11 +48,11 @@ class cs_session extends cs_contentAbstract {
 		$this->sid = session_id();
 		
 	}//end __construct()
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	
 	
 	
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	/**
 	 * Required method, so passing the object to contentSystem::handle_session() 
 	 * will work properly.
@@ -65,11 +64,11 @@ class cs_session extends cs_contentAbstract {
 	public function is_authenticated() {
 		return(FALSE);
 	}//end is_authenticated()
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	
 	
 	
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	/**
 	 * Retrieve data for an existing cookie.
 	 * 
@@ -85,11 +84,11 @@ class cs_session extends cs_contentAbstract {
 		}
 		return($retval);
 	}//end get_cookie()
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	
 	
 	
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	/**
 	 * Create a new cookie.
 	 * 
@@ -116,11 +115,11 @@ class cs_session extends cs_contentAbstract {
 		return($retval);
 		
 	}//end create_cookie()
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	
 	
 	
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
 	/**
 	 * Destroy (expire) an existing cookie.
 	 * 
@@ -138,7 +137,20 @@ class cs_session extends cs_contentAbstract {
 		}
 		return($retval);
 	}//end drop_cookie()
-	//---------------------------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * PHP5 magic method for retrieving the value of internal vars; this allows 
+	 * code to find the value of these variables, but not modify them (modifying 
+	 * requires the "__set($var,$val)" method).
+	 */
+	public function __get($var) {
+		return($this->$var);
+	}//end __get()
+	//-------------------------------------------------------------------------
 
 
 }//end cs_session{}

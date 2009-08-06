@@ -54,6 +54,9 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$newSetting = 0;
 			}
 		}
+		elseif(!is_bool($newSetting) && is_bool($this->oldForceSqlQuotes)) {
+			$newSetting = $this->oldForceSqlQuotes;
+		}
 		else {
 			throw new exception(__METHOD__ .": invalid new setting (". $newSetting .")");
 		}
@@ -159,7 +162,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 		}
 		
 		//make sure $style is valid.
-		$typesArr = array("insert", "update");
 		$style = strtolower($style);
 		
 		if(is_array($array)) {
@@ -191,13 +193,13 @@ class cs_globalFunctions extends cs_versionAbstract {
 				foreach($array as $key=>$value) {
 					@$tmp[0] = $this->create_list($tmp[0], $key);
 					//clean the string, if required.
-					if($cleanString) {
+					if(is_null($value)) {
+						$value = "NULL";
+					}
+					elseif($cleanString) {
 						//make sure it's not full of poo...
 						$value = $this->cleanString($value, "sql");
 						#$value = "'". $value ."'";
-					}
-					if((is_null($value)) OR ($value == "")) {
-						$value = "NULL";
 					}
 					@$tmp[1] = $this->create_list($tmp[1], $value, ",", 1);
 				}
@@ -219,9 +221,16 @@ class cs_globalFunctions extends cs_versionAbstract {
 					if(($value === "NULL" || $value === NULL) && !$this->forceSqlQuotes) {
 						$sqlQuotes = 0;
 					}
-					if($cleanString && !preg_match('/^\'/',$value)) {
+					if($cleanString && !(preg_match('/^\'/',$value) && preg_match('/\'$/', $value))) {
 						//make sure it doesn't have crap in it...
 						$value = $this->cleanString($value, "sql",$sqlQuotes);
+					}
+					if($value == "'") {
+						//Fix possible SQL-injection.
+						$value = "'\''";
+					}
+					elseif(!strlen($value)) {
+						$value = "''";
 					}
 					$retval = $this->create_list($retval, $field . $separator . $value);
 				}
@@ -274,12 +283,12 @@ class cs_globalFunctions extends cs_versionAbstract {
 						}
 						if($cleanString) {
 							//make sure it doesn't have crap in it...
-							$value = $this->cleanString($value, "sql");	
+							$value = $this->cleanString($value, "sql", $this->forceSqlQuotes);	
 						}
-						if(!is_numeric($value) && isset($separator)) {
+						if(isset($separator)) {
 							$value = "'". $value ."'";	
 						}
-						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ", $this->forceSqlQuotes);
+						$retval = $this->create_list($retval, $field . $separator . $value, " $delimiter ");
 					}
 				}
 				break;
@@ -801,8 +810,12 @@ class cs_globalFunctions extends cs_versionAbstract {
 		
 		//now figure out the value to return.
 		if(is_numeric($interpretThis)) {
+			if(preg_match('/\.[0-9]{1,}/', $interpretThis)) {
+				//if it is a decimal number, remove the dot (i.e. "0.000001" -> "0000001" -> 1)
+				$interpretThis = str_replace('.', '', $interpretThis);
+			}
 			settype($interpretThis, 'integer');
-			if($interpretThis == '0') {
+			if($interpretThis == 0) {
 				$index=0;
 			}
 			else {
