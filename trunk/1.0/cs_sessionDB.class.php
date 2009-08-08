@@ -10,10 +10,15 @@
 
 require_once(dirname(__FILE__) .'/cs_session.class.php');
 require_once(constant('LIBDIR') .'/cs-phpxml/cs_arrayToPath.class.php');
+require_once(constant('LIBDIR') .'/cs-webdblogger/cs_webdblogger.class.php');
 
 class cs_sessionDB extends cs_session {
 
 	protected $db;
+	
+	protected $logger = null;
+	
+	protected $logCategory = "DB Sessions";
 	
 	//-------------------------------------------------------------------------
 	/**
@@ -82,6 +87,7 @@ class cs_sessionDB extends cs_session {
 			$exists = true;
 		}
 		catch(exception $e) {
+			$this->exception_handler(__METHOD__ .": exception while trying to detect table::: ". $e->getMessage());
 			$exists = false;
 		}
 		
@@ -99,16 +105,15 @@ class cs_sessionDB extends cs_session {
 				$this->db->run_update(file_get_contents($filename),true);
 			}
 			catch(exception $e) {
-				throw new exception(__METHOD__ .": failed to load required table " .
-						"into your database automatically::: ". $e->getMessage());
+				$this->exception_handler(__METHOD__ .": failed to load required table " .
+						"into your database automatically::: ". $e->getMessage(), true);
 			}
 		}
 		else {
-			throw new exception(__METHOD__ .": while attempting to load required " .
+			$this->exception_handler(__METHOD__ .": while attempting to load required " .
 					"table into your database, discovered you have a missing schema " .
-					"file (". $filename .")");
+					"file (". $filename .")", true);
 		}
-		$this->logger->append_to_file(__METHOD__ .": done". microtime(true));
 	}//end load_table()
 	//-------------------------------------------------------------------------
 	
@@ -127,7 +132,7 @@ class cs_sessionDB extends cs_session {
 					$isValid = true;
 				}
 				elseif($numrows > 0 || $numrows < 0) {
-					throw new exception(__METHOD__ .": invalid numrows returned (". $numrows .")");
+					$this->exception_handler(__METHOD__ .": invalid numrows returned (". $numrows .")",true);
 				}
 			}
 			catch(exception $e) {
@@ -146,6 +151,7 @@ class cs_sessionDB extends cs_session {
 	 * Open the session (doesn't really do anything)
 	 */
 	public function sessdb_open($savePath, $sessionName) {
+		$this->do_log("Request for new session, savePath=(". $savePath ."), sessionName=(". $sessionName .")", 'debug');
 		return(true);
 	}//end sessdb_open()
 	//-------------------------------------------------------------------------
@@ -157,6 +163,7 @@ class cs_sessionDB extends cs_session {
 	 * Close the session (call the "gc" method)
 	 */
 	public function sessdb_close() {
+		$this->do_log("Request for session close", 'debug');
 		return($this->sessdb_gc(0));
 	}//end sessdb_close()
 	//-------------------------------------------------------------------------
@@ -181,6 +188,7 @@ class cs_sessionDB extends cs_session {
 		}
 		catch(exception $e) {
 			//no throwing exceptions...
+			$this->exception_handler(__METHOD__ .": failed to read::: ". $e->getMessage());
 		}
 		return($retval);
 	}//end sessdb_read()
@@ -230,9 +238,11 @@ class cs_sessionDB extends cs_session {
 		try {
 			$funcName = 'run_'. $type;
 			$res = $this->db->$funcName($sql, $secondArg);
+			$this->do_log(__METHOD__ .": action=(". $type ."), result=(". $res .")", 'debug');
 		}
 		catch(exception $e) {
 			//umm... yeah.
+			$this->exception_handler(__METHOD__ .": failed to perform action (". $type .")::: ". $e->getMessage());
 		}
 		
 		return(true);
@@ -245,7 +255,11 @@ class cs_sessionDB extends cs_session {
 	public function sessdb_destroy($sid) {
 		try {
 			$sql = "DELETE FROM ". $this->tableName ." WHERE session_id='". $sid ."'";
-			$this->db->run_update($sql, true);
+			$numDeleted = $this->db->run_update($sql, true);
+			
+			if($numDeleted > 0) {
+				$this->do_log("Destroyed session_id (". $sid .")", 'deleted');
+			}
 		}
 		catch(exception $e) {
 			//do... nothing?
@@ -263,30 +277,95 @@ class cs_sessionDB extends cs_session {
 	 */
 	public function sessdb_gc($maxLifetime=null) {
 		
-		$nowTime = date('Y-m-d H:i:s');
-		if(is_null($maxLifetime) || !is_numeric($maxLifetime) || $maxLifetime < 0) {
+		$dateFormat = 'Y-m-d H:i:s';
+		$strftimeFormat = '%Y-%m-%d %H:%M:%S';
+		$nowTime = date($dateFormat);
+		$excludeCurrent = true;
+		if(defined('SESSION_MAX_TIME') || defined('SESSION_MAX_IDLE')) {
+			$maxFreshness = null;
+			if(defined('SESSION_MAX_TIME')) {
+				$date = strtotime('- '. constant('SESSION_MAX_TIME'));
+				$maxFreshness = "date_created < '". strftime($strftimeFormat, $date) ."'";
+				$excludeCurrent=false;
+			}
+			if(defined('SESSION_MAX_IDLE')) {
+				
+				$date = strtotime('- '. constant('SESSION_MAX_IDLE'));
+				$addThis = "last_updated < '". strftime($strftimeFormat, $date) ."'";
+				$maxFreshness = $this->gfObj->create_list($maxFreshness, $addThis, ' OR ');
+			}
+		}
+		elseif(is_null($maxLifetime) || !is_numeric($maxLifetime) || $maxLifetime <= 0) {
 			//pull it from PHP's ini settings.
 			$maxLifetime = ini_get("session.gc_maxlifetime");
+			$interval = $maxLifetime .' seconds';
+			
+			$dt1 = strtotime($nowTime .' - '. $interval);
+			$maxFreshness = "last_updated < '". date($dateFormat, $dt1) ."'";
 		}
-		$interval = $maxLifetime .' seconds';
-		
-		$dt1 = strtotime($nowTime .' - '. $interval);
-		$dt2 = date('Y-m-d H:i:s', $dt1);
 		
 		
 		
 		try {
 			//destroy old sessions, but don't complain if nothing is deleted.
-			$sql = "DELETE FROM ". $this->tableName ." WHERE last_updated < ". $dt2;
-			#$this->db->run_update($sql, true);
+			$sql = "DELETE FROM ". $this->tableName ." WHERE ". $maxFreshness;
+			if(strlen($this->sid) && $excludeCurrent === false) {
+				$sql .= " AND session_id != '". $this->sid ."'";
+			}
+			$numCleaned = $this->db->run_update($sql, true);
+			
+			if($numCleaned > 0) {
+				$this->do_log("cleaned (". $numCleaned .") old sessions, " .
+						"excludeCurrent=(". $this->gfObj->interpret_bool($excludeCurrent) .")" .
+						", maxFreshness=(". $maxFreshness .")", "debug");
+			}
 		}
 		catch(exception $e) {
-			//probably should do something here.
+			$this->exception_handler(__METHOD__ .": exception while cleaning: ". $e->getMessage());
 		}
 		
 		return(true);
 		
 	}//end sessdb_gc()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	protected function do_log($message, $type) {
+		
+		//check if the logger object has been created.
+		if(!is_object($this->logger)) {
+			$newDB = new cs_phpDB(constant('DBTYPE'));
+			$newDB->connect($this->db->connectParams, true);
+			$this->logger = new cs_webdblogger($newDB, $this->logCategory);
+		}
+		
+		$fs = new cs_fileSystem(constant('RWDIR'));
+		$logFile = 'session.log';
+		if(!is_array($fs->ls($logFile))) {
+			$fs->create_file($logFile);
+		}
+		$fs->openFile($logFile);
+		$fs->append_to_file($this->logCategory .": ". $type ." -- ". $message);
+		
+		
+		return($this->logger->log_by_class("SID=(". $this->sid .") -- ". $message,$type));
+		
+	}//end do_log()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	protected function exception_handler($message, $throwException=false) {
+		$logId = $this->do_log($message, 'exception in code');
+		if($throwException === true) {
+			//in this class, it is mostly useless to throw exceptions, so by default they're not thrown.
+			throw new exception($message);
+		}
+		return($logId);
+	}//end exception_handler()
 	//-------------------------------------------------------------------------
 
 
