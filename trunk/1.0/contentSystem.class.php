@@ -669,7 +669,7 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		//include the final shared & index files.
-		if($this->incFs->cd($this->finalSection)) {
+		if($this->incFs->cd('/'. $this->section)) {
 			$lsData = $this->incFs->ls();
 			if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 				$this->add_include('shared.inc');
