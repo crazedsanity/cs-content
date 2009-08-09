@@ -9,6 +9,7 @@
  */
 
 require_once(dirname(__FILE__) .'/cs_session.class.php');
+require_once(dirname(__FILE__) .'/cs_phpDB.class.php');
 require_once(constant('LIBDIR') .'/cs-phpxml/cs_arrayToPath.class.php');
 require_once(constant('LIBDIR') .'/cs-webdblogger/cs_webdblogger.class.php');
 
@@ -340,15 +341,6 @@ class cs_sessionDB extends cs_session {
 			$newDB->connect($this->db->connectParams, true);
 			$this->logger = new cs_webdblogger($newDB, $this->logCategory);
 		}
-		
-		$fs = new cs_fileSystem(constant('RWDIR'));
-		$logFile = 'session.log';
-		if(!is_array($fs->ls($logFile))) {
-			$fs->create_file($logFile);
-		}
-		$fs->openFile($logFile);
-		$fs->append_to_file($this->logCategory .": ". $type ." -- ". $message);
-		
 		
 		return($this->logger->log_by_class("SID=(". $this->sid .") -- ". $message,$type));
 		
