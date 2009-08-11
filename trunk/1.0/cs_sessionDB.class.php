@@ -152,7 +152,6 @@ class cs_sessionDB extends cs_session {
 	 * Open the session (doesn't really do anything)
 	 */
 	public function sessdb_open($savePath, $sessionName) {
-		$this->do_log("Request for new session, savePath=(". $savePath ."), sessionName=(". $sessionName .")", 'debug');
 		return(true);
 	}//end sessdb_open()
 	//-------------------------------------------------------------------------
@@ -164,7 +163,6 @@ class cs_sessionDB extends cs_session {
 	 * Close the session (call the "gc" method)
 	 */
 	public function sessdb_close() {
-		$this->do_log("Request for session close", 'debug');
 		return($this->sessdb_gc(0));
 	}//end sessdb_close()
 	//-------------------------------------------------------------------------
@@ -239,7 +237,6 @@ class cs_sessionDB extends cs_session {
 		try {
 			$funcName = 'run_'. $type;
 			$res = $this->db->$funcName($sql, $secondArg);
-			$this->do_log(__METHOD__ .": action=(". $type ."), result=(". $res .")", 'debug');
 		}
 		catch(exception $e) {
 			//umm... yeah.
