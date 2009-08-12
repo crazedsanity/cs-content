@@ -178,7 +178,7 @@ class cs_siteConfig extends cs_contentAbstract {
 					
 					unset($secData['type']);
 					
-					if(is_array($secData['attributes'])) {
+					if(isset($secData['attributes']) && is_array($secData['attributes'])) {
 						$sectionAttribs = $secData['attributes'];
 						unset($secData['attributes']);
 						
@@ -196,10 +196,15 @@ class cs_siteConfig extends cs_contentAbstract {
 					
 					foreach($secData as $itemName=>$itemValue) {
 						$attribs = array();
-						if(is_array($itemValue['attributes'])) {
+						if(isset($itemValue['attributes']) && is_array($itemValue['attributes'])) {
 							$attribs = $itemValue['attributes'];
 						}
-						$itemValue = $itemValue['value'];
+						if(isset($itemValue['value'])) {
+							$itemValue = $itemValue['value'];
+						}
+						else {
+							$itemValue = null;
+						}
 						if(preg_match("/{/", $itemValue)) {
 							$origVal = $itemValue;
 							
@@ -239,7 +244,9 @@ class cs_siteConfig extends cs_contentAbstract {
 									$setVarIndex = $attribs['SETCONSTANTPREFIX'] ."-". $setVarIndex;
 								}
 							}
-							define($setVarIndex, $itemValue);
+							if(!defined($setVarIndex)) {
+								define($setVarIndex, $itemValue);
+							}
 						}
 					}
 				}
