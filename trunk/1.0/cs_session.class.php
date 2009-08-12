@@ -40,7 +40,7 @@ class cs_session extends cs_contentAbstract {
 		//TODO: need a setting somewhere that says what the name of this var should be,
 		//	instead of always forcing "uid".
 		$this->uid = 0;
-		if($_SESSION['uid']) {
+		if(isset($_SESSION['uid']) && $_SESSION['uid']) {
 			$this->uid = $_SESSION['uid'];
 		}
 		
