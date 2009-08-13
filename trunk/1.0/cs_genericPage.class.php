@@ -13,6 +13,7 @@ require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 class cs_genericPage extends cs_contentAbstract {
 	public $templateObj;					//template object to parse the pages
 	public $templateVars	= array();	//our copy of the global templateVars
+	public $templateRows	= array();	//array of block rows & their contents.
 	public $mainTemplate;				//the default layout of the site
 	public $unhandledVars=array();
 	public $printOnFinish=true;
