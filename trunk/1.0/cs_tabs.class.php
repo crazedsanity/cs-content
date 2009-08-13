@@ -11,8 +11,8 @@ class cs_tabs extends cs_contentAbstract {
 	private $tabsArr=array();
 	private $selectedTab;
 	
-	private $csPageObj;
 	private $templateVar;
+	private $gfObj;
 	
 	/** This is the default suffix to use when none is given during the add_tab() call. */
 	private $defaultSuffix='tab';
@@ -24,19 +24,14 @@ class cs_tabs extends cs_contentAbstract {
 	 * @param $csPageObj	(object) Instance of the class "cs_genericPage".
 	 * @param $templateVar	(str,optional) What template var to find the tab blockrows in.
 	 */
-	public function __construct(cs_genericPage $csPageObj, $templateVar="tabs") {
+	public function __construct($templateVar="tabs") {
 		parent::__construct(false);
-		if(is_null($csPageObj) || !is_object($csPageObj) || get_class($csPageObj) !== 'cs_genericPage') {
-			//can't continue without that!
-			throw new exception("cs_tabs::__construct(): cannot load without cs_genericPage{} object (". get_class($csPageObj) .")");
-		}
-		else {
-			//set it as a member.
-			$this->csPageObj = $csPageObj;
-		}
 		
-		
-		if(is_null($templateVar) || strlen($templateVar) < 3) {
+		if(is_object($templateVar)) {
+			//trying to pass cs_genericPage{}... tell 'em we don't like that anymore.
+			throw new exception(__METHOD__ .": got an object (". get_class($templateVar) .") instead of template var name");
+		}
+		elseif(is_string($templateVar) && is_null($templateVar) || strlen($templateVar) < 3) {
 			//no template name?  AHH!!!
 			throw new exception("cs_tabs::__construct(): failed to specify proper template file");
 		}
@@ -44,28 +39,9 @@ class cs_tabs extends cs_contentAbstract {
 			//set the internal var.
 			$this->templateVar = $templateVar;
 		}
-	}//end __construct()
-	//---------------------------------------------------------------------------------------------
-	
-	
-	
-	//---------------------------------------------------------------------------------------------
-	/**
-	 * Loads & parses the given tabs template.  Requires that the given template has "selected_tab" 
-	 * and "unselected_tab" block row definitions.
-	 * 
-	 * @param (void)
-	 * @return (void)
-	 */
-	private function load_tabs_template() {
-		//now let's parse it for the proper block rows.
-		$blockRows = $this->csPageObj->rip_all_block_rows($this->templateVar);
 		
-		#if(count($blockRows) < 2) {
-		#	//not enough blocks, or they're not properly named.
-		#	throw new exception("cs_tabs::load_tabs_template(): failed to retrieve the required block rows");
-		#}
-	}//end load_tabs_template()
+		$this->gfObj = new cs_globalFunctions;
+	}//end __construct()
 	//---------------------------------------------------------------------------------------------
 	
 	
@@ -120,7 +96,7 @@ class cs_tabs extends cs_contentAbstract {
 	/**
 	 * Call this to add the parsed tabs into the page.
 	 */
-	public function display_tabs() {
+	public function display_tabs(array $blockRows) {
 		
 		if(!strlen($this->selectedTab)) {
 			$keys = array_keys($this->tabsArr);
@@ -128,7 +104,6 @@ class cs_tabs extends cs_contentAbstract {
 		}
 		
 		if(is_array($this->tabsArr) && count($this->tabsArr)) {
-			$this->load_tabs_template();
 			$finalString = "";
 			//loop through the array.
 			foreach($this->tabsArr as $tabName=>$tabData) {
@@ -141,11 +116,13 @@ class cs_tabs extends cs_contentAbstract {
 					$blockRowName = 'selected_'. $suffix;
 				}
 				
-				if(isset($this->csPageObj->templateRows[$blockRowName])) {
-					$useTabContent = $this->csPageObj->templateRows[$blockRowName];
+				if(isset($blockRows[$blockRowName])) {
+					$useTabContent = $blockRows[$blockRowName];
 				}
 				else {
-					throw new exception(__METHOD__ ."(): failed to load block row (". $blockRowName .") for tab (". $tabName .")". $this->csPageObj->gfObj->debug_print($this->csPageObj->templateRows,0));
+					throw new exception(__METHOD__ ."(): failed to load block row " .
+							"(". $blockRowName .") for tab (". $tabName .")". 
+							$this->gfObj->debug_print($blockRows,0));
 				}
 				
 				$parseThis = array(
@@ -153,17 +130,15 @@ class cs_tabs extends cs_contentAbstract {
 					'url'			=> $url,
 					'cleanTitle'	=> preg_replace('/[^a-zA-Z0-9]/', '_', $tabName)
 				);
-				$finalString .= $this->csPageObj->mini_parser($useTabContent, $parseThis, '%%', '%%');
+				$finalString .= $this->gfObj->mini_parser($useTabContent, $parseThis, '%%', '%%');
 			}
-			
-			//now parse it onto the page.
-			$this->csPageObj->add_template_var($this->templateVar, $finalString);
 		}
 		else {
 			//something bombed.
 			throw new exception(__METHOD__ ."(): no tabs to add");
 		}
 		
+		return($finalString);
 	}//end display_tabs()
 	//---------------------------------------------------------------------------------------------
 	

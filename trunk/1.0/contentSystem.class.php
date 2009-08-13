@@ -180,7 +180,8 @@ class contentSystem extends cs_contentAbstract {
 		
 		
 		//create a tabs object, in case they want to load tabs on the page.
-		$this->tabs = new cs_tabs($this->templateObj);
+		//TODO: make the tabs object usable to included code!
+		$this->tabs = new cs_tabs();
 		
 		//check versions, make sure they're all the same.
 		$myVersion = $this->get_version();
