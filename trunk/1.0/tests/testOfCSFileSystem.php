@@ -148,11 +148,41 @@ class TestOfCSFileSystem extends UnitTestCase {
 			//now make sure the contents of the file are as expected...
 			$this->assertEqual($myContent, $this->writer->read($appendTestFile));
 			
-			$this->writer->create_file('x.txt');
-			$this->writer->write($myContent, 'x.txt');
-			
 			unset($myContent,$finalFileLines);
+			
+			//randomly pull a line and make sure it starts with the right phrase.
+			$this->writer->openFile($appendTestFile, 'r');
+			$linesToTest = 100;
+			
+			for($i=0;$i<$linesToTest;$i++) {
+				$randomLine = rand(0, $actualNum);
+				
+				$this->writer->go_to_line($randomLine);
+				$lineContents = $this->writer->get_next_line();
+				
+				$this->assertTrue(preg_match('/^line #'. $randomLine .' /', $lineContents));
+			}
+			
+			$this->writer->go_to_last_line();
+			$this->writer->go_to_line(($this->writer->lineNum -2));//go back two lines because we're actually past the last line, gotta go 2 up so when we fetch "the next line", it is actually the last.
+			$lineContents = $this->writer->get_next_line();
+			$this->assertTrue(preg_match('/^line #'. ($this->writer->lineNum -1) .' /', $lineContents), " getting last line (#". $this->writer->lineNum ."), Line Contents::: ". $lineContents);
+			
+			$this->writer->closeFile();
 		}
+		
+		//now let's try moving a file.
+		$newName = "movedFile.txt";
+		$lsData = $this->writer->ls();
+		$this->assertTrue(isset($lsData[$appendTestFile]));
+		$this->writer->move_file($appendTestFile, $newName);
+		
+		//change the array and make sure it is approximately the same.
+		$newLsData = $this->writer->ls();
+		$tmp = $lsData[$appendTestFile];
+		unset($lsData[$appendTestFile]);
+		$lsData[$newName] = $tmp;
+		$this->assertEqual($newLsData, $lsData);
 		
 		
 		//now delete the files.

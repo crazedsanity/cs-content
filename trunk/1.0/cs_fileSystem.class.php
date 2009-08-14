@@ -885,6 +885,8 @@ class cs_fileSystem extends cs_contentAbstract {
 		if($this->is_readable($filename)) {
 			if($this->check_chroot($destination)) {
 				//do the move.
+				$filename = $this->filename2absolute($filename);
+				$destination = $this->filename2absolute($destination);
 				$retval = rename($filename, $destination);
 			}
 			else {
