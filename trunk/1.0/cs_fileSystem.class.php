@@ -363,7 +363,7 @@ class cs_fileSystem extends cs_contentAbstract {
 				//something bad happened.
 				$retval = 0;
 			}
-		} 
+		}
 		else {
 			throw new exception(__METHOD__ .": file is unreadable (". $filename .")");
 		} 
