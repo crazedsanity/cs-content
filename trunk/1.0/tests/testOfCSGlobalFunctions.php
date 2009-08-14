@@ -402,6 +402,6 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 	
 	
 	
-}//end TestOfCSContent
+}//end TestOfCSGlobalFunctions
 //=============================================================================
 ?>
