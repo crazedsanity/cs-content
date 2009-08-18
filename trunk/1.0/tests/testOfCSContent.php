@@ -104,14 +104,15 @@ class TestOfCSContent extends UnitTestCase {
 	function test_genericPage() {
 		$filesDir = dirname(__FILE__) .'/files';
 		
-		$page = new cs_genericPage(false, $filesDir .'/templates/main.shared.tmpl', false);
+		$mainTemplate = $filesDir .'/templates/main.shared.tmpl';
+		$page = new cs_genericPage(false, $mainTemplate);
 		$fs = new cs_fileSystem($filesDir .'/templates');
 		
 		$lsData = $fs->ls();
 		
 		foreach($lsData as $index=>$value) {
 			$filenameBits = explode('.', $index);
-			$page->add_template_var($filenameBits[0], $page->file_to_string($index));
+			$page->add_template_file($filenameBits[0], $index);
 		}
 		
 		$page->add_template_var('blockRowTestVal', 3);
@@ -152,6 +153,44 @@ class TestOfCSContent extends UnitTestCase {
 		$this->assertNotEqual($page2->templateVars['content'], $page2->strip_undef_template_vars($page2->templateVars['content']));
 		$page2->templateVars['content'] = $page2->strip_undef_template_vars($page2->templateVars['content']);
 		$this->assertEqual($page->return_printed_page(1), $page2->return_printed_page(1));
+		
+		
+		//test to see if the list of templateFiles is as expected...
+		{
+			$files = array_keys($lsData);
+			$expectedList = array();
+			foreach($files as $name) {
+				$bits = explode('.', $name);
+				$expectedList[$bits[0]] = $name;
+			}
+			
+			$this->assertEqual($expectedList, $page->templateFiles);
+		}
+		
+		
+		//make sure stripping undefined vars works properly.
+		{
+			$page = new cs_genericPage(false, $mainTemplate);
+			$this->assertEqual($fs->read($mainTemplate), $page->return_printed_page(0));
+			$this->assertNotEqual($fs->read($mainTemplate), $page->return_printed_page(1));
+			
+			//rip out undefined template vars manually & check 'em.
+			$junk = array();
+			$contents = $page->strip_undef_template_vars($fs->read($mainTemplate), $junk);
+			$this->assertEqual($page->strip_undef_template_vars($fs->read($mainTemplate)), $page->return_printed_page(1));
+			$this->assertNotEqual($page->strip_undef_template_vars($fs->read($mainTemplate)), $page->return_printed_page(0));
+			
+			
+			//make sure the unhandled var lists are the same.
+			$myUnhandledVars = array();
+			$page->strip_undef_template_vars($fs->read($mainTemplate), $myUnhandledVars);
+			$page->return_printed_page(1);//the last run MUST strip undefined vars.
+			$this->assertEqual(array_keys($myUnhandledVars), array_keys($page->unhandledVars));
+			if(!$this->assertEqual($myUnhandledVars, $page->unhandledVars)) {
+				$this->gfObj->debug_print($myUnhandledVars);
+				$this->gfObj->debug_print($page->unhandledVars);
+			}
+		}
 	}//end test_genericPage
 	//-------------------------------------------------------------------------
 	
