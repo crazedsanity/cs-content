@@ -12,9 +12,10 @@ require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
 class cs_genericPage extends cs_contentAbstract {
 	public $templateObj;					//template object to parse the pages
-	public $templateVars	= array();	//our copy of the global templateVars
-	public $templateRows	= array();	//array of block rows & their contents.
-	public $mainTemplate;				//the default layout of the site
+	public $templateVars	= array();		//our copy of the global templateVars
+	public $templateFiles	= array();		//our list of template files...
+	public $templateRows	= array();		//array of block rows & their contents.
+	public $mainTemplate;					//the default layout of the site
 	public $unhandledVars=array();
 	public $printOnFinish=true;
 	
@@ -23,17 +24,13 @@ class cs_genericPage extends cs_contentAbstract {
 	private $siteRoot;
 	private $allowRedirect;
 	
-	private $showEditableLink = FALSE;
-	
 	private $allowInvalidUrls=NULL;
 	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
 	 */
-	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedirect=TRUE) {
-		//handle some configuration.
-		$this->allowRedirect = $allowRedirect;
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL) {
 		
 		//initialize stuff from our parent...
 		parent::__construct();
@@ -46,11 +43,6 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		if(!defined('CS-CONTENT_SESSION_NAME')) {
 			define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
-		}
-		
-		//TODO: if the end page doesn't want to allow the "edit" links, will this still work?
-		if(defined("CS_CONTENT_MODIFIABLE") && constant("CS_CONTENT_MODIFIABLE") === TRUE) {
-			$this->showEditableLink = TRUE;
 		}
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
@@ -72,15 +64,28 @@ class cs_genericPage extends cs_contentAbstract {
 			$mainTemplateFile = preg_replace('/^\//', '', $mainTemplateFile);
 		}
 		
-		
-		if(defined('SITE_ROOT')) {
+		if(isset($mainTemplateFile) && strlen($mainTemplateFile) && is_dir(dirname($mainTemplateFile))) {
+			$this->siteRoot = dirname($mainTemplateFile);
+			if(preg_match('/\//', $this->siteRoot) && preg_match('/templates/', $this->siteRoot)) {
+				$this->siteRoot .= "/..";
+			}
+		}
+		elseif(defined('SITE_ROOT') && is_dir(constant('SITE_ROOT'))) {
 			$this->siteRoot = constant('SITE_ROOT');
 		}
+		elseif(is_dir($_SERVER['DOCUMENT_ROOT'] .'/templates')) {
+			$this->siteRoot = $_SERVER['DOCUMENT_ROOT'] .'/templates';
+		}
 		else {
-			throw new exception(__METHOD__ .": required constant 'SITE_ROOT' not set");
+			throw new exception(__METHOD__ .": cannot locate siteRoot from main template file (". $mainTemplateFile .")");
 		}
 		$this->tmplDir = $this->siteRoot .'/templates';
 		$this->libDir = $this->siteRoot .'/lib';
+		
+		if(!is_dir($this->tmplDir)) {
+			$this->gfObj->debug_print(func_get_args(),1);
+			throw new exception(__METHOD__ .": invalid templates folder (". $this->tmplDir ."), pwd=(". getcwd() .")");
+		}
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
 		if(is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
@@ -176,13 +181,8 @@ class cs_genericPage extends cs_contentAbstract {
 	 * TODO: check if $fileName exists before blindly trying to parse it.
 	 */
 	public function add_template_file($handleName, $fileName){
-		if($this->showEditableLink) {
-			$prefix = '[<a href="#NULL_page='. $fileName .'"><font color="red"><b>Edit "'. $handleName .'"</b></font></a>]<BR>';
-			$this->add_template_var($handleName, $prefix .$this->file_to_string($fileName));
-		}
-		else {
-			$this->add_template_var($handleName, $this->file_to_string($fileName));
-		}
+		$this->templateFiles[$handleName] = $fileName;
+		$this->add_template_var($handleName, $this->file_to_string($fileName));
 	}//end add_template_file()
 	//---------------------------------------------------------------------------------------------
 
@@ -489,35 +489,8 @@ class cs_genericPage extends cs_contentAbstract {
 	/**
 	 * Performs redirection, provided it is allowed.
 	 */
-	function conditional_header($url, $exitAfter=TRUE) {
-		if($this->allowRedirect) {
-			//checks to see if headers were sent; if yes: use a meta redirect.
-			//	if no: send header("location") info...
-			if(headers_sent()) {
-				//headers sent.  Use the meta redirect.
-				print "
-				<HTML>
-				<HEAD>
-				<TITLE>Redirect Page</TITLE>
-				<META HTTP-EQUIV='refresh' content='0; URL=$url'>
-				</HEAD>
-				<a href=\"$url\"></a>
-				</HTML>
-				";
-			}
-			else {
-				header("location:$url");
-			}
-			
-			if($exitAfter) {
-				//redirecting without exitting is bad, m'kay?
-				exit;
-			}
-		}
-		else {
-			//TODO: should an exception be thrown, or maybe exit here anyway?
-			throw new exception(__METHOD__ .": auto redirects not allowed...?");
-		}
+	function conditional_header($url, $exitAfter=TRUE,$isPermRedir=FALSE) {
+		$this->gfObj->conditional_header($url, $exitAfter, $isPermRedir);
 	}//end conditional_header()
 	//---------------------------------------------------------------------------------------------
 	
@@ -690,6 +663,31 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		return($this->templateVars[$section]);
 	}//strip_undef_template_vars_from_section()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * Magic PHP method for retrieving the values of private/protected vars.
+	 */
+	public function __get($var) {
+		return($this->$var);
+	}//end __get()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * Magic PHP method for changing the values of private/protected vars (or 
+	 * creating new ones).
+	 */
+	public function __set($var, $val) {
+		
+		//TODO: set some restrictions on internal vars...
+		$this->$var = $val;
+	}//end __set()
 	//-------------------------------------------------------------------------
 
 }//end cs_genericPage{}

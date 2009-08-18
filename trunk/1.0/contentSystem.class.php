@@ -145,7 +145,11 @@ class contentSystem extends cs_contentAbstract {
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$this->templateObj = new cs_genericPage(FALSE, "main.shared.tmpl");
+		$root = $_SERVER['DOCUMENT_ROOT'];
+		if(defined('SITE_ROOT')) {
+			$root = constant('SITE_ROOT');
+		}
+		$this->templateObj = new cs_genericPage(FALSE, $root ."/main.shared.tmpl");
 		
 		//setup some default template vars.
 		$this->templateObj->add_template_var('date', date('m-d-Y'));
