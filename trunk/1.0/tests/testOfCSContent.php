@@ -157,36 +157,6 @@ class TestOfCSContent extends UnitTestCase {
 	
 	
 	
-	//-------------------------------------------------------------------------
-	function test_cs_fileSystem() {
-		$fs = new cs_fileSystem(constant('TEST_FILESDIR'));
-		
-		$list = array(
-			'slashTest'		=> array('/sampleConfig.xml', 'sampleConfig.xml'),
-			'slashtest2'	=> array('/templates/content.shared.tmpl', 'templates/content.shared.tmpl'),
-			'pathWithDots'	=> array('templates/.././sampleConfig.xml', '/templates/.././sampleConfig.xml'),
-			'multiSlashes'	=> array('////sampleConfig.xml', '///sampleConfig.xml', '/templates///////content.shared.tmpl/../templates/content.shared.tmpl')
-		);
-		
-		foreach($list as $testName=>$files) {
-			foreach($files as $filename) {
-				$gotException=false;
-				try {
-					$data = $fs->ls('/sampleConfig.xml');
-				}
-				catch(exception $e) {
-					$gotException=true;
-				}
-				
-				$this->assertFalse($gotException, "Failed test '". $testName ."'");
-			}
-		}
-		
-	}//end test_cs_fileSystem()
-	//-------------------------------------------------------------------------
-	
-	
-	
 }//end TestOfCSContent
 //=============================================================================
 ?>
