@@ -807,13 +807,6 @@ class contentSystem extends cs_contentAbstract {
 			unset($this->templateList['index']);
 		}
 		
-		foreach($this->templateList as $mySection => $myTmpl) {
-			$myTmpl = preg_replace("/\/\//", "/", $myTmpl);
-			$page->add_template_file($mySection, $myTmpl);
-		}
-		unset($mySection);
-		unset($myTmpl);
-		
 		//make the "final section" available to scripts.
 		$finalSection = $this->finalSection;
 		$sectionArr = $this->sectionArr;
@@ -938,7 +931,8 @@ class contentSystem extends cs_contentAbstract {
 	
 	//------------------------------------------------------------------------
 	private final function add_template($var, $file) {
-		$this->templateList[$var] = $file;
+		$file = preg_replace("/\/\//", "/", $file);
+		$this->templateObj->add_template_file($var, $file);
 	}//end add_template()
 	//------------------------------------------------------------------------
 	
