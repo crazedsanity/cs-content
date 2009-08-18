@@ -280,28 +280,10 @@ class cs_genericPage extends cs_contentAbstract {
 		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
 		
 		if($stripUndefVars) {
-			$numLoops = 0;
-			while(preg_match_all('/\{.\S+?\}/', $this->templateObj->varvals['out'], $tags) && $numLoops < 50) {
-				$tags = $tags[0];
-				
-				//TODO: figure out why this works when running it twice.
-				foreach($tags as $key=>$str) {
-					$str2 = str_replace("{", "", $str);
-					$str2 = str_replace("}", "", $str2);
-					if(!isset($this->templateVars[$str2]) && $stripUndefVars) {
-						//TODO: set an internal pointer or something to use here, so they can see what was missed.
-						$this->templateObj->varvals['out'] = str_replace($str, '', $this->templateObj->varvals['out']);
-						if(isset($this->unhandledVars[$str2])) {
-							$this->unhandledVars[$str2]++;
-						}
-						else {
-							$this->unhandledVars[$str2] = 1;
-						}
-					}
-				}
-				$this->templateObj->parse("out", "out");
-				$numLoops++;
-			}
+			$this->templateObj->varvals['out'] = $this->strip_undef_template_vars(
+				$this->templateObj->varvals['out'], 
+				$this->unhandledVars
+			);
 		}
 		$this->templateObj->pparse("out","out"); //parse the main page 
 		
