@@ -102,7 +102,7 @@ class TestOfCSContent extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function test_genericPage() {
-		$filesDir = constant('TEST_FILESDIR');
+		$filesDir = dirname(__FILE__) .'/files';
 		
 		$page = new cs_genericPage(false, $filesDir .'/templates/main.shared.tmpl', false);
 		$fs = new cs_fileSystem($filesDir .'/templates');
