@@ -268,6 +268,7 @@ class cs_genericPage extends cs_contentAbstract {
 	 * @return (str)				Final, parsed page.
 	 */
 	public function print_page($stripUndefVars=1) {
+		$this->unhandledVars = array();
 		//Show any available messages.
 		$this->process_set_message();
 		
@@ -630,7 +631,7 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//-------------------------------------------------------------------------
-	public function strip_undef_template_vars($templateContents) {
+	public function strip_undef_template_vars($templateContents, array &$unhandled=null) {
 		$numLoops = 0;
 		while(preg_match_all('/\{.\S+?\}/', $templateContents, $tags) && $numLoops < 50) {
 			$tags = $tags[0];
@@ -641,6 +642,9 @@ class cs_genericPage extends cs_contentAbstract {
 				$str2 = str_replace("}", "", $str2);
 				if(!$this->templateVars[$str2]) {
 					//TODO: set an internal pointer or something to use here, so they can see what was missed.
+					if(is_array($unhandled)) {
+						$unhandled[$str2]++;
+					}
 					$templateContents = str_replace($str, '', $templateContents);
 				}
 			}
@@ -655,6 +659,7 @@ class cs_genericPage extends cs_contentAbstract {
 	//-------------------------------------------------------------------------
 	public function strip_undef_template_vars_from_section($section='content') {
 		if(isset($this->templateVars[$section])) {
+			//rip out undefined vars from the contents of the given section.
 			$this->templateVars[$section] = $this->strip_undef_template_vars($this->templateVars[$section]);
 		}
 		else {
