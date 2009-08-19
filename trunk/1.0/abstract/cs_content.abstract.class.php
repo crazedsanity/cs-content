@@ -11,7 +11,7 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) ."/../../cs-versionparse/cs_version.abstract.class.php");
+require_once(dirname(__FILE__) ."/../../cs-webapplibs/cs_version.abstract.class.php");
 
 
 abstract class cs_contentAbstract extends cs_versionAbstract {
