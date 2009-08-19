@@ -83,8 +83,7 @@ class cs_genericPage extends cs_contentAbstract {
 		$this->libDir = $this->siteRoot .'/lib';
 		
 		if(!is_dir($this->tmplDir)) {
-			$this->gfObj->debug_print(func_get_args(),1);
-			throw new exception(__METHOD__ .": invalid templates folder (". $this->tmplDir ."), pwd=(". getcwd() .")");
+			throw new exception(__METHOD__ .": invalid templates folder (". $this->tmplDir ."), siteRoot=(". $this->siteRoot .")");
 		}
 		
 		//if there have been some global template vars (or files) set, read 'em in here.

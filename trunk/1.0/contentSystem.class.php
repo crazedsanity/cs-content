@@ -103,27 +103,21 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * The CONSTRUCTOR.  Duh.
 	 */
-	public function __construct($testOnly=FALSE) {
+	public function __construct($siteRoot=null) {
 		parent::__construct();
-		if($testOnly === 'unit_test') {
-			//It's just a test, don't do anything we might regret later.
-			$this->isTest = TRUE;
+		
+		if(is_null($siteRoot) && !defined('SITE_ROOT')) {
+			throw new exception(__METHOD__ .": must set siteRoot or constant 'SITE_ROOT'");
 		}
-		else {
-			
-			if(!defined('SITE_ROOT')) {
-				throw new exception(__METHOD__ .": must set required constant 'SITE_ROOT'");
-			}
-			
-			//setup the section stuff...
-			$repArr = array($_SERVER['SCRIPT_NAME'], "/");
-			$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
-			
-			//figure out the section & subsection stuff.
-			$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
-			
-			$this->initialize_locals();
-		}
+		
+		//setup the section stuff...
+		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
+		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
+		
+		//figure out the section & subsection stuff.
+		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
+		
+		$this->initialize_locals($siteRoot);
 	}//end __construct()
 	//------------------------------------------------------------------------
 	
@@ -133,7 +127,7 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * Creates internal objects & prepares for later usage.
 	 */
-	private function initialize_locals() {
+	private function initialize_locals($siteRoot=null) {
 		
 		//create a session that gets stored in a database if they so desire...
 		if(defined('SESSION_DBSAVE')) {
@@ -146,10 +140,13 @@ class contentSystem extends cs_contentAbstract {
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
 		$root = $_SERVER['DOCUMENT_ROOT'];
-		if(defined('SITE_ROOT')) {
+		if(!is_null($siteRoot) && is_dir($siteRoot)) {
+			$root = $siteRoot;
+		}
+		elseif(defined('SITE_ROOT') && is_dir(constant('SITE_ROOT'))) {
 			$root = constant('SITE_ROOT');
 		}
-		$this->templateObj = new cs_genericPage(FALSE, $root ."/main.shared.tmpl");
+		$this->templateObj = new cs_genericPage(FALSE, $root ."/templates/main.shared.tmpl");
 		
 		//setup some default template vars.
 		$this->templateObj->add_template_var('date', date('m-d-Y'));
@@ -168,18 +165,12 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		//create a fileSystem object for templates.
-		$tmplBaseDir = constant('SITE_ROOT') .'/templates';
-		if(defined('TMPLDIR')) {
-			$tmplBaseDir = constant('TMPLDIR');
-		}
+		$tmplBaseDir = $root .'/templates';
 		$this->tmplFs = new cs_fileSystem($tmplBaseDir);
 		
 		
 		//create a fileSystem object for includes
-		$incBaseDir = constant('SITE_ROOT') .'/includes';
-		if(defined('INCLUDES_DIR')) {
-			$incBaseDir = constant('INCLUDES_DIR');
-		}
+		$incBaseDir = $root .'/includes';
 		$this->incFs = new cs_fileSystem($incBaseDir);
 		
 		
@@ -782,8 +773,6 @@ class contentSystem extends cs_contentAbstract {
 			unset($_GET[$badVarName], $_POST[$badVarName]);
 		}
 		
-		$page =& $this->templateObj;
-		
 		if(is_array($this->injectVars) && count($this->injectVars)) {
 			$definedVars = get_defined_vars();
 			foreach($this->injectVars as $myVarName=>$myVarVal) {
@@ -797,14 +786,13 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		if(isset($this->session) && is_object($this->session)) {
-			$page->session = $this->session;
+			$this->templateObj->session = $this->session;
 		}
 		
 		
 		//if we loaded an index, but there is no "content", then move 'em around so we have content.
-		if(isset($this->templateList['index']) && !isset($this->templateList['content'])) {
-			$this->add_template('content', $this->templateList['index']);
-			unset($this->templateList['index']);
+		if(isset($this->templateObj->templateFiles['index']) && !isset($this->templateObj->templateFiles['content'])) {
+			$this->add_template('content', $this->templateObj->templateFiles['index']);
 		}
 		
 		//make the "final section" available to scripts.
@@ -812,6 +800,9 @@ class contentSystem extends cs_contentAbstract {
 		$sectionArr = $this->sectionArr;
 		array_unshift($sectionArr, $this->baseDir);
 		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
+		
+		
+		$page = $this->templateObj;
 		
 		//now include the includes scripts, if there are any.
 		if(is_array($this->includesList) && count($this->includesList)) {
@@ -832,7 +823,7 @@ class contentSystem extends cs_contentAbstract {
 			catch(exception $e) {
 				$myRoot = preg_replace('/\//', '\\\/', $this->incFs->root);
 				$displayableInclude = preg_replace('/^'. $myRoot .'/', '', $this->myLastInclude);
-				$this->templateObj->set_message_wrapper(array(
+				$page->set_message_wrapper(array(
 					'title'		=> "Fatal Error",
 					'message'	=> __METHOD__ .": A fatal error occurred while processing <b>". 
 							$displayableInclude ."</b>:<BR>\n<b>ERROR</b>: ". $e->getMessage(),
@@ -848,12 +839,12 @@ class contentSystem extends cs_contentAbstract {
 			unset($myInternalScriptName);
 		}
 		
-		if(is_bool($this->templateObj->allow_invalid_urls() === TRUE) && $this->isValid === FALSE) {
-			$this->isValid = $this->templateObj->allow_invalid_urls();
+		if(is_bool($page->allow_invalid_urls() === TRUE) && $this->isValid === FALSE) {
+			$this->isValid = $page->allow_invalid_urls();
 		}
 		
 		if($this->isValid === TRUE) {
-			if($this->templateObj->printOnFinish === true) {
+			if($page->printOnFinish === true) {
 				$page->print_page();
 			}
 		}
