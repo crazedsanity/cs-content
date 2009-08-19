@@ -160,7 +160,7 @@ class TestOfCSFileSystem extends UnitTestCase {
 				$this->writer->go_to_line($randomLine);
 				$lineContents = $this->writer->get_next_line();
 				
-				$this->assertTrue(preg_match('/^line #'. $randomLine .' /', $lineContents));
+				$this->assertTrue(preg_match('/^line #'. $randomLine .' /', $lineContents), 'Random line #'. $randomLine .' did not start with '. $randomLine .': ('. $lineContents .')');
 			}
 			
 			$this->writer->go_to_last_line();
