@@ -67,7 +67,6 @@ require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 require_once(dirname(__FILE__) ."/cs_fileSystem.class.php");
 require_once(dirname(__FILE__) ."/cs_session.class.php");
 require_once(dirname(__FILE__) ."/cs_genericPage.class.php");
-require_once(dirname(__FILE__) ."/cs_tabs.class.php");
 
 class contentSystem extends cs_contentAbstract {
 	
@@ -131,7 +130,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//create a session that gets stored in a database if they so desire...
 		if(defined('SESSION_DBSAVE')) {
-			require_once(dirname(__FILE__) .'/cs_sessionDB.class.php');
+			require_once(constant('LIBDIR') .'/cs-webapplibs/cs_sessionDB.class.php');
 			$obj = new cs_sessionDB();
 			$this->handle_session($obj);
 		}
@@ -188,10 +187,6 @@ class contentSystem extends cs_contentAbstract {
 		$this->incFs = new cs_fileSystem($incBaseDir);
 		
 		
-		//create a tabs object, in case they want to load tabs on the page.
-		//TODO: make the tabs object usable to included code!
-		$this->tabs = new cs_tabs();
-		
 		//check versions, make sure they're all the same.
 		$myVersion = $this->get_version();
 		if($this->templateObj->get_version() !== $myVersion) {
@@ -202,9 +197,6 @@ class contentSystem extends cs_contentAbstract {
 		}
 		if($this->gfObj->get_version() !== $myVersion) {
 			throw new exception(__METHOD__ .": ". get_class($this->gfObj) ." has mismatched version (". $this->gfObj->get_version() ." does not equal ". $myVersion .")");
-		}
-		if($this->tabs->get_version() !== $myVersion) {
-			throw new exception(__METHOD__ .": ". get_class($this->tabs) ." has mismatched version (". $this->tabs->get_version() ." does not equal ". $myVersion .")");
 		}
 		
 		//split apart the section so we can do stuff with it later.
