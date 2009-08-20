@@ -155,7 +155,7 @@ class TestOfCSFileSystem extends UnitTestCase {
 			$linesToTest = 100;
 			
 			for($i=0;$i<$linesToTest;$i++) {
-				$randomLine = rand(0, $actualNum);
+				$randomLine = rand(0, ($actualNum -1));
 				
 				$this->writer->go_to_line($randomLine);
 				$lineContents = $this->writer->get_next_line();
