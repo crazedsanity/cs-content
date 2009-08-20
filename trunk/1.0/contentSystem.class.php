@@ -149,9 +149,23 @@ class contentSystem extends cs_contentAbstract {
 		$this->templateObj = new cs_genericPage(FALSE, $root ."/templates/main.shared.tmpl");
 		
 		//setup some default template vars.
-		$this->templateObj->add_template_var('date', date('m-d-Y'));
-		$this->templateObj->add_template_var('time', date('H:i:s'));
-		$this->templateObj->add_template_var('curYear', date('Y'));
+		$defaultVars = array(
+			'date'			=> date('m-d-Y'),
+			'time'			=> date('H:i:s'),
+			'curYear'		=> date('Y'),
+			'curDate'		=> date("F j, Y"),
+			'curMonth'		=> date("m"),
+			'timezone'		=> date("T"),
+			'DOMAIN'		=> $_SERVER['SERVER_NAME'],
+			'PHP_SELF'		=> $_SERVER['SCRIPT_NAME'],
+			'REQUEST_URI'	=> $_SERVER['REQUEST_URI'],
+			'FULL_URL'		=> $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'],
+			'error_msg'		=> ""
+		);
+		foreach($defaultVars as $k=>$v) {
+			$this->templateObj->add_template_var($k, $v);
+		}
+		
 		
 		$myUrl = '/';
 		if(strlen($this->section) && $this->section !== 0) {
