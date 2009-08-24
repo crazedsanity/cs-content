@@ -621,9 +621,12 @@ class cs_genericPage extends cs_contentAbstract {
 			foreach($tags as $key=>$str) {
 				$str2 = str_replace("{", "", $str);
 				$str2 = str_replace("}", "", $str2);
-				if(!$this->templateVars[$str2]) {
+				if(!isset($this->templateVars[$str2])) {
 					//TODO: set an internal pointer or something to use here, so they can see what was missed.
 					if(is_array($unhandled)) {
+						if(!isset($unhandled[$str2])) {
+							$unhandled[$str2]=0;
+						}
 						$unhandled[$str2]++;
 					}
 					$templateContents = str_replace($str, '', $templateContents);
