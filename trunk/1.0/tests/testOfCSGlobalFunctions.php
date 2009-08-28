@@ -19,8 +19,6 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function __construct() {
-		require_once(dirname(__FILE__) .'/../cs_globalFunctions.class.php');
-		
 		$this->gfObj = new cs_globalFunctions;
 		$this->gfObj->debugPrintOpt=1;
 		

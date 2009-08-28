@@ -11,7 +11,6 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) .'/../abstract/cs_version.abstract.class.php');
 
 class testOfCSVersionAbstract extends UnitTestCase {
 	

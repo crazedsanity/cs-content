@@ -63,10 +63,6 @@
  * 													|--> /includes/content/members/test.inc
  */
 
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
-require_once(dirname(__FILE__) ."/cs_fileSystem.class.php");
-require_once(dirname(__FILE__) ."/cs_session.class.php");
-require_once(dirname(__FILE__) ."/cs_genericPage.class.php");
 
 class contentSystem extends cs_contentAbstract {
 	
@@ -130,7 +126,6 @@ class contentSystem extends cs_contentAbstract {
 		
 		//create a session that gets stored in a database if they so desire...
 		if(defined('SESSION_DBSAVE')) {
-			require_once(constant('LIBDIR') .'/cs-webapplibs/cs_sessionDB.class.php');
 			$obj = new cs_sessionDB();
 			$this->handle_session($obj);
 		}

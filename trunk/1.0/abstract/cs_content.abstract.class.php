@@ -11,7 +11,6 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) ."/cs_version.abstract.class.php");
 
 
 abstract class cs_contentAbstract extends cs_versionAbstract {
@@ -24,7 +23,6 @@ abstract class cs_contentAbstract extends cs_versionAbstract {
 		
 		if($makeGfObj === true) {
 			//make a cs_globalFunctions{} object.
-			require_once(dirname(__FILE__) ."/../cs_globalFunctions.class.php");
 			$this->gfObj = new cs_globalFunctions();
 		}
     }//end __construct()

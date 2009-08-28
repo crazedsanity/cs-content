@@ -1,6 +1,5 @@
 <?php
 
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
 class cs_globalFunctions extends cs_versionAbstract {
 	

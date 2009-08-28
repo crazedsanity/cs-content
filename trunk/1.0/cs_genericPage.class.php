@@ -8,7 +8,6 @@
  * $LastChangedRevision$
  */
 require_once(dirname(__FILE__) ."/required/template.inc");
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
 class cs_genericPage extends cs_contentAbstract {
 	public $templateObj;					//template object to parse the pages

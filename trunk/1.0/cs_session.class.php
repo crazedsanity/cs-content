@@ -8,8 +8,6 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
-
 class cs_session extends cs_contentAbstract {
 
 	protected $uid;
