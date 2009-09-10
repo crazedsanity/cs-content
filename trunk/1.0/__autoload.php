@@ -47,6 +47,7 @@ function __autoload($class) {
 			$tryThis[] = 'abstract/'. $myClass .'.abstract.class.php';
 		}
 		$tryThis[] = $class .'.class.php';
+		$tryThis[] = $class .'Class.php';
 		$tryThis[] = $class .'.php';
 		
 		$found=false;
