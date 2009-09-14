@@ -120,6 +120,7 @@ class TestOfCSContent extends UnitTestCase {
 		
 		
 		$this->assertEqual($checkThis, file_get_contents($filesDir .'/gptest_all-together.txt'));
+		$this->assertEqual($checkThis, $page->templateObj->varvals['out']);
 		
 		//now let's rip all the template rows out & add them back in.
 		$rowDefs = $page->get_block_row_defs('content');
@@ -137,8 +138,10 @@ class TestOfCSContent extends UnitTestCase {
 		$checkThis2 = $page->return_printed_page();
 		
 		$this->assertEqual($checkThis, $checkThis2);
+		$this->assertEqual($checkThis2, $page->templateObj->varvals['out']);
 		
 		$checkThis = $page->return_printed_page(0);
+		$this->assertTrue(preg_match('/\{.\S+?\}/', $page->templateObj->varvals['out']));
 		$this->assertTrue(preg_match('/\{.\S+?\}/', $checkThis));
 		
 		//clone the page object so we can change stuff & not affect the original.
