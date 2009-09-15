@@ -67,16 +67,24 @@ class TestOfCSFileSystem extends UnitTestCase {
 		//okay, read all the files & make the writer create them.
 		$matchSize = array();
 		foreach($insideLs as $file=>$data) {
-			$this->assertEqual(1, $this->writer->create_file($file));
-			
-			$this->assertNotEqual($this->writer->realcwd, $this->reader->realcwd);
-			
-			//now read data out of one & write into the other, make sure they're the same size.
-			$fileSize = $this->writer->write($this->reader->read($file), $file);
-			$this->assertEqual($fileSize, $data['size']);
-			
-			//now get rid of the new file.
-			$this->writer->rm($file);
+			if($data['type'] == 'file') {
+				$this->assertEqual(1, $this->writer->create_file($file));
+				
+				$this->assertNotEqual($this->writer->realcwd, $this->reader->realcwd);
+				
+				//now read data out of one & write into the other, make sure they're the same size.
+				$fileSize = $this->writer->write($this->reader->read($file), $file);
+				if(!$this->assertEqual($fileSize, $data['size'], "Invalid file size for '". $file ."' (". $fileSize ." != ". $data['size'] .")")) {
+					$this->gfObj->debug_print($this->writer->ls($file));
+					$this->gfObj->debug_print($this->reader->ls($file));
+					
+					$this->gfObj->debug_print($this->writer);
+					$this->gfObj->debug_print($this->reader);
+				}
+				
+				//now get rid of the new file.
+				$this->writer->rm($file);
+			}
 		}
 		
 		//lets take the contents of ALL of those files, push it into one big file, and make sure it is identical.
