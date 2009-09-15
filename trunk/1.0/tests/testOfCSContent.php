@@ -102,8 +102,18 @@ class TestOfCSContent extends UnitTestCase {
 	function test_genericPage() {
 		$filesDir = dirname(__FILE__) .'/files';
 		
-		$mainTemplate = $filesDir .'/templates/main.shared.tmpl';
-		$page = new cs_genericPage(false, $mainTemplate);
+		$mainTemplateFullUrl = $filesDir .'/templates/main.shared.tmpl';
+		$mainTemplate = 'main.shared.tmpl';
+		
+		$page = new cs_genericPage(false, $mainTemplateFullUrl);
+		
+		//NOTE::: this test FAILS with cs_genericPage.class.php@455 (or any revision less than 455)
+		$this->assertEqual($mainTemplateFullUrl, $page->template_file_exists($mainTemplate));
+		
+		$this->assertEqual($page->file_to_string($mainTemplate), file_get_contents($mainTemplateFullUrl));
+		
+		
+		
 		$fs = new cs_fileSystem($filesDir .'/templates');
 		
 		$lsData = $fs->ls();
@@ -118,9 +128,7 @@ class TestOfCSContent extends UnitTestCase {
 		
 		$checkThis = $page->return_printed_page();
 		
-		
 		$this->assertEqual($checkThis, file_get_contents($filesDir .'/gptest_all-together.txt'));
-		$this->assertEqual($checkThis, $page->templateObj->varvals['out']);
 		
 		//now let's rip all the template rows out & add them back in.
 		$rowDefs = $page->get_block_row_defs('content');
@@ -137,11 +145,10 @@ class TestOfCSContent extends UnitTestCase {
 		}
 		$checkThis2 = $page->return_printed_page();
 		
+		//NOTE::: this test FAILS with cs_genericPage.class.php@455 (or any revision less than 455)
 		$this->assertEqual($checkThis, $checkThis2);
-		$this->assertEqual($checkThis2, $page->templateObj->varvals['out']);
 		
 		$checkThis = $page->return_printed_page(0);
-		$this->assertTrue(preg_match('/\{.\S+?\}/', $page->templateObj->varvals['out']));
 		$this->assertTrue(preg_match('/\{.\S+?\}/', $checkThis));
 		
 		//clone the page object so we can change stuff & not affect the original.
@@ -169,9 +176,9 @@ class TestOfCSContent extends UnitTestCase {
 		}
 		
 		
-		//make sure stripping undefined vars works properly.
+		//make sure stripping undefined vars works properly (see issue #237)
 		{
-			$page = new cs_genericPage(false, $mainTemplate);
+			$page = new cs_genericPage(false, $mainTemplateFullUrl);
 			$this->assertEqual($fs->read($mainTemplate), $page->return_printed_page(0));
 			$this->assertNotEqual($fs->read($mainTemplate), $page->return_printed_page(1));
 			
@@ -191,6 +198,49 @@ class TestOfCSContent extends UnitTestCase {
 				$this->gfObj->debug_print($myUnhandledVars);
 				$this->gfObj->debug_print($page->unhandledVars);
 			}
+		}
+		
+		//Test if ripping out all the block rows works as intended (also related to issue #237)
+		{
+			$page = new cs_genericPage(false, $mainTemplateFullUrl);
+			$page->add_template_var('blockRowTestVal', 3);
+			
+			$fs = new cs_fileSystem($filesDir .'/templates');
+			$lsData = $fs->ls();
+			foreach($lsData as $index=>$value) {
+				$filenameBits = explode('.', $index);
+				$page->add_template_file($filenameBits[0], $index);
+			}
+			
+			$blockRows = $page->rip_all_block_rows('content');
+			
+			//make sure printing the page multiple times doesn't change its output.
+			$this->assertEqual($page->return_printed_page(), $page->return_printed_page());
+			$this->assertEqual($page->return_printed_page(), $page->return_printed_page());
+			$this->assertEqual($page->return_printed_page(), $page->return_printed_page());
+			
+			/*
+			 * NOTE::: if this seems confusing, well... it is.  Basically, the template var "{blockRowTestVal}" doesn't get 
+			 * parsed into the value of 3 until the call to print_page(), so therefore the block row "blockRow3" doesn't have
+			 * a valid BEGIN statement until AFTER the page is built... ripping out that blockrow would have to be done after 
+			 * everything is all complete (i.e. by assigning the value of return_printed_page() to a template var)
+			 */
+			if(!$this->assertEqual(6, count($blockRows))) {
+				$this->gfObj->debug_print($blockRows);
+			}
+			
+			$this->assertEqual(file_get_contents($filesDir .'/gptest_blockrows.txt'), $page->return_printed_page());
+			
+			$rasterizedData = $page->return_printed_page();
+			$page->add_template_var('main', $page->return_printed_page());
+			$this->assertEqual($rasterizedData, $page->return_printed_page());
+			
+			$blockRows = $page->rip_all_block_rows('main');
+			$this->assertEqual(1, count($blockRows));
+			$this->assertTrue(isset($blockRows['blockRow3']));
+			
+			$this->assertEqual(file_get_contents($filesDir .'/gptest_blockrows2.txt'), $page->return_printed_page());
+			$this->assertNotEqual(file_get_contents($filesDir .'/gptest_blockrows2.txt'), file_get_contents($filesDir .'/gptest_blockrows.txt'));
 		}
 	}//end test_genericPage
 	//-------------------------------------------------------------------------

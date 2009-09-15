@@ -7,10 +7,8 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-require_once(dirname(__FILE__) ."/required/template.inc");
 
 class cs_genericPage extends cs_contentAbstract {
-	public $templateObj;					//template object to parse the pages
 	public $templateVars	= array();		//our copy of the global templateVars
 	public $templateFiles	= array();		//our list of template files...
 	public $templateRows	= array();		//array of block rows & their contents.
@@ -63,7 +61,7 @@ class cs_genericPage extends cs_contentAbstract {
 			$mainTemplateFile = preg_replace('/^\//', '', $mainTemplateFile);
 		}
 		
-		if(isset($mainTemplateFile) && strlen($mainTemplateFile) && is_dir(dirname($mainTemplateFile))) {
+		if(isset($mainTemplateFile) && strlen($mainTemplateFile) && is_dir(dirname($mainTemplateFile)) && dirname($mainTemplateFile) != '.') {
 			$this->siteRoot = dirname($mainTemplateFile);
 			if(preg_match('/\//', $this->siteRoot) && preg_match('/templates/', $this->siteRoot)) {
 				$this->siteRoot .= "/..";
@@ -78,6 +76,8 @@ class cs_genericPage extends cs_contentAbstract {
 		else {
 			throw new exception(__METHOD__ .": cannot locate siteRoot from main template file (". $mainTemplateFile .")");
 		}
+		$fs = new cs_fileSystem(dirname(__FILE__));
+		$this->siteRoot = $fs->resolve_path_with_dots($this->siteRoot);
 		$this->tmplDir = $this->siteRoot .'/templates';
 		$this->libDir = $this->siteRoot .'/lib';
 		
@@ -97,9 +97,6 @@ class cs_genericPage extends cs_contentAbstract {
 			}
 		}
 		unset($GLOBALS['templateVars'], $GLOBALS['templateFiles']);
-		
-		//build a new instance of the template library (from PHPLib)
-		$this->templateObj=new Template($this->tmplDir,"keep"); //initialize a new template parser
 
 		if(!preg_match('/^\//', $mainTemplateFile)) {
 			$mainTemplateFile = $this->tmplDir ."/". $mainTemplateFile;
@@ -270,20 +267,32 @@ class cs_genericPage extends cs_contentAbstract {
 		//Show any available messages.
 		$this->process_set_message();
 		
-		//Load the default page layout.
-		$this->templateObj->set_file("main", $this->mainTemplate);
-
-		//load the placeholder names and thier values
-		$this->templateObj->set_var($this->templateVars);
-		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
+		if(isset($this->templateVars['main'])) {
+			//this is done to simulate old behaviour (the "main" templateVar could overwrite the entire main template).
+			$out = $this->templateVars['main'];
+		}
+		else {
+			$out = $this->file_to_string($this->mainTemplate);
+		}
+		if(!strlen($out)) {
+			$this->gfObj->debug_print($out);
+			$this->gfObj->debug_print($this->mainTemplate);
+			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->tmplDir .'/'. $this->mainTemplate)));
+			exit(__METHOD__ .": mainTemplate (". $this->mainTemplate .") was empty...?");
+		}
+		
+		$numLoops = 0;
+		$tags = array();
+		while(preg_match_all('/\{.\S+?\}/', $out, $tags) && $numLoops < 10) {
+			$out = $this->gfObj->mini_parser($out, $this->templateVars, '{', '}');
+			$numLoops++;
+		}
 		
 		if($stripUndefVars) {
-			$this->templateObj->varvals['out'] = $this->strip_undef_template_vars(
-				$this->templateObj->varvals['out'], 
-				$this->unhandledVars
-			);
+			$out = $this->strip_undef_template_vars($out, $this->unhandledVars);
 		}
-		$this->templateObj->pparse("out","out"); //parse the main page 
+		
+		print($out);
 		
 	}//end of print_page()
 	//---------------------------------------------------------------------------------------------
@@ -330,9 +339,20 @@ class cs_genericPage extends cs_contentAbstract {
 	 * content & returns it.
 	 */
 	public function file_to_string($templateFileName) {
+		
+		if(preg_match('/templates/', $templateFileName)) {
+			$bits = explode('templates', $templateFileName);
+			if(count($bits) == 2) {
+				$templateFileName = $bits[1];
+			}
+			else {
+				throw new exception(__METHOD__ .": full path to template file given but could not break the path into bits::: ". $templateFileName);
+			}
+		}
 		$templateFileName = preg_replace('/\/\//', '\/', $templateFileName);
-		if($this->template_file_exists($templateFileName)) {
-			$retval = file_get_contents($this->tmplDir .'/'. $templateFileName);
+		$fullPathToFile = $this->template_file_exists($templateFileName);
+		if($fullPathToFile !== false && strlen($fullPathToFile)) {
+			$retval = file_get_contents($fullPathToFile);
 		} else {
 			$this->set_message_wrapper(array(
 				"title"		=> 'Template File Error',
@@ -351,7 +371,7 @@ class cs_genericPage extends cs_contentAbstract {
 	 * Checks to see if the given filename exists within the template directory.
 	 */
 	public function template_file_exists($file) {
-		$retval = 0;
+		$retval = false;
 		//If the string doesn't start with a /, add one
 		if (strncmp("/",$file,1)) {
 			//strncmp returns 0 if they match, so we're putting a / on if they don't
