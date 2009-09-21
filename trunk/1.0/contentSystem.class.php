@@ -101,10 +101,6 @@ class contentSystem extends cs_contentAbstract {
 	public function __construct($siteRoot=null) {
 		parent::__construct();
 		
-		if(is_null($siteRoot) && !defined('SITE_ROOT')) {
-			throw new exception(__METHOD__ .": must set siteRoot or constant 'SITE_ROOT'");
-		}
-		
 		//setup the section stuff...
 		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
 		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
@@ -133,7 +129,9 @@ class contentSystem extends cs_contentAbstract {
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$root = $_SERVER['DOCUMENT_ROOT'];
+		$root = preg_replace('/\/public_html$/', '', $_SERVER['DOCUMENT_ROOT']);
+		$root = preg_replace('/\/html/', '', $root);
+		
 		if(!is_null($siteRoot) && is_dir($siteRoot)) {
 			$root = $siteRoot;
 		}

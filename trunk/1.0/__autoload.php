@@ -21,11 +21,6 @@ require_once(dirname(__FILE__) .'/cs_globalFunctions.class.php');
 
 function __autoload($class) {
 	
-	if(is_array($GLOBALS['__autoload__libDefs']) && isset($GLOBALS['__autoload__libDefs'][$class])) {
-		require_once($GLOBALS['__autoload__libDefs'][$class]);
-	}
-	else {
-		
 		$tried = array();
 		
 		$fsRoot = dirname(__FILE__) .'/../../';
@@ -55,8 +50,10 @@ function __autoload($class) {
 			if(isset($lsData[$filename])) {
 				$tried[] = $fs->realcwd .'/'. $filename;
 				require_once($fs->realcwd .'/'. $filename);
-				$found=true;
-				break;
+				if(class_exists($class)) {
+					$found=true;
+					break;
+				}
 			}
 		}
 		
@@ -70,8 +67,10 @@ function __autoload($class) {
 						if(file_exists($fileLocation)) {
 							$tried[] = $fileLocation;
 							require_once($fileLocation);
-							$found=true;
-							break;
+							if(class_exists($class)) {
+								$found=true;
+								break;
+							}
 						}
 					}
 				}
@@ -80,11 +79,10 @@ function __autoload($class) {
 				}
 			}
 		}
-	}
 	
 	if(!$found) {
 		$gf = new cs_globalFunctions;
-		$gf->debug_print(__FILE__ ." - line#". __LINE__ ."::: couldn't find (". $class .")",1);
+		$gf->debug_print(__FILE__ ." - line #". __LINE__ ."::: couldn't find (". $class .")",1);
 		$gf->debug_print($tried,1);
 		$gf->debug_print($tryThis,1);
 		exit;
