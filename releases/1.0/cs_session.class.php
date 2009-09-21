@@ -8,9 +8,6 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
-require_once(dirname(__FILE__) ."/../cs-versionparse/cs_version.abstract.class.php");
-
 class cs_session extends cs_contentAbstract {
 
 	protected $uid;
@@ -40,7 +37,7 @@ class cs_session extends cs_contentAbstract {
 		//TODO: need a setting somewhere that says what the name of this var should be,
 		//	instead of always forcing "uid".
 		$this->uid = 0;
-		if($_SESSION['uid']) {
+		if(isset($_SESSION['uid']) && $_SESSION['uid']) {
 			$this->uid = $_SESSION['uid'];
 		}
 		

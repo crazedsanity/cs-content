@@ -9,8 +9,6 @@
  * $LastChangedRevision$
  */
 
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
-
 class cs_fileSystem extends cs_contentAbstract {
 
 	public $root;		//actual root directory.
@@ -363,7 +361,7 @@ class cs_fileSystem extends cs_contentAbstract {
 				//something bad happened.
 				$retval = 0;
 			}
-		} 
+		}
 		else {
 			throw new exception(__METHOD__ .": file is unreadable (". $filename .")");
 		} 
@@ -885,6 +883,8 @@ class cs_fileSystem extends cs_contentAbstract {
 		if($this->is_readable($filename)) {
 			if($this->check_chroot($destination)) {
 				//do the move.
+				$filename = $this->filename2absolute($filename);
+				$destination = $this->filename2absolute($destination);
 				$retval = rename($filename, $destination);
 			}
 			else {

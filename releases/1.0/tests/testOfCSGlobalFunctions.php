@@ -19,9 +19,6 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function __construct() {
-		require_once(dirname(__FILE__) .'/../cs_globalFunctions.class.php');
-		require_once(dirname(__FILE__) .'/../cs_siteConfig.class.php');
-		
 		$this->gfObj = new cs_globalFunctions;
 		$this->gfObj->debugPrintOpt=1;
 		
@@ -238,12 +235,170 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 		
 		//now go through the same thing, but this time tell it to give back a specific value for true and false.
 		$this->assertEqual($gf->interpret_bool(false, array(0=>'FaLSe',1=>"crap")), 'FaLSe');
+		$this->assertEqual($gf->interpret_bool(true, array(0=>'FaLSe',1=>"crap")), 'crap');
 		$this->assertEqual($gf->interpret_bool(false, array(0=>"crap",1=>'FaLSe')), 'crap');
+		$this->assertEqual($gf->interpret_bool(true, array(0=>"crap",1=>'FaLSe')), 'FaLSe');
 	}//end test_interpret_bool()
 	//-------------------------------------------------------------------------
 	
 	
 	
-}//end TestOfCSContent
+	//-------------------------------------------------------------------------
+	function test_mini_parser() {
+		
+		$gf = new cs_globalFunctions;
+		
+		//Basic test.
+		{
+			$stringToChange = '{{random-{number}-item}} {test}';
+			$arrayOfVars = array(
+				'number'		=> 5,
+				'random-5-item'	=> "test",
+				'test'			=> "SUCCESS"
+			);
+			$expectedOutput = 'SUCCESS SUCCESS';
+			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars, '{', '}');
+			$this->assertEqual($expectedOutput, $actualOutput);
+		}
+		
+		//Order of operations test.
+		{
+			$stringToChange = '{{random-{number}-item}} {test}';
+			$arrayOfVars = array(
+				'random-5-item'	=> "test",
+				'number'		=> 5,
+				'test'			=> "SUCCESS"
+			);
+			$expectedOutput = '{{random-5-item}} SUCCESS';
+			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars, '{', '}');
+			$this->assertEqual($expectedOutput, $actualOutput);
+			
+			//if we put that same actualOutput through the ringer again, it comes up with the originally expected output.
+			$expectedOutput = "SUCCESS SUCCESS";
+			$actualOutput = $gf->mini_parser($actualOutput, $arrayOfVars, '{', '}');
+			$this->assertEqual($expectedOutput, $actualOutput);
+		}
+		
+		//some testing with the default begin/end strings.
+		{
+			$stringToChange = '%%%%random-%%number%%-item%%%% %%test%%';
+			$arrayOfVars = array(
+				'number'		=> 5,
+				'random-5-item'	=> "test",
+				'test'			=> "SUCCESS"
+			);
+			$expectedOutput = 'SUCCESS SUCCESS';
+			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars);
+			$this->assertEqual($expectedOutput, $actualOutput);
+		}
+		
+		//A stupid test to make sure we can specify different begin/end var identifiers.
+		
+		{
+			$stringToChange = '__BEGIN____BEGIN__random-__BEGIN__number__END__-item__END____END__ __BEGIN__test__END__';
+			$arrayOfVars = array(
+				'number'		=> 5,
+				'random-5-item'	=> "test",
+				'test'			=> "SUCCESS"
+			);
+			$expectedOutput = 'SUCCESS SUCCESS';
+			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars, '__BEGIN__', '__END__');
+			$this->assertEqual($expectedOutput, $actualOutput);
+		}
+		
+	}//end test_mini_parser()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	function test_truncate_string() {
+		
+		$gf = new cs_globalFunctions;
+		
+		//basic test.
+		{
+			$length = 15;
+			$string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean et mi scelerisque massa consequat adipiscing.";
+			$looseFinal = "Lorem ipsum dol...";
+			$strictFinal= "Lorem ipsum ...";
+			
+			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length));
+			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...'));
+			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...', false));
+			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...', 0));
+			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...', null));
+			
+			
+			$this->assertEqual($strictFinal, $gf->truncate_string($string, $length, '...', true));
+			$this->assertEqual($strictFinal, $gf->truncate_string($string, $length, '...', 1));
+			$this->assertEqual($strictFinal, $gf->truncate_string($string, $length, '...', "Do it"));
+			
+			
+			$this->assertNotEqual($looseFinal, $gf->truncate_string($string, $length, '...', true));
+			$this->assertNotEqual($looseFinal, $gf->truncate_string($string, $length, '...', 1));
+			$this->assertNotEqual($looseFinal, $gf->truncate_string($string, $length, '...', "Do it"));
+		}
+		
+		//advanced test: give it a final length of *near* the length of the string & see what happens.
+		{
+			
+			$length = 56;
+			$string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+			$string2= "Lorem ipsum dolor sit amet, consectetur adipiscing elit...";
+			$string3= "Lorem ipsum dolor sit amet, consectetur adipiscing eli...";
+			$string54= "Lorem ipsum dolor sit amet, consectetur adipiscing ...";
+			$string55= "Lorem ipsum dolor sit amet, consectetur adipiscing e...";
+			$string56= "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+			
+			//make sure the initial string is ACTUALLY 56 characters long.
+			$this->assertEqual($length, strlen($string));
+			
+			$this->assertEqual($string,  $gf->truncate_string($string, 56, '...', false));
+			$this->assertEqual($string2, $gf->truncate_string($string, 55, '...', false));
+			$this->assertEqual($string3, $gf->truncate_string($string, 54, '...', false));
+			
+			$this->assertEqual($string56, $gf->truncate_string($string, 56, '...', true));
+			$this->assertEqual(56, strlen($gf->truncate_string($string, 56, '...', true)));
+			
+			$this->assertEqual($string55, $gf->truncate_string($string, 55, '...', true));
+			$this->assertEqual(55, strlen($gf->truncate_string($string, 55, '...', true)));
+			
+			$this->assertEqual($string54, $gf->truncate_string($string, 54, '...', true));
+			$this->assertEqual(54, strlen($gf->truncate_string($string, 54, '...', true)));
+		}
+		
+	}//end truncate_string()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	function test_create_list() {
+		
+		$gf = new cs_globalFunctions;
+		
+		$items = array(
+			"", "one", "'TWO", "thr'ee", "four", "^five", "six'"
+		);
+		$noSqlRes = "one, 'TWO, thr'ee, four, ^five, six'";
+		$sqlRes = "'', 'one', ''TWO', 'thr'ee', 'four', '^five', 'six''";
+		
+		$checkNoSql = null;
+		$checkSql = null;
+		foreach($items as $str) {
+			$checkNoSql = $gf->create_list($checkNoSql, $str, ", ", 0);
+			$checkSql = $gf->create_list($checkSql, $str, ", ", 1);
+		}
+		
+		$this->assertEqual($checkNoSql, $noSqlRes);
+		$this->assertEqual($checkSql, $sqlRes);
+		
+	}//end test_create_list()
+	//-------------------------------------------------------------------------
+	
+	
+	
+}//end TestOfCSGlobalFunctions
 //=============================================================================
 ?>

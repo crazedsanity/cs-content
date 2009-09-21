@@ -1,0 +1,19 @@
+<html>
+	<head>
+		<title>This is the title.</title>
+	</head>
+<body>
+	<table>This is the infobar.</table>
+	--- the menubar (DATE: )
+---+++ CONTENT STARTS HERE +++---
+	
+	
+
+	
+	
+	
+	
+---+++ CONTENT ENDS HERE +++---
+	--- the footer.
+</body>
+</html>

@@ -7,13 +7,12 @@
  * $LastChangedBy$
  * $LastChangedRevision$
  */
-require_once(dirname(__FILE__) ."/required/template.inc");
-require_once(dirname(__FILE__) ."/abstract/cs_content.abstract.class.php");
 
 class cs_genericPage extends cs_contentAbstract {
-	public $templateObj;					//template object to parse the pages
-	public $templateVars	= array();	//our copy of the global templateVars
-	public $mainTemplate;				//the default layout of the site
+	public $templateVars	= array();		//our copy of the global templateVars
+	public $templateFiles	= array();		//our list of template files...
+	public $templateRows	= array();		//array of block rows & their contents.
+	public $mainTemplate;					//the default layout of the site
 	public $unhandledVars=array();
 	public $printOnFinish=true;
 	
@@ -22,17 +21,13 @@ class cs_genericPage extends cs_contentAbstract {
 	private $siteRoot;
 	private $allowRedirect;
 	
-	private $showEditableLink = FALSE;
-	
 	private $allowInvalidUrls=NULL;
 	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
 	 */
-	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL, $allowRedirect=TRUE) {
-		//handle some configuration.
-		$this->allowRedirect = $allowRedirect;
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL) {
 		
 		//initialize stuff from our parent...
 		parent::__construct();
@@ -45,11 +40,6 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		if(!defined('CS-CONTENT_SESSION_NAME')) {
 			define("CS-CONTENT_SESSION_NAME", ini_get('session.name'));
-		}
-		
-		//TODO: if the end page doesn't want to allow the "edit" links, will this still work?
-		if(defined("CS_CONTENT_MODIFIABLE") && constant("CS_CONTENT_MODIFIABLE") === TRUE) {
-			$this->showEditableLink = TRUE;
 		}
 	}//end __construct()
 	//---------------------------------------------------------------------------------------------
@@ -71,15 +61,29 @@ class cs_genericPage extends cs_contentAbstract {
 			$mainTemplateFile = preg_replace('/^\//', '', $mainTemplateFile);
 		}
 		
-		
-		if(defined('SITE_ROOT')) {
+		if(isset($mainTemplateFile) && strlen($mainTemplateFile) && is_dir(dirname($mainTemplateFile)) && dirname($mainTemplateFile) != '.') {
+			$this->siteRoot = dirname($mainTemplateFile);
+			if(preg_match('/\//', $this->siteRoot) && preg_match('/templates/', $this->siteRoot)) {
+				$this->siteRoot .= "/..";
+			}
+		}
+		elseif(defined('SITE_ROOT') && is_dir(constant('SITE_ROOT'))) {
 			$this->siteRoot = constant('SITE_ROOT');
 		}
-		else {
-			throw new exception(__METHOD__ .": required constant 'SITE_ROOT' not set");
+		elseif(is_dir($_SERVER['DOCUMENT_ROOT'] .'/templates')) {
+			$this->siteRoot = $_SERVER['DOCUMENT_ROOT'] .'/templates';
 		}
+		else {
+			throw new exception(__METHOD__ .": cannot locate siteRoot from main template file (". $mainTemplateFile .")");
+		}
+		$fs = new cs_fileSystem(dirname(__FILE__));
+		$this->siteRoot = $fs->resolve_path_with_dots($this->siteRoot);
 		$this->tmplDir = $this->siteRoot .'/templates';
 		$this->libDir = $this->siteRoot .'/lib';
+		
+		if(!is_dir($this->tmplDir)) {
+			throw new exception(__METHOD__ .": invalid templates folder (". $this->tmplDir ."), siteRoot=(". $this->siteRoot .")");
+		}
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
 		if(is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
@@ -93,9 +97,6 @@ class cs_genericPage extends cs_contentAbstract {
 			}
 		}
 		unset($GLOBALS['templateVars'], $GLOBALS['templateFiles']);
-		
-		//build a new instance of the template library (from PHPLib)
-		$this->templateObj=new Template($this->tmplDir,"keep"); //initialize a new template parser
 
 		if(!preg_match('/^\//', $mainTemplateFile)) {
 			$mainTemplateFile = $this->tmplDir ."/". $mainTemplateFile;
@@ -175,13 +176,8 @@ class cs_genericPage extends cs_contentAbstract {
 	 * TODO: check if $fileName exists before blindly trying to parse it.
 	 */
 	public function add_template_file($handleName, $fileName){
-		if($this->showEditableLink) {
-			$prefix = '[<a href="#NULL_page='. $fileName .'"><font color="red"><b>Edit "'. $handleName .'"</b></font></a>]<BR>';
-			$this->add_template_var($handleName, $prefix .$this->file_to_string($fileName));
-		}
-		else {
-			$this->add_template_var($handleName, $this->file_to_string($fileName));
-		}
+		$this->templateFiles[$handleName] = $fileName;
+		$this->add_template_var($handleName, $this->file_to_string($fileName));
 	}//end add_template_file()
 	//---------------------------------------------------------------------------------------------
 
@@ -267,41 +263,36 @@ class cs_genericPage extends cs_contentAbstract {
 	 * @return (str)				Final, parsed page.
 	 */
 	public function print_page($stripUndefVars=1) {
+		$this->unhandledVars = array();
 		//Show any available messages.
 		$this->process_set_message();
 		
-		//Load the default page layout.
-		$this->templateObj->set_file("main", $this->mainTemplate);
-
-		//load the placeholder names and thier values
-		$this->templateObj->set_var($this->templateVars);
-		$this->templateObj->parse("out","main"); //parse the sub-files into the main page
+		if(isset($this->templateVars['main'])) {
+			//this is done to simulate old behaviour (the "main" templateVar could overwrite the entire main template).
+			$out = $this->templateVars['main'];
+		}
+		else {
+			$out = $this->file_to_string($this->mainTemplate);
+		}
+		if(!strlen($out)) {
+			$this->gfObj->debug_print($out);
+			$this->gfObj->debug_print($this->mainTemplate);
+			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->tmplDir .'/'. $this->mainTemplate)));
+			exit(__METHOD__ .": mainTemplate (". $this->mainTemplate .") was empty...?");
+		}
+		
+		$numLoops = 0;
+		$tags = array();
+		while(preg_match_all('/\{.\S+?\}/', $out, $tags) && $numLoops < 10) {
+			$out = $this->gfObj->mini_parser($out, $this->templateVars, '{', '}');
+			$numLoops++;
+		}
 		
 		if($stripUndefVars) {
-			$numLoops = 0;
-			while(preg_match_all('/\{.\S+?\}/', $this->templateObj->varvals['out'], $tags) && $numLoops < 50) {
-				$tags = $tags[0];
-				
-				//TODO: figure out why this works when running it twice.
-				foreach($tags as $key=>$str) {
-					$str2 = str_replace("{", "", $str);
-					$str2 = str_replace("}", "", $str2);
-					if(!isset($this->templateVars[$str2]) && $stripUndefVars) {
-						//TODO: set an internal pointer or something to use here, so they can see what was missed.
-						$this->templateObj->varvals['out'] = str_replace($str, '', $this->templateObj->varvals['out']);
-						if(isset($this->unhandledVars[$str2])) {
-							$this->unhandledVars[$str2]++;
-						}
-						else {
-							$this->unhandledVars[$str2] = 1;
-						}
-					}
-				}
-				$this->templateObj->parse("out", "out");
-				$numLoops++;
-			}
+			$out = $this->strip_undef_template_vars($out, $this->unhandledVars);
 		}
-		$this->templateObj->pparse("out","out"); //parse the main page 
+		
+		print($out);
 		
 	}//end of print_page()
 	//---------------------------------------------------------------------------------------------
@@ -348,9 +339,20 @@ class cs_genericPage extends cs_contentAbstract {
 	 * content & returns it.
 	 */
 	public function file_to_string($templateFileName) {
+		
+		if(preg_match('/templates/', $templateFileName)) {
+			$bits = explode('templates', $templateFileName);
+			if(count($bits) == 2) {
+				$templateFileName = $bits[1];
+			}
+			else {
+				throw new exception(__METHOD__ .": full path to template file given but could not break the path into bits::: ". $templateFileName);
+			}
+		}
 		$templateFileName = preg_replace('/\/\//', '\/', $templateFileName);
-		if($this->template_file_exists($templateFileName)) {
-			$retval = file_get_contents($this->tmplDir .'/'. $templateFileName);
+		$fullPathToFile = $this->template_file_exists($templateFileName);
+		if($fullPathToFile !== false && strlen($fullPathToFile)) {
+			$retval = file_get_contents($fullPathToFile);
 		} else {
 			$this->set_message_wrapper(array(
 				"title"		=> 'Template File Error',
@@ -369,7 +371,7 @@ class cs_genericPage extends cs_contentAbstract {
 	 * Checks to see if the given filename exists within the template directory.
 	 */
 	public function template_file_exists($file) {
-		$retval = 0;
+		$retval = false;
 		//If the string doesn't start with a /, add one
 		if (strncmp("/",$file,1)) {
 			//strncmp returns 0 if they match, so we're putting a / on if they don't
@@ -488,35 +490,8 @@ class cs_genericPage extends cs_contentAbstract {
 	/**
 	 * Performs redirection, provided it is allowed.
 	 */
-	function conditional_header($url, $exitAfter=TRUE) {
-		if($this->allowRedirect) {
-			//checks to see if headers were sent; if yes: use a meta redirect.
-			//	if no: send header("location") info...
-			if(headers_sent()) {
-				//headers sent.  Use the meta redirect.
-				print "
-				<HTML>
-				<HEAD>
-				<TITLE>Redirect Page</TITLE>
-				<META HTTP-EQUIV='refresh' content='0; URL=$url'>
-				</HEAD>
-				<a href=\"$url\"></a>
-				</HTML>
-				";
-			}
-			else {
-				header("location:$url");
-			}
-			
-			if($exitAfter) {
-				//redirecting without exitting is bad, m'kay?
-				exit;
-			}
-		}
-		else {
-			//TODO: should an exception be thrown, or maybe exit here anyway?
-			throw new exception(__METHOD__ .": auto redirects not allowed...?");
-		}
+	function conditional_header($url, $exitAfter=TRUE,$isPermRedir=FALSE) {
+		$this->gfObj->conditional_header($url, $exitAfter, $isPermRedir);
 	}//end conditional_header()
 	//---------------------------------------------------------------------------------------------
 	
@@ -656,7 +631,7 @@ class cs_genericPage extends cs_contentAbstract {
 	
 	
 	//-------------------------------------------------------------------------
-	public function strip_undef_template_vars($templateContents) {
+	public function strip_undef_template_vars($templateContents, array &$unhandled=null) {
 		$numLoops = 0;
 		while(preg_match_all('/\{.\S+?\}/', $templateContents, $tags) && $numLoops < 50) {
 			$tags = $tags[0];
@@ -665,8 +640,14 @@ class cs_genericPage extends cs_contentAbstract {
 			foreach($tags as $key=>$str) {
 				$str2 = str_replace("{", "", $str);
 				$str2 = str_replace("}", "", $str2);
-				if(!$this->templateVars[$str2]) {
+				if(!isset($this->templateVars[$str2])) {
 					//TODO: set an internal pointer or something to use here, so they can see what was missed.
+					if(is_array($unhandled)) {
+						if(!isset($unhandled[$str2])) {
+							$unhandled[$str2]=0;
+						}
+						$unhandled[$str2]++;
+					}
 					$templateContents = str_replace($str, '', $templateContents);
 				}
 			}
@@ -681,6 +662,7 @@ class cs_genericPage extends cs_contentAbstract {
 	//-------------------------------------------------------------------------
 	public function strip_undef_template_vars_from_section($section='content') {
 		if(isset($this->templateVars[$section])) {
+			//rip out undefined vars from the contents of the given section.
 			$this->templateVars[$section] = $this->strip_undef_template_vars($this->templateVars[$section]);
 		}
 		else {
@@ -689,6 +671,31 @@ class cs_genericPage extends cs_contentAbstract {
 		
 		return($this->templateVars[$section]);
 	}//strip_undef_template_vars_from_section()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * Magic PHP method for retrieving the values of private/protected vars.
+	 */
+	public function __get($var) {
+		return($this->$var);
+	}//end __get()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * Magic PHP method for changing the values of private/protected vars (or 
+	 * creating new ones).
+	 */
+	public function __set($var, $val) {
+		
+		//TODO: set some restrictions on internal vars...
+		$this->$var = $val;
+	}//end __set()
 	//-------------------------------------------------------------------------
 
 }//end cs_genericPage{}

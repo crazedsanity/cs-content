@@ -13,6 +13,10 @@
 	<!-- END blockRow3 -->
 	
 	<!-- BEGIN blockRow4 --><!-- END blockRow4 -->
+	
+	<!-- BEGIN blockRow5 --><!-- BEGIN embeddedBlockRow1 --><!-- END embeddedBlockRow1 -->
+		<!-- BEGIN embeddedBlockRow2 --><!-- END embeddedBlockRow2 -->
+	<!-- END blockRow5 -->
 ---+++ CONTENT ENDS HERE +++---
 	--- the footer.
 </body>
