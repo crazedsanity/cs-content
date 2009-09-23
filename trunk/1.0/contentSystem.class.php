@@ -731,8 +731,8 @@ class contentSystem extends cs_contentAbstract {
 	 * Called when something is broken.
 	 */
 	private function die_gracefully($details=NULL) {
-		header('HTTP/1.0 404 Not Found');
-		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+		if(isset($_SERVER['SERVER_PROTOCOL']) && $this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+			header('HTTP/1.0 404 Not Found');
 			//Simple "Page Not Found" error... show 'em.
 			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
 			
@@ -748,7 +748,6 @@ class contentSystem extends cs_contentAbstract {
 			exit;
 		}
 		else {
-			//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
 			throw new exception(__METHOD__ .": Couldn't find 404 template, plus additional error... \nDETAILS::: $details" .
 					"\nREASON::: ". $this->reason);
 		}
