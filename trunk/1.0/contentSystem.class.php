@@ -69,6 +69,7 @@ class contentSystem extends cs_contentAbstract {
 	protected $baseDir			= NULL;			//base directory for templates & includes.			
 	protected $section			= NULL;			//section string, derived from the URL.		
 	protected $sectionArr		= array();		//array of items, for figuring out where templates & includes are.
+	protected $fullsectionArr	= array();
 	
 	
 	protected $tmplFs			= NULL;			//Object used to access the TEMPLATES filesystem
@@ -106,6 +107,7 @@ class contentSystem extends cs_contentAbstract {
 		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
 		
 		//figure out the section & subsection stuff.
+		$this->fullSectionArr = split('/', $_SERVER['REQUEST_URI']); //TODO: will this cope with an APPURL being set?
 		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
 		
 		$this->initialize_locals($siteRoot);
@@ -796,6 +798,7 @@ class contentSystem extends cs_contentAbstract {
 		//make the "final section" available to scripts.
 		$finalSection = $this->finalSection;
 		$sectionArr = $this->sectionArr;
+		$fullSectionArr = $this->fullSectionArr;
 		array_unshift($sectionArr, $this->baseDir);
 		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
 		
