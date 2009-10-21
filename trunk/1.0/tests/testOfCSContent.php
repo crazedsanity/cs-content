@@ -247,6 +247,17 @@ class TestOfCSContent extends UnitTestCase {
 	
 	
 	
+	//-------------------------------------------------------------------------
+	public function test_contentSystem () {
+		
+		$content = new contentSystem(dirname(__FILE__) .'/files');
+		$content->inject_var('testObj', $this);
+		$content->finish();
+	}//end test_contentSystem()
+	//-------------------------------------------------------------------------
+	
+	
+	
 }//end TestOfCSContent
 //=============================================================================
 ?>

@@ -107,7 +107,8 @@ class contentSystem extends cs_contentAbstract {
 		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
 		
 		//figure out the section & subsection stuff.
-		$this->fullSectionArr = split('/', $_SERVER['REQUEST_URI']); //TODO: will this cope with an APPURL being set?
+		$requestUri = preg_replace('/\/$/', '', $_SERVER['REQUEST_URI']);
+		$this->fullSectionArr = split('/', $requestUri); //TODO: will this cope with an APPURL being set?
 		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
 		
 		$this->initialize_locals($siteRoot);
@@ -772,6 +773,7 @@ class contentSystem extends cs_contentAbstract {
 		foreach($badUrlVars as $badVarName) {
 			unset($_GET[$badVarName], $_POST[$badVarName]);
 		}
+		unset($badUrlVars, $badVarName);
 		
 		if(is_array($this->injectVars) && count($this->injectVars)) {
 			$definedVars = get_defined_vars();
@@ -784,6 +786,7 @@ class contentSystem extends cs_contentAbstract {
 				}
 			}
 		}
+		unset($definedVars, $myVarName, $myVarVal);
 		
 		if(isset($this->session) && is_object($this->session)) {
 			$this->templateObj->session = $this->session;
@@ -810,6 +813,7 @@ class contentSystem extends cs_contentAbstract {
 			try {
 				foreach($this->includesList as $myInternalIndex=>$myInternalScriptName) {
 					$this->myLastInclude = $myInternalScriptName;
+					unset($myInternalScriptName, $myInternalIndex);
 					include_once($this->myLastInclude);
 				}
 				
@@ -817,6 +821,7 @@ class contentSystem extends cs_contentAbstract {
 				if(is_array($this->afterIncludesList)) {
 					foreach($this->afterIncludesList as $myInternalIndex=>$myInternalScriptName) {
 						$this->myLastInclude = $myInternalScriptName;
+						unset($myInternalScriptName, $myInternalIndex);
 						include_once($this->myLastInclude);
 					}
 				}
