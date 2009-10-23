@@ -152,7 +152,7 @@ class contentSystem extends cs_contentAbstract {
 			'curMonth'		=> date("m"),
 			'timezone'		=> date("T"),
 			'DOMAIN'		=> $_SERVER['SERVER_NAME'],
-			'PHP_SELF'		=> $_SERVER['SCRIPT_NAME'],
+			//'PHP_SELF'		=> $_SERVER['SCRIPT_NAME'],		// --> set in finish().
 			'REQUEST_URI'	=> $_SERVER['REQUEST_URI'],
 			'FULL_URL'		=> $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'],
 			'error_msg'		=> ""
@@ -804,6 +804,7 @@ class contentSystem extends cs_contentAbstract {
 		$fullSectionArr = $this->fullSectionArr;
 		array_unshift($sectionArr, $this->baseDir);
 		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
+		$this->templateObj->add_template_var('PHP_SELF', '/'. $this->gfObj->string_from_array($sectionArr, NULL, '/'));
 		
 		
 		$page = $this->templateObj;
