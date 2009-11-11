@@ -24,7 +24,9 @@ class TestOfCSContent extends UnitTestCase {
 		$this->gfObj->debugPrintOpt=1;
 		
 		$filesDir = dirname(__FILE__) ."/files";
-		define('TEST_FILESDIR', $filesDir);
+		if(!defined('TEST_FILESDIR')) {
+			define('TEST_FILESDIR', $filesDir);
+		}
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -68,7 +70,7 @@ class TestOfCSContent extends UnitTestCase {
 		foreach($sc->get_valid_sections() as $section) {
 			$sectionData = $sc->get_section($section);
 			foreach($sectionData as $name=>$value) {
-				if(is_array($value['attributes'])) {
+				if(isset($value['attributes']) && is_array($value['attributes'])) {
 					if(isset($value['attributes']['SETGLOBAL'])) {
 						$setAsGlobals[$name] = $value['value'];
 					}

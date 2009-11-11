@@ -680,7 +680,7 @@ class cs_genericPage extends cs_contentAbstract {
 	 * Magic PHP method for retrieving the values of private/protected vars.
 	 */
 	public function __get($var) {
-		return($this->$var);
+		return(@$this->$var);
 	}//end __get()
 	//-------------------------------------------------------------------------
 	
