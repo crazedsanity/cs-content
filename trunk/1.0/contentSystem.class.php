@@ -132,7 +132,8 @@ class contentSystem extends cs_contentAbstract {
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$root = preg_replace('/\/public_html$/', '', $_SERVER['DOCUMENT_ROOT']);
+		$root = preg_replace('/\/$/', '', $_SERVER['DOCUMENT_ROOT']);
+		$root = preg_replace('/\/public_html$/', '', $root);
 		$root = preg_replace('/\/html/', '', $root);
 		
 		if(!is_null($siteRoot) && is_dir($siteRoot)) {
