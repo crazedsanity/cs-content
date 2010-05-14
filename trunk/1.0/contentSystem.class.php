@@ -578,8 +578,8 @@ class contentSystem extends cs_contentAbstract {
 					$filename = preg_replace('/^\/\//', '/', $filename);
 					//call another method to rip the filename apart properly, then arrange things as needed.
 					$pieces = $this->parse_filename($index);
-					$myPriIndex = $pieces[$primaryIndex];
-					$mySecIndex = $pieces[$secondaryIndex];
+					$myPriIndex = @$pieces[$primaryIndex];
+					$mySecIndex = @$pieces[$secondaryIndex];
 					if(strlen($myPriIndex) && strlen($mySecIndex)) {
 						//only load if it's got BOTH parts of the filename.
 						$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
