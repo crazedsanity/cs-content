@@ -550,7 +550,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//pull a list of the files.
 		$dirContents = $this->arrange_directory_contents();
-		if(count($dirContents['shared'])) {
+		if(isset($dirContents['shared']) && count($dirContents['shared'])) {
 			
 			foreach($dirContents['shared'] as $section => $template) {
 				$this->add_template($section, $template);
