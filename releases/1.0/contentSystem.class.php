@@ -69,6 +69,7 @@ class contentSystem extends cs_contentAbstract {
 	protected $baseDir			= NULL;			//base directory for templates & includes.			
 	protected $section			= NULL;			//section string, derived from the URL.		
 	protected $sectionArr		= array();		//array of items, for figuring out where templates & includes are.
+	protected $fullsectionArr	= array();
 	
 	
 	protected $tmplFs			= NULL;			//Object used to access the TEMPLATES filesystem
@@ -106,6 +107,8 @@ class contentSystem extends cs_contentAbstract {
 		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
 		
 		//figure out the section & subsection stuff.
+		$requestUri = preg_replace('/\/$/', '', $_SERVER['REQUEST_URI']);
+		$this->fullSectionArr = split('/', $requestUri); //TODO: will this cope with an APPURL being set?
 		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
 		
 		$this->initialize_locals($siteRoot);
@@ -129,7 +132,8 @@ class contentSystem extends cs_contentAbstract {
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$root = preg_replace('/\/public_html$/', '', $_SERVER['DOCUMENT_ROOT']);
+		$root = preg_replace('/\/$/', '', $_SERVER['DOCUMENT_ROOT']);
+		$root = preg_replace('/\/public_html$/', '', $root);
 		$root = preg_replace('/\/html/', '', $root);
 		
 		if(!is_null($siteRoot) && is_dir($siteRoot)) {
@@ -149,7 +153,7 @@ class contentSystem extends cs_contentAbstract {
 			'curMonth'		=> date("m"),
 			'timezone'		=> date("T"),
 			'DOMAIN'		=> $_SERVER['SERVER_NAME'],
-			'PHP_SELF'		=> $_SERVER['SCRIPT_NAME'],
+			//'PHP_SELF'		=> $_SERVER['SCRIPT_NAME'],		// --> set in finish().
 			'REQUEST_URI'	=> $_SERVER['REQUEST_URI'],
 			'FULL_URL'		=> $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'],
 			'error_msg'		=> ""
@@ -546,7 +550,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//pull a list of the files.
 		$dirContents = $this->arrange_directory_contents();
-		if(count($dirContents['shared'])) {
+		if(isset($dirContents['shared']) && count($dirContents['shared'])) {
 			
 			foreach($dirContents['shared'] as $section => $template) {
 				$this->add_template($section, $template);
@@ -574,8 +578,8 @@ class contentSystem extends cs_contentAbstract {
 					$filename = preg_replace('/^\/\//', '/', $filename);
 					//call another method to rip the filename apart properly, then arrange things as needed.
 					$pieces = $this->parse_filename($index);
-					$myPriIndex = $pieces[$primaryIndex];
-					$mySecIndex = $pieces[$secondaryIndex];
+					$myPriIndex = @$pieces[$primaryIndex];
+					$mySecIndex = @$pieces[$secondaryIndex];
 					if(strlen($myPriIndex) && strlen($mySecIndex)) {
 						//only load if it's got BOTH parts of the filename.
 						$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
@@ -731,8 +735,8 @@ class contentSystem extends cs_contentAbstract {
 	 * Called when something is broken.
 	 */
 	private function die_gracefully($details=NULL) {
-		header('HTTP/1.0 404 Not Found');
-		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+		if(isset($_SERVER['SERVER_PROTOCOL']) && $this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+			header('HTTP/1.0 404 Not Found');
 			//Simple "Page Not Found" error... show 'em.
 			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
 			
@@ -748,7 +752,6 @@ class contentSystem extends cs_contentAbstract {
 			exit;
 		}
 		else {
-			//TODO: make it *actually* die gracefully... the way it works now looks more like puke than grace.
 			throw new exception(__METHOD__ .": Couldn't find 404 template, plus additional error... \nDETAILS::: $details" .
 					"\nREASON::: ". $this->reason);
 		}
@@ -771,6 +774,7 @@ class contentSystem extends cs_contentAbstract {
 		foreach($badUrlVars as $badVarName) {
 			unset($_GET[$badVarName], $_POST[$badVarName]);
 		}
+		unset($badUrlVars, $badVarName);
 		
 		if(is_array($this->injectVars) && count($this->injectVars)) {
 			$definedVars = get_defined_vars();
@@ -783,6 +787,7 @@ class contentSystem extends cs_contentAbstract {
 				}
 			}
 		}
+		unset($definedVars, $myVarName, $myVarVal);
 		
 		if(isset($this->session) && is_object($this->session)) {
 			$this->templateObj->session = $this->session;
@@ -797,8 +802,10 @@ class contentSystem extends cs_contentAbstract {
 		//make the "final section" available to scripts.
 		$finalSection = $this->finalSection;
 		$sectionArr = $this->sectionArr;
+		$fullSectionArr = $this->fullSectionArr;
 		array_unshift($sectionArr, $this->baseDir);
 		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
+		$this->templateObj->add_template_var('PHP_SELF', '/'. $this->gfObj->string_from_array($sectionArr, NULL, '/'));
 		
 		
 		$page = $this->templateObj;
@@ -808,6 +815,7 @@ class contentSystem extends cs_contentAbstract {
 			try {
 				foreach($this->includesList as $myInternalIndex=>$myInternalScriptName) {
 					$this->myLastInclude = $myInternalScriptName;
+					unset($myInternalScriptName, $myInternalIndex);
 					include_once($this->myLastInclude);
 				}
 				
@@ -815,6 +823,7 @@ class contentSystem extends cs_contentAbstract {
 				if(is_array($this->afterIncludesList)) {
 					foreach($this->afterIncludesList as $myInternalIndex=>$myInternalScriptName) {
 						$this->myLastInclude = $myInternalScriptName;
+						unset($myInternalScriptName, $myInternalIndex);
 						include_once($this->myLastInclude);
 					}
 				}

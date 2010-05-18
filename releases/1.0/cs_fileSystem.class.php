@@ -204,7 +204,9 @@ class cs_fileSystem extends cs_contentAbstract {
 			"group"		=> @$this->my_getuser_group(filegroup($tFile), 'gid'),
 			"gid"		=> @filegroup($tFile),
 			"perms"		=> @$this->translate_perms(fileperms($tFile)),
-			"perms_num"	=> @substr(sprintf('%o', fileperms($tFile)), -4)
+			"perms_num"	=> @substr(sprintf('%o', fileperms($tFile)), -4),
+			"is_readable"	=> is_readable($tFile),
+			"is_writable"	=> is_writable($tFile)
 		);
 		
 		return($retval);

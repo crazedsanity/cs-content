@@ -30,7 +30,7 @@ class cs_session extends cs_contentAbstract {
 			}
 			
 			//now actually create the session.
-			session_start();
+			@session_start();
 		}
 		
 		//check if there's a uid in the session already.

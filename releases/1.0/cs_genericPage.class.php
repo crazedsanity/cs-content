@@ -86,7 +86,7 @@ class cs_genericPage extends cs_contentAbstract {
 		}
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
-		if(is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
+		if(isset($GLOBALS['templateVars']) && is_array($GLOBALS['templateVars']) && count($GLOBALS['templateVars'])) {
 			foreach($GLOBALS['templateVars'] as $key=>$value) {
 				$this->add_template_var($key, $value);
 			}
@@ -680,7 +680,7 @@ class cs_genericPage extends cs_contentAbstract {
 	 * Magic PHP method for retrieving the values of private/protected vars.
 	 */
 	public function __get($var) {
-		return($this->$var);
+		return(@$this->$var);
 	}//end __get()
 	//-------------------------------------------------------------------------
 	
