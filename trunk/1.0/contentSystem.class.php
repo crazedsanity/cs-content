@@ -361,6 +361,7 @@ class contentSystem extends cs_contentAbstract {
 				//disregard file extensions, but keep everything else...
 				//	i.e. "index.php/yermom.html" becomes "index/yermom"
 				$tArr = split('/', $section);
+				$tSection = null;
 				foreach($tArr as $tSecName) {
 					$temp = split("\.", $tSecName);
 					if(strlen($temp[0]) > 1) {
