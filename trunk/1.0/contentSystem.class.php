@@ -104,11 +104,11 @@ class contentSystem extends cs_contentAbstract {
 		
 		//setup the section stuff...
 		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
-		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
+		$_SERVER['REQUEST_URI'] = preg_replace('/^\//', "", $_SERVER['REQUEST_URI']);
 		
 		//figure out the section & subsection stuff.
 		$requestUri = preg_replace('/\/$/', '', $_SERVER['REQUEST_URI']);
-		$this->fullSectionArr = split('/', $requestUri); //TODO: will this cope with an APPURL being set?
+		$this->fullSectionArr = explode('/', $requestUri); //TODO: will this cope with an APPURL being set?
 		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
 		
 		$this->initialize_locals($siteRoot);
@@ -298,7 +298,7 @@ class contentSystem extends cs_contentAbstract {
 		if(($this->section === 0 || is_null($this->section) || !strlen($this->section)) && defined('DEFAULT_SECTION')) {
 			$this->section = preg_replace('/^\//', '', constant('DEFAULT_SECTION'));
 		}
-		$myArr = split('/', $this->section);
+		$myArr = explode('/', $this->section);
 		
 		//if we've got something in the array, keep going.
 		if(is_array($myArr) && count($myArr) > 0) {
@@ -357,13 +357,13 @@ class contentSystem extends cs_contentAbstract {
 				$section = $section[0];
 			}
 	
-			if(ereg("\.", $section)) {
+			if(preg_match("/\./", $section)) {
 				//disregard file extensions, but keep everything else...
 				//	i.e. "index.php/yermom.html" becomes "index/yermom"
-				$tArr = split('/', $section);
+				$tArr = explode('/', $section);
 				$tSection = null;
 				foreach($tArr as $tSecName) {
-					$temp = split("\.", $tSecName);
+					$temp = explode(".", $tSecName);
 					if(strlen($temp[0]) > 1) {
 						$tSecName = $temp[0];
 					}

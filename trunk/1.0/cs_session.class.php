@@ -76,7 +76,7 @@ class cs_session extends cs_contentAbstract {
 	 */
 	public function get_cookie($name) {
 		$retval = NULL;
-		if(isset($_COOKIE) && $_COOKIE[$name]) {
+		if(isset($_COOKIE) && isset($_COOKIE[$name])) {
 			$retval = $_COOKIE[$name];
 		}
 		return($retval);
