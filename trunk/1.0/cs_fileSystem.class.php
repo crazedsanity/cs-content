@@ -137,6 +137,7 @@ class cs_fileSystem extends cs_contentAbstract {
 	public function ls($filename=NULL, $args=NULL) {
 		
 		clearstatcache();
+		$retval = null;
 		//open the directory for reading.
 		$this->dh = opendir($this->realcwd);
 		clearstatcache();
@@ -175,13 +176,10 @@ class cs_fileSystem extends cs_contentAbstract {
 						debug_print("FILE: $tFile || TYPE: $tType || is_file(): ". is_file($tFile) ."is_dir(): ". is_dir($tFile));
 						exit;
 					}
-	#debug_print("FILE: $file || $dir". $file);
 					unset($tType);
 				}
 			}
 		}
-		#debug_print($retval);
-		#debug_print(readdir($this->dh));
 		return($retval);
 	}//end ls()
 	//========================================================================================
