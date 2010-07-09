@@ -50,6 +50,9 @@ function __autoload($class) {
 		$gf->debug_print(__FILE__ ." - line #". __LINE__ ."::: couldn't find (". $class ."), realcwd=(". $fs->realcwd .")",1);
 		$gf->debug_print($tried,1);
 		$gf->debug_print($tryThis,1);
+		if(function_exists('cs_debug_backtrace')) {
+			cs_debug_backtrace(1);
+		}
 		$gf->debug_print($lsData,1);
 		exit;
 	}
