@@ -53,7 +53,6 @@ function __autoload($class) {
 		if(function_exists('cs_debug_backtrace')) {
 			cs_debug_backtrace(1);
 		}
-		$gf->debug_print($lsData,1);
 		exit;
 	}
 }//end __autoload()
