@@ -54,8 +54,8 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			'email'							=> '@_-34..JuSTTHIS',
 			'email_plus_spaces'				=> '@_-34..JuST THIS',
 			'phone_fax'						=> '()+-34 ',
-			'integer'						=> '34',
-			'numeric'						=> '34',
+			'integer'						=> '-34',
+			'numeric'						=> '-34',
 			'decimal'						=> '34..',
 			'float'							=> '34..',
 			'name'							=> '\'JuSTTHIS',
@@ -72,7 +72,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			$cleanedData = $gf->cleanString($cleanThis, $name);
 			
 			//NOTE::: passing "%" in the message data causes an exception with the simpletest framework.
-			$this->assertEqual($expected, $cleanedData);
+			$this->assertEqual($expected, $cleanedData, "Cleaning test '". $name ."' FAILED...  expected=(". $expected ."), got (". $cleanedData ."), ");
 		}
 		
 		

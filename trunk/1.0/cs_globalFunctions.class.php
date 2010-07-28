@@ -176,7 +176,12 @@ class cs_globalFunctions extends cs_versionAbstract {
 						}
 						else {
 							//now format it properly.
-							$array[$myIndex] = $this->cleanString($array[$myIndex], $myCleanStringArg);
+							$myUseSqlQuotes = null;
+							if(in_array($myCleanStringArg, array('int', 'integer', 'numeric', 'number', 'decimal', 'float'))) {
+								$myUseSqlQuotes = false;
+							}
+							$array[$myIndex] = $this->cleanString($array[$myIndex], $myCleanStringArg, $myUseSqlQuotes);
+							unset($myUseSqlQuotes);
 						}
 					}
 				}
@@ -507,15 +512,17 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$cleanThis = preg_replace("/[^0-9-+() ]/","",$cleanThis);
 			break;
 			
+			case "int":
 			case "integer":
 			case "numeric":
+			case "number":
 				//Remove everything that's not numeric.
 				if(is_null($cleanThis)) {
 					$cleanThis = "NULL";
 					$sqlQuotes = 0;
 				}
 				else {
-					$cleanThis = preg_replace("/[^0-9]/","",$cleanThis);
+					$cleanThis = preg_replace("/[^0-9\-]/","",$cleanThis);
 				}
 			break;
 			
