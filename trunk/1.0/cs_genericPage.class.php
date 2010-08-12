@@ -277,7 +277,7 @@ class cs_genericPage extends cs_contentAbstract {
 		if(!strlen($out)) {
 			$this->gfObj->debug_print($out);
 			$this->gfObj->debug_print($this->mainTemplate);
-			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->tmplDir .'/'. $this->mainTemplate)));
+			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->mainTemplate)));
 			exit(__METHOD__ .": mainTemplate (". $this->mainTemplate .") was empty...?");
 		}
 		

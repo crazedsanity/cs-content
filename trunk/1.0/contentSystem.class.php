@@ -99,7 +99,7 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * The CONSTRUCTOR.  Duh.
 	 */
-	public function __construct($siteRoot=null) {
+	public function __construct($siteRoot=null, $section=null) {
 		parent::__construct();
 		
 		//setup the section stuff...
@@ -109,7 +109,11 @@ class contentSystem extends cs_contentAbstract {
 		//figure out the section & subsection stuff.
 		$requestUri = preg_replace('/\/$/', '', $_SERVER['REQUEST_URI']);
 		$this->fullSectionArr = explode('/', $requestUri); //TODO: will this cope with an APPURL being set?
-		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
+		
+		if(is_null($section)) {
+			$section = @$_SERVER['REQUEST_URI'];
+		}
+		$this->section = $this->clean_url($section);
 		
 		$this->initialize_locals($siteRoot);
 	}//end __construct()
