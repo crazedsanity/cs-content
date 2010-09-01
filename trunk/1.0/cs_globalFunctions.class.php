@@ -617,7 +617,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	 * 
 	 * @return (string)		printed data.
 	 */
-	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL) {
+	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL, $usePreTags=true) {
 		if(!is_numeric($removeHR)) {
 			$removeHR = $this->debugRemoveHr;
 		}
@@ -630,8 +630,10 @@ class cs_globalFunctions extends cs_versionAbstract {
 		print_r($input);
 		$output = ob_get_contents();
 		ob_end_clean();
-	
-		$output = "<pre>$output</pre>";
+		
+		if($usePreTags === true) {
+			$output = "<pre>$output</pre>";
+		}
 		
 		if(!isset($_SERVER['SERVER_PROTOCOL']) || !$_SERVER['SERVER_PROTOCOL']) {
 			$output = strip_tags($output);
@@ -690,11 +692,17 @@ class cs_globalFunctions extends cs_versionAbstract {
 			$b="{";
 			$e="}";
 		}
-
-		foreach($repArr as $key=>$value) {
-			//run the replacements.
-			$key = "$b" . $key . "$e";
-			$template = str_replace("$key", $value, $template);
+		
+		if(is_array($repArr)) {
+			foreach($repArr as $key=>$value) {
+				//run the replacements.
+				$key = "$b" . $key . "$e";
+				$template = str_replace("$key", $value, $template);
+			}
+		}
+		else {
+			cs_debug_backtrace(1);
+			throw new exception(__METHOD__ .": no replacement array passed, or array was empty");
 		}
 
 		return($template);
