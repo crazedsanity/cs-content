@@ -24,13 +24,25 @@ class cs_session extends cs_contentAbstract {
 	 */
 	function __construct($createSession=true) {
 		parent::__construct(true);
+		$sessName = null;
+		$sessionId = null;
 		if($createSession) {
 			if(is_string($createSession) && strlen($createSession) >2) {
+				$sessName = $createSession;
 				session_name($createSession);
+			}
+			elseif(constant('SESSION_NAME') && isset($_COOKIE) && isset($_COOKIE[constant('SESSION_NAME')])) {
+				$sessName = constant('SESSION_NAME');
+				session_name(constant('SESSION_NAME'));
+				$sessionId = $_COOKIE[constant('SESSION_NAME')];
+				session_id($sessionId);
 			}
 			
 			//now actually create the session.
 			@session_start();
+		}
+		if(is_null($sessName)) {
+			$sessName = session_name();
 		}
 		
 		//check if there's a uid in the session already.
