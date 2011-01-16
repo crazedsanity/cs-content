@@ -31,7 +31,7 @@ class cs_session extends cs_contentAbstract {
 				$sessName = $createSession;
 				session_name($createSession);
 			}
-			elseif(constant('SESSION_NAME') && isset($_COOKIE) && isset($_COOKIE[constant('SESSION_NAME')])) {
+			elseif(defined('SESSION_NAME') && constant('SESSION_NAME') && isset($_COOKIE) && isset($_COOKIE[constant('SESSION_NAME')])) {
 				$sessName = constant('SESSION_NAME');
 				session_name(constant('SESSION_NAME'));
 				$sessionId = $_COOKIE[constant('SESSION_NAME')];
