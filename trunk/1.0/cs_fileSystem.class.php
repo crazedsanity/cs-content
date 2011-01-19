@@ -134,7 +134,7 @@ class cs_fileSystem extends cs_contentAbstract {
 	/**
 	 * Just like the linux version of the 'ls' command.
 	 */
-	public function ls($filename=NULL, $args=NULL) {
+	public function ls($filename=NULL, $extendedInfo=true) {
 		
 		clearstatcache();
 		$retval = null;
@@ -146,13 +146,13 @@ class cs_fileSystem extends cs_contentAbstract {
 			$tFile=$this->filename2absolute($filename);
 			if(file_exists($tFile)) {
 				//it's there... get info about it.
-				$info = $this->get_fileinfo($tFile);
+				$info = $this->get_fileinfo($tFile, $extendedInfo);
 				if($info['type'] == 'dir') {
 					$oldCwd = $this->cwd;
 					$oldRealCwd = $this->realcwd;
 					
 					$this->cd($filename);
-					$retval = $this->ls();
+					$retval = $this->ls(null, $extendedInfo);
 					
 					$this->cwd = $oldCwd;
 					$this->realcwd = $oldRealCwd;
@@ -189,23 +189,25 @@ class cs_fileSystem extends cs_contentAbstract {
 	/**
 	 * Grabs an array of information for a given file.
 	 */
-	public function get_fileinfo($tFile) {
+	public function get_fileinfo($tFile,$extendedInfo=true) {
 		
 		//TODO: shouldn't require putting the "@" in front of these calls!
 		$retval = array(
-			"size"		=> @filesize($tFile),
 			"type"		=> @filetype($tFile),
-			"accessed"	=> @fileatime($tFile),
-			"modified"	=> @filemtime($tFile),
-			"owner"		=> @$this->my_getuser_group(fileowner($tFile), 'uid'),
-			"uid"		=> @fileowner($tFile),
-			"group"		=> @$this->my_getuser_group(filegroup($tFile), 'gid'),
-			"gid"		=> @filegroup($tFile),
-			"perms"		=> @$this->translate_perms(fileperms($tFile)),
-			"perms_num"	=> @substr(sprintf('%o', fileperms($tFile)), -4),
 			"is_readable"	=> is_readable($tFile),
 			"is_writable"	=> is_writable($tFile)
 		);
+		if($extendedInfo) {
+			$retval["size"]		= @filesize($tFile);
+			$retval["accessed"]	= @fileatime($tFile);
+			$retval["modified"]	= @filemtime($tFile);
+			$retval["owner"]	= @$this->my_getuser_group(fileowner($tFile), 'uid');
+			$retval["uid"]		= @fileowner($tFile);
+			$retval["group"]	= @$this->my_getuser_group(filegroup($tFile), 'gid');
+			$retval["gid"]		= @filegroup($tFile);
+			$retval["perms"]	= @$this->translate_perms(fileperms($tFile));
+			$retval["perms_num"]= @substr(sprintf('%o', fileperms($tFile)), -4);
+		}
 		
 		return($retval);
 	}//end get_fileinfo()

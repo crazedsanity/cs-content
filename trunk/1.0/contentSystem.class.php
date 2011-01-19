@@ -572,7 +572,7 @@ class contentSystem extends cs_contentAbstract {
 	 * 	name, or vice-versa.
 	 */
 	private function arrange_directory_contents($primaryIndex='section', $secondaryIndex='name') {
-		$directoryInfo = $this->tmplFs->ls();
+		$directoryInfo = $this->tmplFs->ls(null,false);
 		$arrangedArr = array();
 		if(is_array($directoryInfo)) {
 			foreach($directoryInfo as $index=>$data) {
@@ -678,7 +678,7 @@ class contentSystem extends cs_contentAbstract {
 			$mySection = preg_replace('/\/index$/','', $mySection);
 		}
 		if($this->incFs->cd('/'. $mySection)) {
-			$lsData = $this->incFs->ls();
+			$lsData = $this->incFs->ls(null,false);
 			if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 				$this->add_include('shared.inc');
 			}
@@ -700,7 +700,7 @@ class contentSystem extends cs_contentAbstract {
 	 * 	solely by load_includes().
 	 */
 	private function load_dir_includes($section) {
-		$lsData = $this->incFs->ls();
+		$lsData = $this->incFs->ls(null,false);
 		
 		$addThese = array();
 		
