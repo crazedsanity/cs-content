@@ -878,6 +878,63 @@ class cs_globalFunctions extends cs_versionAbstract {
 		return($this->debug_print($printThis, $printItForMe, $removeHr));
 	}//end debug_var_dump()
 	//##########################################################################
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
+	 * Removes all the crap from the url, so we can figure out what section we
+	 * 	need to load templates & includes for.
+	 */
+	public function clean_url($url=NULL) {
+		//make sure we've still got something valid to work with.
+		if(strlen($url)) {
+			//if there's an "APPURL" constant, drop that from the url.
+			if(defined('APPURL') && strlen(constant('APPURL'))) {
+				$dropThis = preg_replace('/^\//', '', constant('APPURL'));
+				$dropThis = preg_replace('/\//', '\\/', $dropThis);
+				$url = preg_replace('/^'. $dropThis .'/', '', $url);
+			}
+			
+			//check the string to make sure it doesn't begin with a "/"
+			if($url[0] == '/') {
+				$url = substr($url, 1, strlen($url));
+			}
+	
+			//check the last char for a "/"...
+			if($url[strlen($url) -1] == '/') {
+				//last char is a '/'... kill it.
+				$url = substr($url, 0, strlen($url) -1);
+			}
+	
+			//if we've been sent a query, kill it off the string...
+			if(preg_match('/\?/', $url)) {
+				$url = split('\?', $url);
+				$url = $url[0];
+			}
+	
+			if(preg_match("/\./", $url)) {
+				//disregard file extensions, but keep everything else...
+				//	i.e. "index.php/yermom.html" becomes "index/yermom"
+				$tArr = explode('/', $url);
+				$tUrl = null;
+				foreach($tArr as $tUrlPart) {
+					$temp = explode(".", $tUrlPart);
+					if(strlen($temp[0]) > 1) {
+						$tUrlPart = $temp[0];
+					}
+					$tUrl = $this->create_list($tUrl, $tUrlPart, '/');
+				}
+				$url = $tUrl;
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid url (". $url .")");
+		}
+
+		return($url);
+	}//end clean_url()
+	//------------------------------------------------------------------------
 
 }//end cs_globalFunctions{}
 

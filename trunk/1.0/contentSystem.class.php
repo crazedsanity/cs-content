@@ -331,52 +331,17 @@ class contentSystem extends cs_contentAbstract {
 		}
 
 		//make sure we've still got something valid to work with.
-		if(!strlen($section)) {
-			//TODO: remove the extra return statement (should only be one at the bottom of the method).
-			return(NULL);
+		if(strlen($section)) {
+			try {
+				$section = $this->gfObj->clean_url($section);
+			}
+			catch(Exception $e) {
+				//hide the exception and allow it to return NULL.
+			}
 		}
 		else {
-			
-			//if there's an "APPURL" constant, drop that from the section.
-			if(defined('APPURL') && strlen(constant('APPURL'))) {
-				$dropThis = preg_replace('/^\//', '', constant('APPURL'));
-				$dropThis = preg_replace('/\//', '\\/', $dropThis);
-				$section = preg_replace('/^'. $dropThis .'/', '', $section);
-			}
-			
-			//check the string to make sure it doesn't begin with a "/"
-			if($section[0] == '/') {
-				$section = substr($section, 1, strlen($section));
-			}
-	
-			//check the last char for a "/"...
-			if($section[strlen($section) -1] == '/') {
-				//last char is a '/'... kill it.
-				$section = substr($section, 0, strlen($section) -1);
-			}
-	
-			//if we've been sent a query, kill it off the string...
-			if(preg_match('/\?/', $section)) {
-				$section = split('\?', $section);
-				$section = $section[0];
-			}
-	
-			if(preg_match("/\./", $section)) {
-				//disregard file extensions, but keep everything else...
-				//	i.e. "index.php/yermom.html" becomes "index/yermom"
-				$tArr = explode('/', $section);
-				$tSection = null;
-				foreach($tArr as $tSecName) {
-					$temp = explode(".", $tSecName);
-					if(strlen($temp[0]) > 1) {
-						$tSecName = $temp[0];
-					}
-					$tSection = $this->gfObj->create_list($tSection, $tSecName, '/');
-				}
-				$section = $tSection;
-			}
+			$section = null;
 		}
-
 		return($section);
 	}//end clean_url()
 	//------------------------------------------------------------------------
