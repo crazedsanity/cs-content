@@ -920,7 +920,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$tUrl = null;
 				foreach($tArr as $tUrlPart) {
 					$temp = explode(".", $tUrlPart);
-					if(strlen($temp[0]) > 1) {
+					if(strlen($temp[0])) {
 						$tUrlPart = $temp[0];
 					}
 					$tUrl = $this->create_list($tUrl, $tUrlPart, '/');
@@ -929,7 +929,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 			}
 		}
 		else {
-			throw new exception(__METHOD__ .": invalid url (". $url .")");
+			$url = null;
 		}
 
 		return($url);
