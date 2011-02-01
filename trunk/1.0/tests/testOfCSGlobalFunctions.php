@@ -52,7 +52,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			'double_entity'					=> '~`!@#$^&amp;*()_+-=[]\{}|;34:\\\'\&lt;&gt;?,.//\.JuST THIS',
 			'meta'							=> '~`!@#\$\^&\*\(\)_\+-=\[\]\\\\{}|;34:\\\\\'\\\<>\?,\.//\\\\"\.JuST THIS',
 			'email'							=> '@_-34..JuSTTHIS',
-			'email_plus_spaces'				=> '@_-34..JuST THIS',
+			'email_plus_spaces'				=> '@_-34:..JuST THIS',
 			'phone_fax'						=> '()+-34 ',
 			'integer'						=> '-34',
 			'numeric'						=> '-34',

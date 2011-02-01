@@ -502,9 +502,10 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$cleanThis = preg_replace("/[^A-Za-z0-9\._@-]/","",$cleanThis);
 			break;
 	
+			case "email_plus":
 			case "email_plus_spaces":
 				//Remove all characters that aren't allowed in an email address.
-				$cleanThis = preg_replace("/[^A-Za-z0-9\ \._@-]/","",$cleanThis);
+				$cleanThis = preg_replace("/[^A-Za-z0-9\ \._@:-]/","",$cleanThis);
 			break;
 	
 			case "phone_fax":

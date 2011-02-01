@@ -70,11 +70,13 @@ function _autoload_hints_parser($class, $fs) {
 		}
 		#print "<pre>";
 		#print_r($myHints);
-		$tryFile = constant('LIBDIR') .'/'. $myHints[$class];
-		if(isset($myHints[$class]) && file_exists($tryFile)) {
-			require_once($tryFile);
-			if(class_exists($class)) {
-				$foundClass=true;
+		if(isset($myHints[$class])) {
+			$tryFile = constant('LIBDIR') .'/'. $myHints[$class];
+			if(file_exists($tryFile)) {
+				require_once($tryFile);
+				if(class_exists($class)) {
+					$foundClass=true;
+				}
 			}
 		}
 	}
