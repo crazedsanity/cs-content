@@ -550,6 +550,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$cleanThis = $this->interpret_bool($cleanThis, array('f', 't'));
 			break;
 			
+			case "text":
 			case "varchar":
 				$cleanThis=$this->cleanString($cleanThis,"query");
 				$cleanThis="'" . $cleanThis . "'";
