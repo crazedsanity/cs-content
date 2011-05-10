@@ -403,6 +403,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 			break;
 			
 			
+			case "varchar":
+			case "text":
 			case "sql_insert":
 				/*
 				 * This is for descriptive fields, where double quotes don't need to be escaped: in these 
@@ -548,15 +550,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 			case "boolean":
 				//makes it either T or F (gotta lower the string & only check the first char to ensure accurate results).
 				$cleanThis = $this->interpret_bool($cleanThis, array('f', 't'));
-			break;
-			
-			case "text":
-			case "varchar":
-				$cleanThis=$this->cleanString($cleanThis,"query");
-				$cleanThis="'" . $cleanThis . "'";
-				if($cleanThis == "''") {
-					$cleanThis="NULL";	
-				}
 			break;
 			
 			case "date":
