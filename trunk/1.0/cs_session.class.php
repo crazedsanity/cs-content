@@ -105,7 +105,7 @@ class cs_session extends cs_contentAbstract {
 	 * @param $value		(string) value of cookie
 	 * @param $expiration	(string/number) unix timestamp or value for strtotime().
 	 */
-	public function create_cookie($name, $value, $expiration=NULL) {
+	public function create_cookie($name, $value, $expiration=NULL, $path=NULL, $domain=NULL) {
 		
 		$expTime = NULL;
 		if(!is_null($expiration)) {
@@ -120,7 +120,16 @@ class cs_session extends cs_contentAbstract {
 			}
 		}
 		
-		$retval = setcookie($name, $value, $expTime, '/');
+		if(is_null($domain)) {
+			$bits = explode('.', $_SERVER['SERVER_NAME']);
+			if(count($bits) > 1) {
+				$tldBit = $bits[count($bits)-1];
+				$domBit  = $bits[count($bits)];
+				$domain = '.'. $domBit .'.'. $tldBit;
+			}
+		}
+		
+		$retval = setcookie($name, $value, $expTime, $path, $domain);
 		return($retval);
 		
 	}//end create_cookie()
