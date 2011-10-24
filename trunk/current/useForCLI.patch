@@ -1,0 +1,53 @@
+Index: code/lib/cs-content/cs_genericPage.class.php
+===================================================================
+--- code/lib/cs-content/cs_genericPage.class.php	(revision 480)
++++ code/lib/cs-content/cs_genericPage.class.php	(working copy)
+@@ -277,7 +277,7 @@
+ 		if(!strlen($out)) {
+ 			$this->gfObj->debug_print($out);
+ 			$this->gfObj->debug_print($this->mainTemplate);
+-			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->tmplDir .'/'. $this->mainTemplate)));
++			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->mainTemplate)));
+ 			exit(__METHOD__ .": mainTemplate (". $this->mainTemplate .") was empty...?");
+ 		}
+ 		
+Index: code/lib/cs-content/contentSystem.class.php
+===================================================================
+--- code/lib/cs-content/contentSystem.class.php	(revision 480)
++++ code/lib/cs-content/contentSystem.class.php	(working copy)
+@@ -99,7 +99,7 @@
+ 	/**
+ 	 * The CONSTRUCTOR.  Duh.
+ 	 */
+-	public function __construct($siteRoot=null) {
++	public function __construct($siteRoot=null, $section=null) {
+ 		parent::__construct();
+ 		
+ 		//setup the section stuff...
+@@ -109,8 +109,12 @@
+ 		//figure out the section & subsection stuff.
+ 		$requestUri = preg_replace('/\/$/', '', $_SERVER['REQUEST_URI']);
+ 		$this->fullSectionArr = explode('/', $requestUri); //TODO: will this cope with an APPURL being set?
+-		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
+ 		
++		if(is_null($section)) {
++			$section = @$_SERVER['REQUEST_URI'];
++		}
++		$this->section = $this->clean_url($section);
++		
+ 		$this->initialize_locals($siteRoot);
+ 	}//end __construct()
+ 	//------------------------------------------------------------------------
+@@ -736,8 +740,10 @@
+ 	 * Called when something is broken.
+ 	 */
+ 	private function die_gracefully($details=NULL) {
+-		if(isset($_SERVER['SERVER_PROTOCOL']) && $this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+-			header('HTTP/1.0 404 Not Found');
++		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
++			if(isset($_SERVER['SERVER_PROTOCOL'])) {
++				header('HTTP/1.0 404 Not Found');
++			}
+ 			//Simple "Page Not Found" error... show 'em.
+ 			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
+ 			
