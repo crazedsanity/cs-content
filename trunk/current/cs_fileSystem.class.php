@@ -903,8 +903,8 @@ class cs_fileSystem extends cs_contentAbstract {
 	
 	//========================================================================================
 	public function mkdir($name, $mode=0777) {
-		if(!is_numeric($mode) || strlen($mode) != 4) {
-			$mode = 0777;
+		if(isset($mode)) {
+			$mode = intval($mode);
 		}
 		$retval = NULL;
 		if(!is_null($name) && strlen($name)) {
