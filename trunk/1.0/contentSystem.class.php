@@ -774,6 +774,9 @@ class contentSystem extends cs_contentAbstract {
 		//make the "final section" available to scripts.
 		$finalSection = $this->finalSection;
 		$sectionArr = $this->sectionArr;
+		if(count($sectionArr) && $sectionArr[(count($sectionArr)-1)] == "") {
+			array_pop($sectionArr);
+		}
 		$fullSectionArr = $this->fullSectionArr;
 		array_unshift($sectionArr, $this->baseDir);
 		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
