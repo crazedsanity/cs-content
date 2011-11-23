@@ -24,13 +24,25 @@ class cs_session extends cs_contentAbstract {
 	 */
 	function __construct($createSession=true) {
 		parent::__construct(true);
+		$sessName = null;
+		$sessionId = null;
 		if($createSession) {
 			if(is_string($createSession) && strlen($createSession) >2) {
+				$sessName = $createSession;
 				session_name($createSession);
+			}
+			elseif(defined('SESSION_NAME') && constant('SESSION_NAME') && isset($_COOKIE) && isset($_COOKIE[constant('SESSION_NAME')])) {
+				$sessName = constant('SESSION_NAME');
+				session_name(constant('SESSION_NAME'));
+				$sessionId = $_COOKIE[constant('SESSION_NAME')];
+				session_id($sessionId);
 			}
 			
 			//now actually create the session.
 			@session_start();
+		}
+		if(is_null($sessName)) {
+			$sessName = session_name();
 		}
 		
 		//check if there's a uid in the session already.
@@ -76,7 +88,7 @@ class cs_session extends cs_contentAbstract {
 	 */
 	public function get_cookie($name) {
 		$retval = NULL;
-		if(isset($_COOKIE) && $_COOKIE[$name]) {
+		if(isset($_COOKIE) && isset($_COOKIE[$name])) {
 			$retval = $_COOKIE[$name];
 		}
 		return($retval);
@@ -93,7 +105,7 @@ class cs_session extends cs_contentAbstract {
 	 * @param $value		(string) value of cookie
 	 * @param $expiration	(string/number) unix timestamp or value for strtotime().
 	 */
-	public function create_cookie($name, $value, $expiration=NULL) {
+	public function create_cookie($name, $value, $expiration=NULL, $path=NULL, $domain=NULL) {
 		
 		$expTime = NULL;
 		if(!is_null($expiration)) {
@@ -108,7 +120,16 @@ class cs_session extends cs_contentAbstract {
 			}
 		}
 		
-		$retval = setcookie($name, $value, $expTime, '/');
+		if(is_null($domain)) {
+			$bits = explode('.', $_SERVER['SERVER_NAME']);
+			if(count($bits) > 1) {
+				$tldBit = $bits[count($bits)-1];
+				$domBit  = $bits[count($bits)];
+				$domain = '.'. $domBit .'.'. $tldBit;
+			}
+		}
+		
+		$retval = setcookie($name, $value, $expTime, $path, $domain);
 		return($retval);
 		
 	}//end create_cookie()

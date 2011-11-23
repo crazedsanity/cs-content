@@ -176,7 +176,12 @@ class cs_globalFunctions extends cs_versionAbstract {
 						}
 						else {
 							//now format it properly.
-							$array[$myIndex] = $this->cleanString($array[$myIndex], $myCleanStringArg);
+							$myUseSqlQuotes = null;
+							if(in_array($myCleanStringArg, array('int', 'integer', 'numeric', 'number', 'decimal', 'float'))) {
+								$myUseSqlQuotes = false;
+							}
+							$array[$myIndex] = $this->cleanString($array[$myIndex], $myCleanStringArg, $myUseSqlQuotes);
+							unset($myUseSqlQuotes);
 						}
 					}
 				}
@@ -398,6 +403,8 @@ class cs_globalFunctions extends cs_versionAbstract {
 			break;
 			
 			
+			case "varchar":
+			case "text":
 			case "sql_insert":
 				/*
 				 * This is for descriptive fields, where double quotes don't need to be escaped: in these 
@@ -497,9 +504,10 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$cleanThis = preg_replace("/[^A-Za-z0-9\._@-]/","",$cleanThis);
 			break;
 	
+			case "email_plus":
 			case "email_plus_spaces":
 				//Remove all characters that aren't allowed in an email address.
-				$cleanThis = preg_replace("/[^A-Za-z0-9\ \._@-]/","",$cleanThis);
+				$cleanThis = preg_replace("/[^A-Za-z0-9\ \._@:-]/","",$cleanThis);
 			break;
 	
 			case "phone_fax":
@@ -507,15 +515,17 @@ class cs_globalFunctions extends cs_versionAbstract {
 				$cleanThis = preg_replace("/[^0-9-+() ]/","",$cleanThis);
 			break;
 			
+			case "int":
 			case "integer":
 			case "numeric":
+			case "number":
 				//Remove everything that's not numeric.
 				if(is_null($cleanThis)) {
 					$cleanThis = "NULL";
 					$sqlQuotes = 0;
 				}
 				else {
-					$cleanThis = preg_replace("/[^0-9]/","",$cleanThis);
+					$cleanThis = preg_replace("/[^0-9\-]/","",$cleanThis);
 				}
 			break;
 			
@@ -540,14 +550,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 			case "boolean":
 				//makes it either T or F (gotta lower the string & only check the first char to ensure accurate results).
 				$cleanThis = $this->interpret_bool($cleanThis, array('f', 't'));
-			break;
-			
-			case "varchar":
-				$cleanThis=$this->cleanString($cleanThis,"query");
-				$cleanThis="'" . $cleanThis . "'";
-				if($cleanThis == "''") {
-					$cleanThis="NULL";	
-				}
 			break;
 			
 			case "date":
@@ -610,7 +612,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	 * 
 	 * @return (string)		printed data.
 	 */
-	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL) {
+	public function debug_print($input=NULL, $printItForMe=NULL, $removeHR=NULL, $usePreTags=true) {
 		if(!is_numeric($removeHR)) {
 			$removeHR = $this->debugRemoveHr;
 		}
@@ -623,8 +625,10 @@ class cs_globalFunctions extends cs_versionAbstract {
 		print_r($input);
 		$output = ob_get_contents();
 		ob_end_clean();
-	
-		$output = "<pre>$output</pre>";
+		
+		if($usePreTags === true) {
+			$output = "<pre>$output</pre>";
+		}
 		
 		if(!isset($_SERVER['SERVER_PROTOCOL']) || !$_SERVER['SERVER_PROTOCOL']) {
 			$output = strip_tags($output);
@@ -683,11 +687,17 @@ class cs_globalFunctions extends cs_versionAbstract {
 			$b="{";
 			$e="}";
 		}
-
-		foreach($repArr as $key=>$value) {
-			//run the replacements.
-			$key = "$b" . $key . "$e";
-			$template = str_replace("$key", $value, $template);
+		
+		if(is_array($repArr)) {
+			foreach($repArr as $key=>$value) {
+				//run the replacements.
+				$key = "$b" . $key . "$e";
+				$template = str_replace("$key", $value, $template);
+			}
+		}
+		else {
+			cs_debug_backtrace(1);
+			throw new exception(__METHOD__ .": no replacement array passed, or array was empty");
 		}
 
 		return($template);
@@ -863,6 +873,63 @@ class cs_globalFunctions extends cs_versionAbstract {
 		return($this->debug_print($printThis, $printItForMe, $removeHr));
 	}//end debug_var_dump()
 	//##########################################################################
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
+	 * Removes all the crap from the url, so we can figure out what section we
+	 * 	need to load templates & includes for.
+	 */
+	public function clean_url($url=NULL) {
+		//make sure we've still got something valid to work with.
+		if(strlen($url)) {
+			//if there's an "APPURL" constant, drop that from the url.
+			if(defined('APPURL') && strlen(constant('APPURL'))) {
+				$dropThis = preg_replace('/^\//', '', constant('APPURL'));
+				$dropThis = preg_replace('/\//', '\\/', $dropThis);
+				$url = preg_replace('/^'. $dropThis .'/', '', $url);
+			}
+			
+			//check the string to make sure it doesn't begin with a "/"
+			if($url[0] == '/') {
+				$url = substr($url, 1, strlen($url));
+			}
+	
+			//check the last char for a "/"...
+			if($url[strlen($url) -1] == '/') {
+				//last char is a '/'... kill it.
+				$url = substr($url, 0, strlen($url) -1);
+			}
+	
+			//if we've been sent a query, kill it off the string...
+			if(preg_match('/\?/', $url)) {
+				$url = split('\?', $url);
+				$url = $url[0];
+			}
+	
+			if(preg_match("/\./", $url)) {
+				//disregard file extensions, but keep everything else...
+				//	i.e. "index.php/yermom.html" becomes "index/yermom"
+				$tArr = explode('/', $url);
+				$tUrl = null;
+				foreach($tArr as $tUrlPart) {
+					$temp = explode(".", $tUrlPart);
+					if(strlen($temp[0])) {
+						$tUrlPart = $temp[0];
+					}
+					$tUrl = $this->create_list($tUrl, $tUrlPart, '/');
+				}
+				$url = $tUrl;
+			}
+		}
+		else {
+			$url = null;
+		}
+
+		return($url);
+	}//end clean_url()
+	//------------------------------------------------------------------------
 
 }//end cs_globalFunctions{}
 

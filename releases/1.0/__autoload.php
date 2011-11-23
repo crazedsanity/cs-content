@@ -21,17 +21,16 @@ require_once(dirname(__FILE__) .'/cs_globalFunctions.class.php');
 
 function __autoload($class) {
 	
-		$tried = array();
-		
-		$fsRoot = dirname(__FILE__) .'/../../';
-		if(defined('LIBDIR')) {
-			$fsRoot = constant('LIBDIR');
-		}
-		$fs = new cs_fileSystem($fsRoot);
-		
-		//try going into a "lib" directory.
-		$fs->cd('lib');
-		$lsData = $fs->ls();
+	$tried = array();
+	
+	$fsRoot = dirname(__FILE__) .'/../../';
+	if(defined('LIBDIR')) {
+		$fsRoot = constant('LIBDIR');
+	}
+	$fs = new cs_fileSystem($fsRoot);
+	$fs->cd('lib');
+	if(!_autoload_hints_parser($class, $fs)) {
+		$lsData = $fs->ls(null,false);
 		
 		//attempt to find it here...
 		$tryThis = array();
@@ -39,53 +38,89 @@ function __autoload($class) {
 			$myClass = preg_replace('/[aA]bstract/', '', $class);
 			$tryThis[] = $class .'.abstract.class.php';
 			$tryThis[] = $myClass .'.abstract.class.php';
-			$tryThis[] = 'abstract/'. $myClass .'.abstract.class.php';
 		}
 		$tryThis[] = $class .'.class.php';
 		$tryThis[] = $class .'Class.php';
 		$tryThis[] = $class .'.php';
 		
-		$found=false;
-		foreach($tryThis as $filename) {
-			if(isset($lsData[$filename])) {
-				$tried[] = $fs->realcwd .'/'. $filename;
-				require_once($fs->realcwd .'/'. $filename);
-				if(class_exists($class)) {
-					$found=true;
-					break;
-				}
+		_autoload_directory_checker($fs, $class, $tryThis);
+		if(!class_exists($class)) {
+			$gf = new cs_globalFunctions;
+			$gf->debug_print(__FILE__ ." - line #". __LINE__ ."::: couldn't find (". $class ."), realcwd=(". $fs->realcwd .")",1);
+			$gf->debug_print($tried,1);
+			$gf->debug_print($tryThis,1);
+			if(function_exists('cs_debug_backtrace')) {
+				cs_debug_backtrace(1);
 			}
+			exit;
 		}
-		
-		if(!$found) {
-			//try going into sub-directories to pull the files.
-			foreach($lsData as $i=>$d) {
-				if($d['type'] == 'dir') {
-					$subLs = $fs->ls($i);
-					foreach($tryThis as $filename) {
-						$fileLocation = $fs->realcwd .'/'. $i .'/'. $filename;
-						if(file_exists($fileLocation)) {
-							$tried[] = $fileLocation;
-							require_once($fileLocation);
-							if(class_exists($class)) {
-								$found=true;
-								break;
-							}
-						}
-					}
-				}
-				if($found) {
-					break;
-				}
-			}
-		}
-	
-	if(!$found) {
-		$gf = new cs_globalFunctions;
-		$gf->debug_print(__FILE__ ." - line #". __LINE__ ."::: couldn't find (". $class .")",1);
-		$gf->debug_print($tried,1);
-		$gf->debug_print($tryThis,1);
-		exit;
 	}
 }//end __autoload()
+
+function _autoload_hints_parser($class, $fs) {
+	$foundClass=false;
+	if(defined('AUTOLOAD_HINTS') && file_exists(constant('AUTOLOAD_HINTS'))) {
+		$data = $fs->read(constant('AUTOLOAD_HINTS'),true);
+		$myHints = array();
+		foreach($data as $s) {
+			$bits = explode('|', rtrim($s));
+			if(count($bits) == 2) {
+				$myHints[$bits[1]] = $bits[0];
+			}
+		}
+		#print "<pre>";
+		#print_r($myHints);
+		if(isset($myHints[$class])) {
+			$tryFile = constant('LIBDIR') .'/'. $myHints[$class];
+			if(file_exists($tryFile)) {
+				require_once($tryFile);
+				if(class_exists($class)) {
+					$foundClass=true;
+				}
+			}
+		}
+	}
+	return($foundClass);
+}//end _autoload_hints_parser()
+
+
+function _autoload_directory_checker($fs, $class, $lookForFiles) {
+	$lsData = $fs->ls(null,false);
+	$dirNames = array();
+	$curDirectory = $fs->realcwd;
+	
+	$found = false;
+	
+	if(is_array($lsData)) {
+		foreach($lsData as $objectName => $objectData) {
+			if($objectData['type'] == 'dir') {
+				$dirNames[] = $objectName;
+			}
+			elseif($objectData['type'] == 'file') {
+				if(in_array($objectName, $lookForFiles)) {
+					require_once($fs->realcwd .'/'. $objectName);
+					if(class_exists($class)) {
+						$found = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	if(!$found && is_array($dirNames) && count($dirNames)) {
+		foreach($dirNames as $dir) {
+			$fs->cd($dir);
+			$found = _autoload_directory_checker($fs, $class, $lookForFiles);
+			$fs->cdup();
+			
+			if($found === true) {
+				break;
+			}
+		}
+	}
+	
+	return($found);
+}
+
 ?>

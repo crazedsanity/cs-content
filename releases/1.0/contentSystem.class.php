@@ -99,17 +99,21 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * The CONSTRUCTOR.  Duh.
 	 */
-	public function __construct($siteRoot=null) {
+	public function __construct($siteRoot=null, $section=null) {
 		parent::__construct();
 		
 		//setup the section stuff...
 		$repArr = array($_SERVER['SCRIPT_NAME'], "/");
-		$_SERVER['REQUEST_URI'] = ereg_replace('^/', "", $_SERVER['REQUEST_URI']);
+		$_SERVER['REQUEST_URI'] = preg_replace('/^\//', "", $_SERVER['REQUEST_URI']);
 		
 		//figure out the section & subsection stuff.
 		$requestUri = preg_replace('/\/$/', '', $_SERVER['REQUEST_URI']);
-		$this->fullSectionArr = split('/', $requestUri); //TODO: will this cope with an APPURL being set?
-		$this->section = $this->clean_url($_SERVER['REQUEST_URI']);
+		$this->fullSectionArr = explode('/', $requestUri); //TODO: will this cope with an APPURL being set?
+		
+		if(is_null($section)) {
+			$section = @$_SERVER['REQUEST_URI'];
+		}
+		$this->section = $this->clean_url($section);
 		
 		$this->initialize_locals($siteRoot);
 	}//end __construct()
@@ -298,7 +302,7 @@ class contentSystem extends cs_contentAbstract {
 		if(($this->section === 0 || is_null($this->section) || !strlen($this->section)) && defined('DEFAULT_SECTION')) {
 			$this->section = preg_replace('/^\//', '', constant('DEFAULT_SECTION'));
 		}
-		$myArr = split('/', $this->section);
+		$myArr = explode('/', $this->section);
 		
 		//if we've got something in the array, keep going.
 		if(is_array($myArr) && count($myArr) > 0) {
@@ -327,51 +331,17 @@ class contentSystem extends cs_contentAbstract {
 		}
 
 		//make sure we've still got something valid to work with.
-		if(!strlen($section)) {
-			//TODO: remove the extra return statement (should only be one at the bottom of the method).
-			return(NULL);
+		if(strlen($section)) {
+			try {
+				$section = $this->gfObj->clean_url($section);
+			}
+			catch(Exception $e) {
+				//hide the exception and allow it to return NULL.
+			}
 		}
 		else {
-			
-			//if there's an "APPURL" constant, drop that from the section.
-			if(defined('APPURL') && strlen(constant('APPURL'))) {
-				$dropThis = preg_replace('/^\//', '', constant('APPURL'));
-				$dropThis = preg_replace('/\//', '\\/', $dropThis);
-				$section = preg_replace('/^'. $dropThis .'/', '', $section);
-			}
-			
-			//check the string to make sure it doesn't begin with a "/"
-			if($section[0] == '/') {
-				$section = substr($section, 1, strlen($section));
-			}
-	
-			//check the last char for a "/"...
-			if($section[strlen($section) -1] == '/') {
-				//last char is a '/'... kill it.
-				$section = substr($section, 0, strlen($section) -1);
-			}
-	
-			//if we've been sent a query, kill it off the string...
-			if(preg_match('/\?/', $section)) {
-				$section = split('\?', $section);
-				$section = $section[0];
-			}
-	
-			if(ereg("\.", $section)) {
-				//disregard file extensions, but keep everything else...
-				//	i.e. "index.php/yermom.html" becomes "index/yermom"
-				$tArr = split('/', $section);
-				foreach($tArr as $tSecName) {
-					$temp = split("\.", $tSecName);
-					if(strlen($temp[0]) > 1) {
-						$tSecName = $temp[0];
-					}
-					$tSection = $this->gfObj->create_list($tSection, $tSecName, '/');
-				}
-				$section = $tSection;
-			}
+			$section = null;
 		}
-
 		return($section);
 	}//end clean_url()
 	//------------------------------------------------------------------------
@@ -567,7 +537,7 @@ class contentSystem extends cs_contentAbstract {
 	 * 	name, or vice-versa.
 	 */
 	private function arrange_directory_contents($primaryIndex='section', $secondaryIndex='name') {
-		$directoryInfo = $this->tmplFs->ls();
+		$directoryInfo = $this->tmplFs->ls(null,false);
 		$arrangedArr = array();
 		if(is_array($directoryInfo)) {
 			foreach($directoryInfo as $index=>$data) {
@@ -673,7 +643,7 @@ class contentSystem extends cs_contentAbstract {
 			$mySection = preg_replace('/\/index$/','', $mySection);
 		}
 		if($this->incFs->cd('/'. $mySection)) {
-			$lsData = $this->incFs->ls();
+			$lsData = $this->incFs->ls(null,false);
 			if(isset($lsData['shared.inc']) && is_array($lsData['shared.inc'])) {
 				$this->add_include('shared.inc');
 			}
@@ -695,7 +665,7 @@ class contentSystem extends cs_contentAbstract {
 	 * 	solely by load_includes().
 	 */
 	private function load_dir_includes($section) {
-		$lsData = $this->incFs->ls();
+		$lsData = $this->incFs->ls(null,false);
 		
 		$addThese = array();
 		
@@ -735,8 +705,10 @@ class contentSystem extends cs_contentAbstract {
 	 * Called when something is broken.
 	 */
 	private function die_gracefully($details=NULL) {
-		if(isset($_SERVER['SERVER_PROTOCOL']) && $this->templateObj->template_file_exists('system/404.shared.tmpl')) {
-			header('HTTP/1.0 404 Not Found');
+		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
+			if(isset($_SERVER['SERVER_PROTOCOL'])) {
+				header('HTTP/1.0 404 Not Found');
+			}
 			//Simple "Page Not Found" error... show 'em.
 			$this->templateObj->add_template_var('main', $this->templateObj->file_to_string('system/404.shared.tmpl'));
 			
@@ -802,6 +774,9 @@ class contentSystem extends cs_contentAbstract {
 		//make the "final section" available to scripts.
 		$finalSection = $this->finalSection;
 		$sectionArr = $this->sectionArr;
+		if(count($sectionArr) && $sectionArr[(count($sectionArr)-1)] == "") {
+			array_pop($sectionArr);
+		}
 		$fullSectionArr = $this->fullSectionArr;
 		array_unshift($sectionArr, $this->baseDir);
 		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
