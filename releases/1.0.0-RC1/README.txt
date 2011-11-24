@@ -1,0 +1,5 @@
+Documentation is now located at: 
+[https://cs-content.svn.sourceforge.net/svnroot/cs-content/documentation]. It 
+has been moved to avoid unnecessarily large downloads.
+
+$Id$ 
