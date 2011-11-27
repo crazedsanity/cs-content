@@ -296,9 +296,34 @@ class cs_genericPage extends cs_contentAbstract {
 		
 	}//end of print_page()
 	//---------------------------------------------------------------------------------------------
-
-
-
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	/**
+	 * Returns a fully-parsed template.
+	 */
+	public function return_parsed_template($tmplVar, $stripUndefVars=1) {
+		if(isset($this->templateVars[$tmplVar])) {
+			$oldMd5 = md5(serialize($this->templateVars));
+			$oldTemplateVars = $this->templateVars;
+			$this->add_template_var('main', $this->templateVars[$tmplVar]);
+			$retval = $this->return_printed_page($stripUndefVars);
+			$this->templateVars = $oldTemplateVars;
+			$newMd5 = md5(serialize($this->templateVars));
+			if($oldMd5 !== $newMd5) {
+				throw new exception(__METHOD__ .": old template vars don't match new...");
+			}
+		}
+		else {
+			throw new exception(__METHOD__ .": invalid template var (". $tmplVar .")");
+		}
+		return($retval);
+	}//end return_parsed_template()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * Handles a message that was set into the session.
