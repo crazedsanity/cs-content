@@ -1,3 +1,4 @@
+Generic framework designed to leverage the power of a templating system and PHP includes, all running through a single display script. Allows incredibly fast building of an intelligent website without having to write a script for every page. Separate HTML from code, intelligently build pages using path-based script and template inheritance.
+
 Documentation is now located at: 
-[https://cs-content.svn.sourceforge.net/svnroot/cs-content/documentation]. It 
-has been moved to avoid unnecessarily large downloads.
+[https://cs-content.svn.sourceforge.net/svnroot/cs-content/documentation], or via the Git repository at GitHub... It has been moved to avoid unnecessarily large downloads.
