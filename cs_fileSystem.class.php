@@ -431,7 +431,7 @@ class cs_fileSystem extends cs_contentAbstract {
 		
 		if(!$this->check_chroot($retval, FALSE)) {
 			$this->gfObj->debug_print(func_get_args());
-			throw new exception(__METHOD__ .": file is outside of allowed directory (". $retval .")");
+			throw new exception(__METHOD__ .": file (". $retval .") is outside of allowed directory");
 		}
 		
 		return($retval);
@@ -830,6 +830,9 @@ class cs_fileSystem extends cs_contentAbstract {
 		//now, let's go through the root directory structure, & make sure $path is within that.
 		$rootPieces = explode('/', $this->root);
 		$pathPieces = explode('/', $path);
+		if(is_file($path)) {
+			$filename = array_pop($pathPieces);
+		}
 		
 		
 		if($rootPieces[0] == '') {
@@ -848,7 +851,9 @@ class cs_fileSystem extends cs_contentAbstract {
 			$pathDir = $pathPieces[$index];
 			if($pathDir != $dirName) {
 				$retval = FALSE;
-				$this->gfObj->debug_print(__METHOD__ .": failed... tmp=(". $tmp ."), dirName=(". $dirName .")");
+		$this->gfObj->debug_print(__METHOD__ .": comparing rootPieces to pathPieces... rootPieces::: ". $this->gfObj->debug_print($rootPieces,0) . " pathPieces::: ".
+				$this->gfObj->debug_print($pathPieces,0));
+				$this->gfObj->debug_print(__METHOD__ .": failed... root=(". $this->root ."), tmp=(". $tmp ."), dirName=(". $dirName ."), translatePath=(". $translatePath .")");
 				break;
 			}
 			$tmp = $this->gfObj->create_list($tmp, $dirName, '/');

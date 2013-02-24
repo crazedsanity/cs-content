@@ -26,7 +26,7 @@ abstract class cs_versionAbstract {
 	
 	
 	
-	abstract public function __construct();
+	#abstract public function __construct();
 	
 	
 	
