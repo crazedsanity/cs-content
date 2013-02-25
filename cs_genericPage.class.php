@@ -19,7 +19,6 @@ class cs_genericPage extends cs_contentAbstract {
 	private $tmplDir;
 	private $libDir;
 	private $siteRoot;
-	private $allowRedirect;
 	
 	private $allowInvalidUrls=NULL;
 	
