@@ -71,7 +71,7 @@ class cs_session extends cs_contentAbstract {
 	 * @return FALSE		FAIL: user is not authenticated (hard-coded this way).
 	 */
 	public function is_authenticated() {
-		return(FALSE);
+		return(isset($_SESSION['uid']) && strlen($_SESSION['uid']));
 	}//end is_authenticated()
 	//-------------------------------------------------------------------------
 	
