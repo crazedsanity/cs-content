@@ -63,8 +63,8 @@ class contentSystem extends cs_contentAbstract {
 		
 		//create a session that gets stored in a database if they so desire...
 		if(defined('SESSION_DBSAVE')) {
-			$obj = new cs_sessionDB();
-			$this->handle_session($obj);
+			$this->session = new cs_sessionDB();
+			$this->handle_session($this->session);
 		}
 		
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
@@ -183,7 +183,7 @@ class contentSystem extends cs_contentAbstract {
 					if(!$this->session->is_authenticated()) {
 						//run the redirect.
 						if(strlen($destinationArg)) {
-							$redirectToUrl .= '?'. $destinationArg .'=/'. urlencode($_SERVER['REQUEST_URI']);
+							$redirectToUrl .= '?'. $destinationArg .'='. urlencode($_SERVER['REQUEST_URI']);
 						}
 						$this->gfObj->conditional_header($redirectToUrl, TRUE);
 					}
