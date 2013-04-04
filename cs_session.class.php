@@ -26,6 +26,7 @@ class cs_session extends cs_contentAbstract {
 		parent::__construct(true);
 		$sessName = null;
 		$sessionId = null;
+		
 		if($createSession) {
 			if(is_string($createSession) && strlen($createSession) >2) {
 				$sessName = $createSession;
@@ -41,6 +42,7 @@ class cs_session extends cs_contentAbstract {
 			//now actually create the session.
 			@session_start();
 		}
+		
 		if(is_null($sessName)) {
 			$sessName = session_name();
 		}
