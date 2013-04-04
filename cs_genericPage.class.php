@@ -127,6 +127,7 @@ class cs_genericPage extends cs_contentAbstract {
 			}
 			
 			//TODO: make the redirectHere variable dynamic--an argument, methinks.
+			
 			$redirectHere = '/login.php?destination='. $myUrlString;
 				
 			//Not exitting after conditional_header() is... bad, m'kay?
