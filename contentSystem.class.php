@@ -63,6 +63,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//create a session that gets stored in a database if they so desire...
 		if(defined('SESSION_DBSAVE')) {
+			ini_set('session.save_handler', 'user');
 			$this->session = new cs_sessionDB();
 			$this->handle_session($this->session);
 		}
