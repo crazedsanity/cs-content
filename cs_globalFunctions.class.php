@@ -904,7 +904,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	
 			//if we've been sent a query, kill it off the string...
 			if(preg_match('/\?/', $url)) {
-				$url = split('\?', $url);
+				$url = preg_split('/\?/', $url);
 				$url = $url[0];
 			}
 	
