@@ -30,6 +30,7 @@ class contentSystem extends cs_contentAbstract {
 	private $reason=NULL;
 	
 	private $injectVars=array();
+	public $templateSource = array();
 	
 	//------------------------------------------------------------------------
 	/**
@@ -305,7 +306,7 @@ class contentSystem extends cs_contentAbstract {
 			}
 			
 			//load templates for the main section.
-			$this->load_main_templates();
+			#$this->load_main_templates();
 			
 			//load templates for the page.
 			$this->load_page_templates();
@@ -842,6 +843,7 @@ class contentSystem extends cs_contentAbstract {
 	private final function add_template($var, $file) {
 		$file = preg_replace("/\/\//", "/", $file);
 		$this->templateObj->add_template_file($var, $file);
+		#$this->templateSource[$mySection] = $templateFilename;
 	}//end add_template()
 	//------------------------------------------------------------------------
 	
