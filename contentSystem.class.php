@@ -5,7 +5,7 @@ class contentSystem extends cs_contentAbstract {
 	protected $baseDir			= NULL;			//base directory for templates & includes.			
 	protected $section			= NULL;			//section string, derived from the URL.		
 	protected $sectionArr		= array();		//array of items, for figuring out where templates & includes are.
-	protected $fullsectionArr	= array();
+	protected $fullSectionArr	= array();
 	
 	
 	protected $tmplFs			= NULL;			//Object used to access the TEMPLATES filesystem
@@ -38,12 +38,6 @@ class contentSystem extends cs_contentAbstract {
 	 */
 	public function __construct($siteRoot=null, $section=null) {
 		parent::__construct();
-		
-		$requestUri = preg_replace('/^\//', "", $_SERVER['REQUEST_URI']);
-		
-		//figure out the section & subsection stuff.
-		$requestUri = preg_replace('/\/$/', '', $requestUri);
-		$this->fullSectionArr = explode('/', $requestUri); //TODO: will this cope with an APPURL being set?
 		
 		if(is_null($section)) {
 			$section = @$_SERVER['REQUEST_URI'];
@@ -242,8 +236,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		//if we've got something in the array, keep going.
 		if(is_array($myArr) && count($myArr) > 0) {
-			
-			//TODO: if there's only one section here, sectionArr becomes BLANK... does that cause unexpected behaviour?
+			$this->fullSectionArr = $myArr;
 			$this->baseDir = array_shift($myArr);
 			$this->sectionArr = $myArr;
 		}
@@ -296,21 +289,39 @@ class contentSystem extends cs_contentAbstract {
 		$validatePageRes = $this->validate_page();
 		if($foundIncludes || $validatePageRes) {
 			
-			//okay, get template directories & start loading
-			$tmplDirs = $this->get_template_dirs();
-			
-			$this->load_shared_templates();
-			foreach($tmplDirs as $myPath) {
-				//load shared templates.
-				$this->load_shared_templates($myPath);
+		$myTestDir = "";
+		$templates = $this->new_arrange_directory_contents('/', 'section', 'name');
+		if(isset($templates['shared']) && count($templates['shared'])) {
+			foreach($templates['shared'] as $var => $file) {
+				$this->add_template($var, $file);
 			}
-			
-			//load templates for the main section.
-			#$this->load_main_templates();
-			
-			//load templates for the page.
-			$this->load_page_templates();
-			
+		}
+
+		$myIndex = 1;
+		foreach($this->fullSectionArr as $index=>$value) {
+			$myTestDir .= '/'. $value;
+
+			$templates = $this->new_arrange_directory_contents($myTestDir, 'section', 'name');
+			if(count($templates)) {
+				if(isset($templates['shared'])) {
+					foreach($templates['shared'] as $v=>$f) {
+						$this->add_template($v, $f);
+					}
+				}
+
+				if(isset($this->fullSectionArr[$myIndex])) {
+					$this->load_page_templates($myTestDir, $this->fullSectionArr[$myIndex]);
+				}
+				else {
+					$this->load_page_templates($myTestDir, 'index');
+				}
+
+				$myIndex ++;
+			}
+			else {
+				break;
+			}
+		}
 			//now cd() all the way back.
 			$this->tmplFs->cd('/');
 			$this->incFs->cd('/');
@@ -368,101 +379,37 @@ class contentSystem extends cs_contentAbstract {
 	
 	//------------------------------------------------------------------------
 	/**
-	 * Loads the templates for the current page (performs template inheritance, too).
+	 * Loads the templates for the current page 
 	 */
-	private function load_page_templates() {
-		//should already be in the proper directory, start looping through sectionArr,
-		//	looking for templates.
-		$mySectionArr = $this->sectionArr;
+	private function load_page_templates($dir, $pageName) {
+		$loadedPageTemplate = false;
 		
-		$finalSection = $this->finalSection;
-		foreach($mySectionArr as $index=>$value) {
-			$tmplList = $this->arrange_directory_contents('name', 'section');
-			if(isset($tmplList[$value])) {
-				foreach($tmplList[$value] as $mySection=>$myTmpl) {
-					$this->add_template($mySection, $myTmpl);
-				}
-			}
-			if(!$this->tmplFs->cd($value)) {
-				break;
-			}
+		$templates = $this->new_arrange_directory_contents($dir, 'name', 'section');
+		if(isset($templates[$pageName]) && isset($templates[$pageName]['content'])) {
+			$this->add_template('content', $templates[$pageName]['content']);
+			$loadedPageTemplate = true;
+			unset($templates[$pageName]['content']);
+		}
+		elseif(isset($templates['index']) && isset($templates['index']['content'])) {
+			$this->add_template('content', $templates['index']['content']);
+			unset($templates['index']['content']);
+			$loadedPageTemplate = true;
 		}
 		
-		$finalTmplList = $this->arrange_directory_contents('name', 'section');
-		foreach($finalTmplList as $mySection => $subArr) {
-			foreach($subArr as $internalSection => $myTmpl) {
-				$this->add_template($mySection, $myTmpl);
-			}
-		}
-		
-		//go through the final section, if set, so the templates defined there are used.
-		if(isset($finalTmplList[$finalSection])) {
-			foreach($finalTmplList[$finalSection] as $mySection => $myTmpl) {
-				$this->add_template($mySection, $myTmpl);
-			}
-		}
-		
-		if($this->tmplFs->cd($finalSection)) {
-			//load the index stuff.
-			$tmplList = $this->arrange_directory_contents('name', 'section');
-			if(isset($tmplList['index'])) {
-				foreach($tmplList['index'] as $mySection => $myTmpl) {
-					$this->add_template($mySection, $myTmpl);
-				}
-			}
-			if(isset($tmplList[$this->baseDir]['content'])) {
-				//load template for the main page (if $this->baseDir == "help", this would load "/help.content.tmpl" as content)
-				$this->add_template('content', $tmplList[$this->baseDir]['content']);
-			}
-		}
-	}//end load_page_templates()
-	//------------------------------------------------------------------------
-	
-	
-	
-	//------------------------------------------------------------------------
-	/**
-	 * loads templates for the main section they're on.
-	 */
-	private function load_main_templates() {
-		//check to see if the present section is valid.
-		$this->tmplFs->cd('/');
-		$dirContents = $this->arrange_directory_contents('name', 'section');
-		$this->tmplFs->cd($this->baseDir);
-		if(is_array($dirContents)) {
-			foreach($dirContents as $mySection => $subArr) {
-				foreach($subArr as $subIndex=>$templateFilename) {
-					$this->add_template($mySection, $templateFilename);
+		if($loadedPageTemplate) {
+			//now load all 'content' templates (i.e. "*.content.tmpl" files).
+			$xTemplates = $this->new_arrange_directory_contents($dir, 'section', 'name');
+			if(isset($xTemplates['content'])) {
+				//remove special ones.
+				unset($xTemplates['content'][$pageName], $xTemplates['content']['index']);
+				foreach($xTemplates['content'] as $v=>$f) {
+					$this->add_template($v, $f);
 				}
 			}
 		}
-	}//end load_main_templates()
-	//------------------------------------------------------------------------
-	
-	
-	
-	//------------------------------------------------------------------------
-	/**
-	 * Loads any shared templates: these can be overwritten later.
-	 */
-	private function load_shared_templates($path=NULL) {
 		
-		if(!is_null($path)) {
-			$this->tmplFs->cd($path);
-		}
-		else {
-			$this->tmplFs->cd('/');
-		}
-		
-		//pull a list of the files.
-		$dirContents = $this->arrange_directory_contents();
-		if(isset($dirContents['shared']) && count($dirContents['shared'])) {
-			
-			foreach($dirContents['shared'] as $section => $template) {
-				$this->add_template($section, $template);
-			}
-		}
-	}//end load_shared_templates()
+		return($loadedPageTemplate);
+	}//end load_page_template()
 	//------------------------------------------------------------------------
 	
 	
@@ -492,6 +439,45 @@ class contentSystem extends cs_contentAbstract {
 					}
 				}
 			}
+		}
+		
+		return($arrangedArr);
+	}//end arrange_directory_contents()
+	//------------------------------------------------------------------------
+	
+	
+	
+	//------------------------------------------------------------------------
+	/**
+	 * Pulls a list of files in the current directory, & arranges them by section & 
+	 * 	name, or vice-versa.
+	 */
+	private function new_arrange_directory_contents($dir, $primaryIndex='section', $secondaryIndex='name') {
+		$fsObj = new cs_fileSystem($this->tmplFs->root);
+		if($fsObj->cd($dir)) {
+			$directoryInfo = $fsObj->ls(null,false);
+			$arrangedArr = array();
+			if(is_array($directoryInfo)) {
+				foreach($directoryInfo as $index=>$data) {
+					$myType = $data['type'];
+					if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
+						$filename = $this->gfObj->create_list($fsObj->cwd, $index, '/');
+						$filename = preg_replace('/^\/templates/', '', $filename);
+						$filename = preg_replace('/^\/\//', '/', $filename);
+						//call another method to rip the filename apart properly, then arrange things as needed.
+						$pieces = $this->parse_filename($index);
+						$myPriIndex = @$pieces[$primaryIndex];
+						$mySecIndex = @$pieces[$secondaryIndex];
+						if(strlen($myPriIndex) && strlen($mySecIndex)) {
+							//only load if it's got BOTH parts of the filename.
+							$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
+						}
+					}
+				}
+			}
+		}
+		else {
+			$arrangedArr = array();
 		}
 		
 		return($arrangedArr);
@@ -843,7 +829,6 @@ class contentSystem extends cs_contentAbstract {
 	private final function add_template($var, $file) {
 		$file = preg_replace("/\/\//", "/", $file);
 		$this->templateObj->add_template_file($var, $file);
-		#$this->templateSource[$mySection] = $templateFilename;
 	}//end add_template()
 	//------------------------------------------------------------------------
 	
