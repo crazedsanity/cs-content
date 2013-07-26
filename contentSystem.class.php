@@ -290,7 +290,7 @@ class contentSystem extends cs_contentAbstract {
 		if($foundIncludes || $validatePageRes) {
 			
 		$myTestDir = "";
-		$templates = $this->new_arrange_directory_contents('/', 'section', 'name');
+		$templates = $this->arrange_directory_contents('/', 'section', 'name');
 		if(isset($templates['shared']) && count($templates['shared'])) {
 			foreach($templates['shared'] as $var => $file) {
 				$this->add_template($var, $file);
@@ -301,7 +301,7 @@ class contentSystem extends cs_contentAbstract {
 		foreach($this->fullSectionArr as $index=>$value) {
 			$myTestDir .= '/'. $value;
 
-			$templates = $this->new_arrange_directory_contents($myTestDir, 'section', 'name');
+			$templates = $this->arrange_directory_contents($myTestDir, 'section', 'name');
 			if(count($templates)) {
 				if(isset($templates['shared'])) {
 					foreach($templates['shared'] as $v=>$f) {
@@ -384,7 +384,7 @@ class contentSystem extends cs_contentAbstract {
 	private function load_page_templates($dir, $pageName) {
 		$loadedPageTemplate = false;
 		
-		$templates = $this->new_arrange_directory_contents($dir, 'name', 'section');
+		$templates = $this->arrange_directory_contents($dir, 'name', 'section');
 		if(isset($templates[$pageName]) && isset($templates[$pageName]['content'])) {
 			$this->add_template('content', $templates[$pageName]['content']);
 			$loadedPageTemplate = true;
@@ -398,7 +398,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		if($loadedPageTemplate) {
 			//now load all 'content' templates (i.e. "*.content.tmpl" files).
-			$xTemplates = $this->new_arrange_directory_contents($dir, 'section', 'name');
+			$xTemplates = $this->arrange_directory_contents($dir, 'section', 'name');
 			if(isset($xTemplates['content'])) {
 				//remove special ones.
 				unset($xTemplates['content'][$pageName], $xTemplates['content']['index']);
@@ -419,40 +419,7 @@ class contentSystem extends cs_contentAbstract {
 	 * Pulls a list of files in the current directory, & arranges them by section & 
 	 * 	name, or vice-versa.
 	 */
-	private function arrange_directory_contents($primaryIndex='section', $secondaryIndex='name') {
-		$directoryInfo = $this->tmplFs->ls(null,false);
-		$arrangedArr = array();
-		if(is_array($directoryInfo)) {
-			foreach($directoryInfo as $index=>$data) {
-				$myType = $data['type'];
-				if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
-					$filename = $this->gfObj->create_list($this->tmplFs->cwd, $index, '/');
-					$filename = preg_replace('/^\/templates/', '', $filename);
-					$filename = preg_replace('/^\/\//', '/', $filename);
-					//call another method to rip the filename apart properly, then arrange things as needed.
-					$pieces = $this->parse_filename($index);
-					$myPriIndex = @$pieces[$primaryIndex];
-					$mySecIndex = @$pieces[$secondaryIndex];
-					if(strlen($myPriIndex) && strlen($mySecIndex)) {
-						//only load if it's got BOTH parts of the filename.
-						$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
-					}
-				}
-			}
-		}
-		
-		return($arrangedArr);
-	}//end arrange_directory_contents()
-	//------------------------------------------------------------------------
-	
-	
-	
-	//------------------------------------------------------------------------
-	/**
-	 * Pulls a list of files in the current directory, & arranges them by section & 
-	 * 	name, or vice-versa.
-	 */
-	private function new_arrange_directory_contents($dir, $primaryIndex='section', $secondaryIndex='name') {
+	private function arrange_directory_contents($dir, $primaryIndex='section', $secondaryIndex='name') {
 		$fsObj = new cs_fileSystem($this->tmplFs->root);
 		if($fsObj->cd($dir)) {
 			$directoryInfo = $fsObj->ls(null,false);
