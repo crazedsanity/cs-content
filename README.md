@@ -57,3 +57,6 @@ It is important to note that the content system will NOT regard a section as val
  										|--> /includes/content/members/shared.inc
  										`--> /includes/content/members/test.inc
 
+# License
+Copyright (c) 2013 "crazedsanity" Dan Falconer
+Dual licensed under the MIT and GPL Licenses.
