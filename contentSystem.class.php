@@ -63,12 +63,29 @@ class contentSystem extends cs_contentAbstract {
 			$this->handle_session($this->session);
 		}
 		
+		$templateBaseDir = "templates";
+		$includeBaseDir = "includes";
+		if(defined('CS_TEMPLATE_BASE_DIR')) {
+			if(is_dir(constant('CS_TEMPLATE_BASE_DIR'))) {
+				$templateBaseDir = constant('CS_TEMPLATE_BASE_DIR');
+			}
+			else {
+				throw new exception(__METHOD__ .": invalid template directory (". constant('CS_TEMPLATE_BASE_DIR') .")");
+			}
+		}
+		if(defined('CS_INCLUDE_BASE_DIR')) {
+			if(is_dir(constant('CS_INCLUDE_BASE_DIR'))) {
+				$includeBaseDir = constant('CS_INCLUDE_BASE_DIR');
+			}
+			else {
+				throw new exception(__METHOD__ .": invalid includes directory (". constant('CS_INCLUDE_BASE_DIR') .")");
+			}
+		}
+		
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$root = preg_replace('/\/$/', '', $_SERVER['DOCUMENT_ROOT']);
-		$root = preg_replace('/\/public_html$/', '', $root);
-		$root = preg_replace('/\/html/', '', $root);
+		$root = preg_replace(array('~/$~', '~/public_html$~', '~/html~'), '', $_SERVER['DOCUMENT_ROOT']);
 		
 		if(!is_null($siteRoot) && is_dir($siteRoot)) {
 			$root = $siteRoot;
@@ -76,7 +93,16 @@ class contentSystem extends cs_contentAbstract {
 		elseif(defined('SITE_ROOT') && is_dir(constant('SITE_ROOT'))) {
 			$root = constant('SITE_ROOT');
 		}
-		$this->templateObj = new cs_genericPage(FALSE, $root ."/templates/main.shared.tmpl");
+		
+		
+		//create a fileSystem object for templates.
+		$this->tmplFs = new cs_fileSystem(preg_replace('~/+~', '/', $templateBaseDir));
+		
+		
+		//create a fileSystem object for includes
+		$this->incFs = new cs_fileSystem(preg_replace('~/+~', '/', $includeBaseDir));
+		
+		$this->templateObj = new cs_genericPage(FALSE, $this->tmplFs->root ."/main.shared.tmpl");
 		
 		//setup some default template vars.
 		$defaultVars = array(
@@ -108,15 +134,6 @@ class contentSystem extends cs_contentAbstract {
 			$this->templateObj->add_template_var('APPURL', constant('APPURL'));
 		}
 		
-		//create a fileSystem object for templates.
-		$tmplBaseDir = $root .'/templates';
-		$this->tmplFs = new cs_fileSystem($tmplBaseDir);
-		
-		
-		//create a fileSystem object for includes
-		$incBaseDir = $root .'/includes';
-		$this->incFs = new cs_fileSystem($incBaseDir);
-		
 		
 		//check versions, make sure they're all the same.
 		$myVersion = $this->get_version();
@@ -136,31 +153,6 @@ class contentSystem extends cs_contentAbstract {
 		//get ready for when we have to load templates & such.
 		$this->prepare();
 	}//end initialize_locals()
-	//------------------------------------------------------------------------
-	
-	
-	
-	//------------------------------------------------------------------------
-	private function get_template_dirs() {
-		if(is_array($this->sectionArr)) {
-			$this->tmplFs->cd('/'. $this->baseDir);
-			$retval = array();
-			$retval[] = $this->tmplFs->cwd;
-			foreach($this->sectionArr as $index=>$name) {
-				if($this->tmplFs->cd($name)) {
-					$retval[] = $this->tmplFs->cwd;
-				}
-				else {
-					break;
-				}
-			}
-		}
-		else {
-			throw new exception(__METHOD__ .": section array is invalid");
-		}
-		
-		return($retval);
-	}//end get_template_dirs()
 	//------------------------------------------------------------------------
 	
 	
@@ -288,40 +280,40 @@ class contentSystem extends cs_contentAbstract {
 		
 		$validatePageRes = $this->validate_page();
 		if($foundIncludes || $validatePageRes) {
-			
-		$myTestDir = "";
-		$templates = $this->arrange_directory_contents('/', 'section', 'name');
-		if(isset($templates['shared']) && count($templates['shared'])) {
-			foreach($templates['shared'] as $var => $file) {
-				$this->add_template($var, $file);
-			}
-		}
 
-		$myIndex = 1;
-		foreach($this->fullSectionArr as $index=>$value) {
-			$myTestDir .= '/'. $value;
-
-			$templates = $this->arrange_directory_contents($myTestDir, 'section', 'name');
-			if(count($templates)) {
-				if(isset($templates['shared'])) {
-					foreach($templates['shared'] as $v=>$f) {
-						$this->add_template($v, $f);
-					}
+			$myTestDir = "";
+			$templates = $this->arrange_directory_contents('/', 'section', 'name');
+			if(isset($templates['shared']) && count($templates['shared'])) {
+				foreach($templates['shared'] as $var => $file) {
+					$this->add_template($var, $file);
 				}
+			}
 
-				if(isset($this->fullSectionArr[$myIndex])) {
-					$this->load_page_templates($myTestDir, $this->fullSectionArr[$myIndex]);
+			$myIndex = 1;
+			foreach($this->fullSectionArr as $index=>$value) {
+				$myTestDir .= '/'. $value;
+
+				$templates = $this->arrange_directory_contents($myTestDir, 'section', 'name');
+				if(count($templates)) {
+					if(isset($templates['shared'])) {
+						foreach($templates['shared'] as $v=>$f) {
+							$this->add_template($v, $f);
+						}
+					}
+
+					if(isset($this->fullSectionArr[$myIndex])) {
+						$this->load_page_templates($myTestDir, $this->fullSectionArr[$myIndex]);
+					}
+					else {
+						$this->load_page_templates($myTestDir, 'index');
+					}
+
+					$myIndex ++;
 				}
 				else {
-					$this->load_page_templates($myTestDir, 'index');
+					break;
 				}
-
-				$myIndex ++;
 			}
-			else {
-				break;
-			}
-		}
 			//now cd() all the way back.
 			$this->tmplFs->cd('/');
 			$this->incFs->cd('/');
@@ -555,7 +547,7 @@ class contentSystem extends cs_contentAbstract {
 	 */
 	private function load_dir_includes($section) {
 		$lsData = $this->incFs->ls(null,false);
-		
+
 		$addThese = array();
 		
 		//attempt to load the shared includes file.
@@ -584,6 +576,7 @@ class contentSystem extends cs_contentAbstract {
 				$this->add_include($f,true);
 			}
 		}
+		
 	}//end load_dir_includes()
 	//------------------------------------------------------------------------
 	
@@ -594,6 +587,7 @@ class contentSystem extends cs_contentAbstract {
 	 * Called when something is broken.
 	 */
 	private function die_gracefully($details=NULL) {
+		cs_debug_backtrace(1);
 		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
 			if(isset($_SERVER['SERVER_PROTOCOL'])) {
 				header('HTTP/1.0 404 Not Found');

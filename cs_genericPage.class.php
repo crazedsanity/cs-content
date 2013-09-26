@@ -78,6 +78,9 @@ class cs_genericPage extends cs_contentAbstract {
 		$fs = new cs_fileSystem(dirname(__FILE__));
 		$this->siteRoot = $fs->resolve_path_with_dots($this->siteRoot);
 		$this->tmplDir = $this->siteRoot .'/templates';
+		if(defined('CS_TEMPLATE_BASE_DIR')) {
+			$this->tmplDir = constant('CS_TEMPLATE_BASE_DIR');
+		}
 		$this->libDir = $this->siteRoot .'/lib';
 		
 		if(!is_dir($this->tmplDir)) {
