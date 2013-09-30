@@ -65,6 +65,7 @@ class contentSystem extends cs_contentAbstract {
 		
 		$templateBaseDir = "templates";
 		$includeBaseDir = "includes";
+		$root = preg_replace(array('~/$~', '~/public_html$~', '~/html~'), '', $_SERVER['DOCUMENT_ROOT']);
 		if(defined('CS_TEMPLATE_BASE_DIR')) {
 			if(is_dir(constant('CS_TEMPLATE_BASE_DIR'))) {
 				$templateBaseDir = constant('CS_TEMPLATE_BASE_DIR');
@@ -72,6 +73,9 @@ class contentSystem extends cs_contentAbstract {
 			else {
 				throw new exception(__METHOD__ .": invalid template directory (". constant('CS_TEMPLATE_BASE_DIR') .")");
 			}
+		}
+		else {
+			$templateBaseDir = $root .'/templates';
 		}
 		if(defined('CS_INCLUDE_BASE_DIR')) {
 			if(is_dir(constant('CS_INCLUDE_BASE_DIR'))) {
@@ -81,11 +85,13 @@ class contentSystem extends cs_contentAbstract {
 				throw new exception(__METHOD__ .": invalid includes directory (". constant('CS_INCLUDE_BASE_DIR') .")");
 			}
 		}
+		else {
+			$includeBaseDir = $root .'/includes';
+		}
 		
 		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
 		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
 		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		$root = preg_replace(array('~/$~', '~/public_html$~', '~/html~'), '', $_SERVER['DOCUMENT_ROOT']);
 		
 		if(!is_null($siteRoot) && is_dir($siteRoot)) {
 			$root = $siteRoot;
