@@ -12,7 +12,7 @@
  */
 
 
-class testOfCSVersionAbstract extends UnitTestCase {
+class testOfCSVersion extends UnitTestCase {
 	
 	//--------------------------------------------------------------------------
 	function __construct() {
@@ -123,8 +123,11 @@ class testOfCSVersionAbstract extends UnitTestCase {
 }
 
 
-class middleTestClass extends cs_versionAbstract {
+class middleTestClass extends cs_version implements cs_versionInterface {
+	public static $version;
+	
 	function __construct(){}
+	
 } 
 
 ?>

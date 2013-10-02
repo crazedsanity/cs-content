@@ -1,7 +1,7 @@
 <?php
 
 
-class cs_globalFunctions extends cs_versionAbstract {
+class cs_globalFunctions implements cs_versionInterface {
 	
 	
 	/* DEBUG PRINT OPTIONS */
@@ -11,6 +11,7 @@ class cs_globalFunctions extends cs_versionAbstract {
 	
 	private $forceSqlQuotes=0;
 	private $oldForceSqlQuotes=0;
+	public static $version;
 	
 	//=========================================================================
 	public function __construct() {
@@ -29,8 +30,34 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
-		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 	}//end __construct()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public static function GetVersionObject() {
+		if(!is_object(self::$version)) {
+			self::$version = new cs_version();
+		}
+		return(self::$version);
+	}//end GetVersionObject()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function get_version() {
+		return(self::GetVersionObject()->get_version());
+	}//end get_version()
+	//=========================================================================
+	
+	
+	
+	//=========================================================================
+	public function get_project() {
+		return(self::GetVersionObject()->get_project());
+	}//end get_project()
 	//=========================================================================
 	
 	

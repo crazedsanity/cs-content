@@ -1,12 +1,4 @@
 <?php
-/*
- * FILE INFORMATION:
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
- */
 
 class cs_genericPage extends cs_contentAbstract {
 	public $templateVars	= array();		//our copy of the global templateVars

@@ -1,23 +1,14 @@
 <?php
 /*
  * Created on Aug 28, 2009
- *
- *  SVN INFORMATION:::
- * -------------------
- * Last Author::::::::: $Author$ 
- * Current Revision:::: $Revision$ 
- * Repository Location: $HeadURL$ 
- * Last Updated:::::::: $Date$
  */
 
 //these libraries are **REQUIRED** to make __autoload() function without chicken-or-the-egg issues.
-require_once(dirname(__FILE__) .'/abstract/cs_version.abstract.class.php');
+require_once(dirname(__FILE__) .'/interface/cs_version.interface.class.php');
+require_once(dirname(__FILE__) .'/cs_version.class.php');
 require_once(dirname(__FILE__) .'/abstract/cs_content.abstract.class.php');
-require_once(dirname(__FILE__) .'/cs_fileSystem.class.php');
 require_once(dirname(__FILE__) .'/cs_globalFunctions.class.php');
-
-
-
+require_once(dirname(__FILE__) .'/cs_fileSystem.class.php');
 
 function __autoload($class) {
 	

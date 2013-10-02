@@ -610,7 +610,6 @@ class contentSystem extends cs_contentAbstract {
 			
 			$this->templateObj->add_template_var('datetime', date('m-d-Y H:i:s'));
 			$this->templateObj->print_page();
-			exit;
 		}
 		else {
 			throw new exception(__METHOD__ .": Couldn't find 404 template, plus additional error... \nDETAILS::: $details" .

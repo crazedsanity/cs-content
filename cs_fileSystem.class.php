@@ -9,7 +9,7 @@
  * $LastChangedRevision$
  */
 
-class cs_fileSystem extends cs_contentAbstract {
+class cs_fileSystem implements cs_versionInterface {//NOTE:: this does not extend cs_contentAbstract like the others to avoid dependency issues
 
 	public $root;		//actual root directory.
 	public $cwd;		//current directory; relative to $this->root
@@ -18,6 +18,7 @@ class cs_fileSystem extends cs_contentAbstract {
 	public $fh;		//file handle.
 	public $filename;	//filename currently being used.
 	public $lineNum = NULL;
+	public static $version;
 
 	
 	//========================================================================================
@@ -38,7 +39,7 @@ class cs_fileSystem extends cs_contentAbstract {
 			exit("UNUSEABLE ROOT: $rootDir");
 		}
 		
-		parent::__construct();
+		$this->gfObj = new cs_globalFunctions;
 		
 		$this->root = $this->resolve_path_with_dots($this->root);
 		
@@ -65,6 +66,33 @@ class cs_fileSystem extends cs_contentAbstract {
 		}
 		
 	}//end __construct()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public static function GetVersionObject() {
+		if(!is_object(self::$version)) {
+			self::$version = new cs_version();
+		}
+		return(self::$version);
+	}
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function get_version() {
+		return(self::GetVersionObject()->get_version());
+	}//end get_version()
+	//========================================================================================
+	
+	
+	
+	//========================================================================================
+	public function get_project() {
+		return(self::GetVersionObject()->get_project());
+	}//end get_project()
 	//========================================================================================
 	
 	

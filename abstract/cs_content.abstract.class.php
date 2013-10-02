@@ -4,7 +4,7 @@
  */
 
 require_once(dirname(__FILE__) .'/../cs_version.class.php');
-abstract class cs_contentAbstract extends cs_versionAbstract implements cs_versionInterface {
+abstract class cs_contentAbstract extends cs_version implements cs_versionInterface {
 	
 	static public $version;
 	
@@ -15,6 +15,8 @@ abstract class cs_contentAbstract extends cs_versionAbstract implements cs_versi
 			//make a cs_globalFunctions{} object.
 			$this->gfObj = new cs_globalFunctions();
 		}
+		
+		parent::__construct();
     }//end __construct()
 	//-------------------------------------------------------------------------
 	

@@ -19,7 +19,6 @@ class cs_version {
 	#abstract public function __construct();
 	//=========================================================================
 	public function __construct($versionFileLocation=NULL) {
-#cs_debug_backtrace(1);
 		if(!is_null($versionFileLocation)) {
 			$this->set_version_file_location($versionFileLocation);
 		}
@@ -27,6 +26,14 @@ class cs_version {
 			$this->auto_set_version_file();
 		}
 	}//end __construct()
+	//=========================================================================
+
+	
+	
+	//=========================================================================
+	public static function GetVersionObject() {
+		trigger_error(__METHOD__ .": incorrect usage");
+	}
 	//=========================================================================
 	
 	
@@ -127,8 +134,12 @@ class cs_version {
 			$tryThis = NULL;
 			if(isset($bt[1])) {
 				$tryThis = dirname($bt[1]['file']) .'/../VERSION';
+				$tryThis2 = dirname($bt[1]['file']) .'/VERSION';
 				if(file_exists($tryThis)) {
 					$this->set_version_file_location($tryThis);
+				}
+				elseif(file_exists($tryThis2)) {
+					$this->set_version_file_location($tryThis2);
 				}
 				else {
 					throw new exception(__METHOD__ .": could not find VERSION file (tried '". $tryThis ."')");
