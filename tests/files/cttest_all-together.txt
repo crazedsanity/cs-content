@@ -1,0 +1,23 @@
+<html>
+	<head>
+		<title>This is the title.</title>
+	</head>
+<body>
+	<table>This is the infobar.</table>
+	--- the menubar (DATE: 2009-01-01)
+---+++ CONTENT STARTS HERE +++---
+	<!-- BEGIN blockRow1 -->This is a TEST<!-- comment --><!-- END blockRow1 -->
+	<!-- BEGIN blockRow2 -->This
+	is second blockRow<!-- END blockRow2 -->
+<!-- BEGIN blockRow3 --> Some data In here...
+	<!-- END blockRow3 -->
+	
+	<!-- BEGIN blockRow4 --><!-- END blockRow4 -->
+	
+	<!-- BEGIN blockRow5 --><!-- BEGIN embeddedBlockRow1 --><!-- END embeddedBlockRow1 -->
+		<!-- BEGIN embeddedBlockRow2 --><!-- END embeddedBlockRow2 -->
+	<!-- END blockRow5 -->
+---+++ CONTENT ENDS HERE +++---
+	--- the footer.
+</body>
+</html>
