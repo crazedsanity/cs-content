@@ -1,13 +1,17 @@
 <?php
+require_once(dirname(__FILE__) .'/interface/cs_template_parser.interface.php');
+require_once(dirname(__FILE__) .'/interface/cs_template_reader.interface.php');
+require_once(dirname(__FILE__) .'/interface/cs_template_writer.interface.php');
+
 class cs_template {
 	
 	protected $location;
 	protected $parser;
 	
 	public function __construct($type, $location) {
-		$reader = cs_template_Factory::getReader($type);
+		$reader = cs_template_Factory::getReader($type, $location);
+		$reader->read();
 		$this->parser = cs_template_Factory::getParser($type, $reader);
-		$this->parser->read($location);
 	}//end __construct()
 	
 	

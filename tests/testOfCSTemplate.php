@@ -22,7 +22,9 @@ class TestOfCSTemplate extends UnitTestCase {
 	
 	//-------------------------------------------------------------------------
 	function test_basic() {
-		
+		$baseDir = dirname(__FILE__) .'/files';
+		$mainTemplate = $baseDir .'/templates/main.shared.tmpl';
+		$template = new cs_template('file', $mainTemplate);
 	}//end test_basic_rw()
 	//-------------------------------------------------------------------------
 	

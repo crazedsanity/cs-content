@@ -4,7 +4,7 @@ interface cs_template_parser {
 	public function getVars();
 	public function defineVar($varName, $definition);
 	public function replaceAllVars();
-	public function getSingleVar(i$varName);
+	public function getSingleVar($varName);
 	public function findDefinedVars();
 
 	public function getRows();

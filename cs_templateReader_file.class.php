@@ -3,14 +3,19 @@
 class cs_templateReader_file implements cs_template_reader {
 	
 	protected $source = NULL;
+
+	public function __construct($templateLocation) {
+		$this->source = $templateLocation;
+	}
 	
-	public function read($location) {
-		if(file_exists($location)) {
-			$retval = file_get_contents($location);
-			$this->source = $retval;
+	public function read() {
+		if(file_exists($this->source)) {
+			$retval = file_get_contents($this->source);
 		}
 		else {
-			throw new exception(__METHOD__ .": file does not exist (". $location .")");
+cs_debug_backtrace(1);
+cs_global::debug_print($this,1);
+			throw new exception(__METHOD__ .": file does not exist (". $this->source .")");
 		}
 		return($retval);
 	}//end read()
