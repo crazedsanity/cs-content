@@ -1,15 +1,8 @@
 <?php
 
-/*
- * FILE INFORMATION:
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
- */
+require_once(dirname(__FILE__) .'/cs_globalFunctions.class.php');
 
-class cs_fileSystem extends cs_contentAbstract {
+class cs_fileSystem {
 
 	public $root;		//actual root directory.
 	public $cwd;		//current directory; relative to $this->root
@@ -38,7 +31,7 @@ class cs_fileSystem extends cs_contentAbstract {
 			exit("UNUSEABLE ROOT: $rootDir");
 		}
 		
-		parent::__construct();
+		$this->gfObj = new cs_globalFunctions();
 		
 		$this->root = $this->resolve_path_with_dots($this->root);
 		
