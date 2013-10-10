@@ -6,11 +6,6 @@ class cs_global {
 	static public $debugRemoveHr = 0;
 	static public $debugPrintOpt = 0;
 	
-	static public function SetOptions($debugPrint, $removeHr) {
-		self::$debugPrintOpt = $debugPrint;
-		self::$debugRemoveHr = $removeHr;
-	}
-	
 	//================================================================================================================
 	/**
 	 * Automatically selects either the header() function, or printing meta-refresh data for redirecting a browser.
