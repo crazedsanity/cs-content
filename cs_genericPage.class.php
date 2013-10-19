@@ -1,7 +1,19 @@
 <?php
+/*
+ * FILE INFORMATION:
+ * $HeadURL$
+ * $Id$
+ * $LastChangedDate$
+ * $LastChangedBy$
+ * $LastChangedRevision$
+ */
 
 class cs_genericPage extends cs_contentAbstract {
-	protected $templates = array();
+	public $templateVars	= array();		//our copy of the global templateVars
+	public $templateFiles	= array();		//our list of template files...
+	public $templateRows	= array();		//array of block rows & their contents.
+	public $mainTemplate;					//the default layout of the site
+	public $unhandledVars=array();
 	public $printOnFinish=true;
 	
 	private $tmplDir;
@@ -13,15 +25,13 @@ class cs_genericPage extends cs_contentAbstract {
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
-	 * TODO: check all instantiations of this class, constructor arguments changed
 	 */
-	public function __construct(cs_template $mainTemplate) {
+	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL) {
 		
 		//initialize stuff from our parent...
 		parent::__construct();
 		
 		//initialize some internal stuff.
-		$tmplReader = cs_template_Factory::getReader('file'); //TODO: make this more extensible
 		$this->initialize_locals($mainTemplateFile);
 		
 		//if they need to be logged-in... 

@@ -1,13 +1,13 @@
 <?php
 /*
- * Created on Aug 28, 2009]
+ * Created on Aug 28, 2009
  */
 
 //these libraries are **REQUIRED** to make __autoload() function without chicken-or-the-egg issues.
+require_once(dirname(__FILE__) .'/cs_globalFunctions.class.php');
 require_once(dirname(__FILE__) .'/cs_fileSystem.class.php');
 require_once(dirname(__FILE__) .'/abstract/cs_version.abstract.class.php');
 require_once(dirname(__FILE__) .'/abstract/cs_content.abstract.class.php');
-require_once(dirname(__FILE__) .'/cs_globalFunctions.class.php');
 
 
 
@@ -42,6 +42,10 @@ function __autoload($class) {
 			$tryThis[] = $myClass .'.interface.class.php';
 			$tryThis[] = $myClass .'.interface.php';
 			$existsFunction = 'interface_exists';
+		}
+		if(preg_match('/[iI]nterface/', $class)) {	
+			$tryThis[] = $class .'.interface.class.php';
+			$tryThis[] = preg_replace('/[iI]nterface/', '', $class) .'.interface.class.php';
 		}
 		$tryThis[] = $class .'.class.php';
 		$tryThis[] = $class .'Class.php';
@@ -78,7 +82,7 @@ function _autoload_hints_parser($class, $fs) {
 			$tryFile = constant('LIBDIR') .'/'. $myHints[$class];
 			if(file_exists($tryFile)) {
 				require_once($tryFile);
-				if(class_exists($class)) {
+				if(class_exists($class) || interface_exists($class)) {
 					$foundClass=true;
 				}
 			}
@@ -103,7 +107,7 @@ function _autoload_directory_checker($fs, $class, $lookForFiles, $existsFunction
 			elseif($objectData['type'] == 'file') {
 				if(in_array($objectName, $lookForFiles)) {
 					require_once($fs->realcwd .'/'. $objectName);
-					if(class_exists($class)||interface_exists($class)) {
+					if(class_exists($class) || interface_exists($class)) {
 						$found = true;
 						break;
 					}

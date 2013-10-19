@@ -141,17 +141,8 @@ class contentSystem extends cs_contentAbstract {
 		}
 		
 		
-		//check versions, make sure they're all the same.
+		//check versions, make sure there's no error with it...
 		$myVersion = $this->get_version();
-		if($this->templateObj->get_version() !== $myVersion) {
-			throw new exception(__METHOD__ .": ". get_class($this->templateObj) ." has mismatched version (". $this->templateObj->get_version() ." does not equal ". $myVersion .")");
-		}
-		if($this->tmplFs->get_version() !== $myVersion) {
-			throw new exception(__METHOD__ .": ". get_class($this->tmplFs) ." has mismatched version (". $this->tmplFs->get_version() ." does not equal ". $myVersion .")");
-		}
-		if($this->gfObj->get_version() !== $myVersion) {
-			throw new exception(__METHOD__ .": ". get_class($this->gfObj) ." has mismatched version (". $this->gfObj->get_version() ." does not equal ". $myVersion .")");
-		}
 		
 		//split apart the section so we can do stuff with it later.
 		$this->parse_section();

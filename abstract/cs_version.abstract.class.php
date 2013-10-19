@@ -1,13 +1,6 @@
 <?php
 /*
  * Created on January 01, 2009 by Dan Falconer
- * 
- * SVN INFORMATION:::
- * -------------------
- * Last Author::::::::: $Author$ 
- * Current Revision:::: $Revision$ 
- * Repository Location: $HeadURL$ 
- * Last Updated:::::::: $Date$
  */
 
 abstract class cs_versionAbstract {
@@ -124,27 +117,19 @@ abstract class cs_versionAbstract {
 		if(!strlen($this->versionFileLocation)) {
 			$bt = debug_backtrace();
 			foreach($bt as $callNum=>$data) {
-				if(strlen($data['class'])) {
-					if($data['class'] != __CLASS__) {
-						$dir = dirname($data['file']);
-						if(preg_match('/tests$/', $dir)) {
-							$dir = preg_replace('/\/tests$/', '', $dir);
-						}
-						elseif(preg_match('/test$/', $dir)) {
-							$dir = preg_replace('/\/test$/', '', $dir);
-						}
+				if(strlen($data['file'])) {
+					if(file_exists(dirname($data['file']) .'/VERSION')) {
+						$this->set_version_file_location(dirname($data['file']) .'/VERSION');
 						break;
 					}
+					$dir = dirname($data['file']);
 				}
 				else {
 					throw new exception(__METHOD__ .": failed to locate the calling class in backtrace");
 				}
 			}
 			
-			if(file_exists($dir .'/VERSION')) {
-				$this->set_version_file_location($dir .'/VERSION');
-			}
-			else {
+			if(!isset($this->versionFileLocation)) {
 				throw new exception(__METHOD__ .": failed to automatically set version file (tried ". $dir ."/VERSION)");
 			}
 		}
