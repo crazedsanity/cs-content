@@ -1,8 +1,12 @@
 <?php
 
-require(dirname(__FILE__) . "/../lib/cs-content/cs_globalFunctions.class.php");
-$gf = new cs_globalFunctions;
-$gf->conditional_header("/content/index.php");
-exit;
+require(dirname(__FILE__) ."/../lib/includes.php");
+
+$contentObj = new contentSystem();
+$siteConfig = new cs_siteConfig(dirname(__FILE__) .'/../conf/siteConfig.xml');
+$contentObj->inject_var('siteConfig', $siteConfig);
+$contentObj->finish();
+
+
 
 ?>
