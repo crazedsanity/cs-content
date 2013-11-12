@@ -1,7 +1,7 @@
 <?php
 
 
-class cs_globalFunctions extends cs_versionAbstract {
+class cs_globalFunctions {
 	
 	
 	/* DEBUG PRINT OPTIONS */
@@ -29,7 +29,6 @@ class cs_globalFunctions extends cs_versionAbstract {
 		if(isset($GLOBALS['DEBUGPRINTOPT'])) {
 			$this->debugPrintOpt = $GLOBALS['DEBUGPRINTOPT'];
 		}
-		$this->set_version_file_location(dirname(__FILE__) . '/VERSION');
 	}//end __construct()
 	//=========================================================================
 	
