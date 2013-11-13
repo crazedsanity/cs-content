@@ -145,6 +145,9 @@ abstract class cs_versionAbstract {
 				$this->set_version_file_location($dir .'/VERSION');
 			}
 			else {
+				if(function_exists('cs_debug_backtrace')) {
+					cs_debug_backtrace(1);
+				}
 				throw new exception(__METHOD__ .": failed to automatically set version file (tried ". $dir ."/VERSION)");
 			}
 		}
