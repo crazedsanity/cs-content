@@ -6,5 +6,8 @@
 		<testsuite name="FileSystem">
 			<file>tests/testOfCSFileSystem.php</file>
 		</testsuite>
+		<testsuite name="basics">
+			<file>tests/testOfCSGlobalFunctions.php</file>
+		</testsuite>
 	</testsuites>
 </phpunit>

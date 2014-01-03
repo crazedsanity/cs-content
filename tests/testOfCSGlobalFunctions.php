@@ -1,21 +1,15 @@
 <?php
 /*
  * Created on Jan 13, 2009
- *
- * 
- * FILE INFORMATION:
- * 
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
  */
 
+require_once(dirname(__FILE__) .'/../__autoload.php');
+require_once(dirname(__FILE__) .'/../cs_genericPage.class.php');
+require_once(dirname(__FILE__) .'/../contentSystem.class.php');
 
 
 //=============================================================================
-class TestOfCSGlobalFunctions extends UnitTestCase {
+class TestOfCSGlobalFunctions extends PHPUnit_Framework_TestCase {
 	
 	//-------------------------------------------------------------------------
 	function __construct() {
@@ -23,7 +17,9 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 		$this->gfObj->debugPrintOpt=1;
 		
 		$filesDir = dirname(__FILE__) ."/files";
-		define('TEST_FILESDIR', $filesDir);
+		if(!defined('TEST_FILESDIR')) {
+			define('TEST_FILESDIR', $filesDir);
+		}
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
@@ -72,7 +68,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			$cleanedData = $gf->cleanString($cleanThis, $name);
 			
 			//NOTE::: passing "%" in the message data causes an exception with the simpletest framework.
-			$this->assertEqual($expected, $cleanedData, "Cleaning test '". $name ."' FAILED...  expected=(". $expected ."), got (". $cleanedData ."), ");
+			$this->assertEquals($expected, $cleanedData, "Cleaning test '". $name ."' FAILED...  expected=(". $expected ."), got (". $cleanedData ."), ");
 		}
 		
 		
@@ -82,10 +78,10 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 		foreach($testQuotes as $name=>$expected) {
 			$gf->switch_force_sql_quotes(1);
 			$cleanedDataPlusQuotes = $gf->cleanString($cleanThis, $name, 1);
-			$this->assertEqual("'". $expected ."'", $cleanedDataPlusQuotes, "Failed quoting with style=(". $name .")");
+			$this->assertEquals("'". $expected ."'", $cleanedDataPlusQuotes, "Failed quoting with style=(". $name .")");
 			
 			$gf->switch_force_sql_quotes(0);
-			$this->assertEqual("'". $expected ."'", $cleanedDataPlusQuotes, "Failed quoting with style=(". $name .")");
+			$this->assertEquals("'". $expected ."'", $cleanedDataPlusQuotes, "Failed quoting with style=(". $name .")");
 		}
 		
 	}//end test_cleanString()
@@ -107,24 +103,24 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 		//Test INSERT style.
 		{
 			$expected = "(column1, column two) VALUES ('my value ' OR 'x'='x','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert'), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert'), $expected);
 			
 			$expected = "(column1, column two) VALUES ('\'my value \' OR \'x\'=\'x\'','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert', null, 'sql'), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert', null, 'sql'), $expected);
 			
 			$expected = "(column1, column two) VALUES ('\'my value \' OR \'x\'=\'x\'','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert', null, 'sql_insert'), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert', null, 'sql_insert'), $expected);
 			
 			$expected = "(column1, column two) VALUES ('\'my value \' OR \'x\'=\'x\'','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert', null, 'sql92_insert'), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert', null, 'sql92_insert'), $expected);
 			
 			//now let's see what happens if we pass an array signifying how it should be cleaned.
 			$expected = "(column1, column two) VALUES ('\'my value \' OR \'x\'=\'x\'','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert', null, array('column1'=>'sql', 'column two'=>'sql')), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert', null, array('column1'=>'sql', 'column two'=>'sql')), $expected);
 			$expected = "(column1, column two) VALUES ('\\\\\'my value \\\\\' OR \\\\\'x\\\\\'=\\\\\'x\\\\\'','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert', null, array('column1'=>'sql_insert', 'column two'=>'sql_insert')), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert', null, array('column1'=>'sql_insert', 'column two'=>'sql_insert')), $expected);
 			$expected = "(column1, column two) VALUES ('\'\'my value \'\' OR \'\'x\'\'=\'\'x\'\'','Stuff')";
-			$this->assertEqual($gf->string_from_array($testSQL, 'insert', null, array('column1'=>'sql92_insert', 'column two'=>'sql92_insert')), $expected);
+			$this->assertEquals($gf->string_from_array($testSQL, 'insert', null, array('column1'=>'sql92_insert', 'column two'=>'sql92_insert')), $expected);
 			
 		}
 		
@@ -136,23 +132,23 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			//a basic set of criteria...
 			$expected = "w='' AND x='y' AND y='0' AND z=''";
 			$actual = $gf->string_from_array(array('w'=>'', 'x'=>"y", 'y'=>0,'z'=>NULL), 'select');
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 			
 			//make sure it distinguishes between text "NULL" and literal NULL.
 			$expected = "w='' AND x='y' AND y='0' AND z='NULL'";
 			$actual = $gf->string_from_array(array('w'=>'', 'x'=>"y", 'y'=>0,'z'=>"NULL"), 'select');
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 			
 			//make sure it distinguishes between text "NULL" and literal NULL.
 			$expected = "w='' AND x='y' AND y='0' AND z='NULL'";
 			$actual = $gf->string_from_array(array('w'=>'', 'x'=>"y", 'y'=>0,'z'=>"NULL"), 'select', null, 'sql');
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 			
 			//check with specific cleaning styles.
 			$expected = "w='' AND x='y' AND y='0' AND z='NULL'";
 			$cleanString = array('w'=>"nonexistent", 'x'=>"alpha", 'y'=>"numeric", 'z'=>"sql");
 			$actual = $gf->string_from_array(array('w'=>'', 'x'=>"y", 'y'=>0,'z'=>"NULL"), 'select', null, $cleanString);
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 		}
 		
 		
@@ -161,20 +157,20 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			//basic update.
 			$expected = "w='', x='y', y='0', z=''";
 			$actual = $gf->string_from_array(array('w'=>"", 'x'=>"y", 'y'=>0, 'z'=>NULL), 'update', null, 'sql');
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 			
 			
 			//basic update, but force SQL quotes...
 			$gf->switch_force_sql_quotes(1);
 			$expected = "w='', x='y', y='0', z=''";
 			$actual = $gf->string_from_array(array('w'=>"", 'x'=>"y", 'y'=>0, 'z'=>NULL), 'update', null, 'sql');
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 			$gf->switch_force_sql_quotes(0);
 			
 			//update with invalid quotes (attempts at SQL injection)
 			$expected = "w='\' ', x='\'', y='0', z=''";
 			$actual = $gf->string_from_array(array('w'=>"' ", 'x'=>"'", 'y'=>0, 'z'=>NULL), 'update', null, 'sql');
-			$this->assertEqual($expected, $actual);
+			$this->assertEquals($expected, $actual);
 		}
 		
 		
@@ -187,38 +183,38 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 	function test_interpret_bool() {
 		$gf=new cs_globalFunctions;
 		
-		$this->assertEqual($gf->interpret_bool('true'), true);
-		$this->assertEqual($gf->interpret_bool(true), true);
-		$this->assertEqual($gf->interpret_bool('false'), false);
-		$this->assertEqual($gf->interpret_bool(false), false);
-		$this->assertEqual($gf->interpret_bool('0'), false);
-		$this->assertEqual($gf->interpret_bool('1'), true);
-		$this->assertEqual($gf->interpret_bool(0), false);
-		$this->assertEqual($gf->interpret_bool("000000"), false);
-		$this->assertEqual($gf->interpret_bool(1), true);
-		$this->assertEqual($gf->interpret_bool(0.1), true);
-		$this->assertEqual($gf->interpret_bool(0.01), true);
-		$this->assertEqual($gf->interpret_bool(0.001), true);
-		$this->assertEqual($gf->interpret_bool('f'), false);
-		$this->assertEqual($gf->interpret_bool('fa'), true);
-		$this->assertEqual($gf->interpret_bool('fal'), true);
-		$this->assertEqual($gf->interpret_bool('fals'), true);
-		$this->assertEqual($gf->interpret_bool('t'), true);
-		$this->assertEqual($gf->interpret_bool('tr'), true);
-		$this->assertEqual($gf->interpret_bool('tru'), true);
-		$this->assertEqual($gf->interpret_bool("1stuff"), true);
-		$this->assertEqual($gf->interpret_bool(""), false);
-		$this->assertEqual($gf->interpret_bool(" true  "), true);
-		$this->assertEqual($gf->interpret_bool(" false  "), false);
-		$this->assertEqual($gf->interpret_bool('false-showastrue'), true);
-		$this->assertEqual($gf->interpret_bool('true-showastrue'), true);
+		$this->assertEquals($gf->interpret_bool('true'), true);
+		$this->assertEquals($gf->interpret_bool(true), true);
+		$this->assertEquals($gf->interpret_bool('false'), false);
+		$this->assertEquals($gf->interpret_bool(false), false);
+		$this->assertEquals($gf->interpret_bool('0'), false);
+		$this->assertEquals($gf->interpret_bool('1'), true);
+		$this->assertEquals($gf->interpret_bool(0), false);
+		$this->assertEquals($gf->interpret_bool("000000"), false);
+		$this->assertEquals($gf->interpret_bool(1), true);
+		$this->assertEquals($gf->interpret_bool(0.1), true);
+		$this->assertEquals($gf->interpret_bool(0.01), true);
+		$this->assertEquals($gf->interpret_bool(0.001), true);
+		$this->assertEquals($gf->interpret_bool('f'), false);
+		$this->assertEquals($gf->interpret_bool('fa'), true);
+		$this->assertEquals($gf->interpret_bool('fal'), true);
+		$this->assertEquals($gf->interpret_bool('fals'), true);
+		$this->assertEquals($gf->interpret_bool('t'), true);
+		$this->assertEquals($gf->interpret_bool('tr'), true);
+		$this->assertEquals($gf->interpret_bool('tru'), true);
+		$this->assertEquals($gf->interpret_bool("1stuff"), true);
+		$this->assertEquals($gf->interpret_bool(""), false);
+		$this->assertEquals($gf->interpret_bool(" true  "), true);
+		$this->assertEquals($gf->interpret_bool(" false  "), false);
+		$this->assertEquals($gf->interpret_bool('false-showastrue'), true);
+		$this->assertEquals($gf->interpret_bool('true-showastrue'), true);
 		
 		
 		//now go through the same thing, but this time tell it to give back a specific value for true and false.
-		$this->assertEqual($gf->interpret_bool(false, array(0=>'FaLSe',1=>"crap")), 'FaLSe');
-		$this->assertEqual($gf->interpret_bool(true, array(0=>'FaLSe',1=>"crap")), 'crap');
-		$this->assertEqual($gf->interpret_bool(false, array(0=>"crap",1=>'FaLSe')), 'crap');
-		$this->assertEqual($gf->interpret_bool(true, array(0=>"crap",1=>'FaLSe')), 'FaLSe');
+		$this->assertEquals($gf->interpret_bool(false, array(0=>'FaLSe',1=>"crap")), 'FaLSe');
+		$this->assertEquals($gf->interpret_bool(true, array(0=>'FaLSe',1=>"crap")), 'crap');
+		$this->assertEquals($gf->interpret_bool(false, array(0=>"crap",1=>'FaLSe')), 'crap');
+		$this->assertEquals($gf->interpret_bool(true, array(0=>"crap",1=>'FaLSe')), 'FaLSe');
 	}//end test_interpret_bool()
 	//-------------------------------------------------------------------------
 	
@@ -239,7 +235,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			);
 			$expectedOutput = 'SUCCESS SUCCESS';
 			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars, '{', '}');
-			$this->assertEqual($expectedOutput, $actualOutput);
+			$this->assertEquals($expectedOutput, $actualOutput);
 		}
 		
 		//Order of operations test.
@@ -252,12 +248,12 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			);
 			$expectedOutput = '{{random-5-item}} SUCCESS';
 			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars, '{', '}');
-			$this->assertEqual($expectedOutput, $actualOutput);
+			$this->assertEquals($expectedOutput, $actualOutput);
 			
 			//if we put that same actualOutput through the ringer again, it comes up with the originally expected output.
 			$expectedOutput = "SUCCESS SUCCESS";
 			$actualOutput = $gf->mini_parser($actualOutput, $arrayOfVars, '{', '}');
-			$this->assertEqual($expectedOutput, $actualOutput);
+			$this->assertEquals($expectedOutput, $actualOutput);
 		}
 		
 		//some testing with the default begin/end strings.
@@ -270,7 +266,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			);
 			$expectedOutput = 'SUCCESS SUCCESS';
 			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars);
-			$this->assertEqual($expectedOutput, $actualOutput);
+			$this->assertEquals($expectedOutput, $actualOutput);
 		}
 		
 		//A stupid test to make sure we can specify different begin/end var identifiers.
@@ -284,7 +280,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			);
 			$expectedOutput = 'SUCCESS SUCCESS';
 			$actualOutput = $gf->mini_parser($stringToChange, $arrayOfVars, '__BEGIN__', '__END__');
-			$this->assertEqual($expectedOutput, $actualOutput);
+			$this->assertEquals($expectedOutput, $actualOutput);
 		}
 		
 	}//end test_mini_parser()
@@ -304,21 +300,21 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			$looseFinal = "Lorem ipsum dol...";
 			$strictFinal= "Lorem ipsum ...";
 			
-			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length));
-			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...'));
-			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...', false));
-			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...', 0));
-			$this->assertEqual($looseFinal, $gf->truncate_string($string, $length, '...', null));
+			$this->assertEquals($looseFinal, $gf->truncate_string($string, $length));
+			$this->assertEquals($looseFinal, $gf->truncate_string($string, $length, '...'));
+			$this->assertEquals($looseFinal, $gf->truncate_string($string, $length, '...', false));
+			$this->assertEquals($looseFinal, $gf->truncate_string($string, $length, '...', 0));
+			$this->assertEquals($looseFinal, $gf->truncate_string($string, $length, '...', null));
 			
 			
-			$this->assertEqual($strictFinal, $gf->truncate_string($string, $length, '...', true));
-			$this->assertEqual($strictFinal, $gf->truncate_string($string, $length, '...', 1));
-			$this->assertEqual($strictFinal, $gf->truncate_string($string, $length, '...', "Do it"));
+			$this->assertEquals($strictFinal, $gf->truncate_string($string, $length, '...', true));
+			$this->assertEquals($strictFinal, $gf->truncate_string($string, $length, '...', 1));
+			$this->assertEquals($strictFinal, $gf->truncate_string($string, $length, '...', "Do it"));
 			
 			
-			$this->assertNotEqual($looseFinal, $gf->truncate_string($string, $length, '...', true));
-			$this->assertNotEqual($looseFinal, $gf->truncate_string($string, $length, '...', 1));
-			$this->assertNotEqual($looseFinal, $gf->truncate_string($string, $length, '...', "Do it"));
+			$this->assertNotEquals($looseFinal, $gf->truncate_string($string, $length, '...', true));
+			$this->assertNotEquals($looseFinal, $gf->truncate_string($string, $length, '...', 1));
+			$this->assertNotEquals($looseFinal, $gf->truncate_string($string, $length, '...', "Do it"));
 		}
 		
 		//advanced test: give it a final length of *near* the length of the string & see what happens.
@@ -333,20 +329,20 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			$string56= "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
 			
 			//make sure the initial string is ACTUALLY 56 characters long.
-			$this->assertEqual($length, strlen($string));
+			$this->assertEquals($length, strlen($string));
 			
-			$this->assertEqual($string,  $gf->truncate_string($string, 56, '...', false));
-			$this->assertEqual($string2, $gf->truncate_string($string, 55, '...', false));
-			$this->assertEqual($string3, $gf->truncate_string($string, 54, '...', false));
+			$this->assertEquals($string,  $gf->truncate_string($string, 56, '...', false));
+			$this->assertEquals($string2, $gf->truncate_string($string, 55, '...', false));
+			$this->assertEquals($string3, $gf->truncate_string($string, 54, '...', false));
 			
-			$this->assertEqual($string56, $gf->truncate_string($string, 56, '...', true));
-			$this->assertEqual(56, strlen($gf->truncate_string($string, 56, '...', true)));
+			$this->assertEquals($string56, $gf->truncate_string($string, 56, '...', true));
+			$this->assertEquals(56, strlen($gf->truncate_string($string, 56, '...', true)));
 			
-			$this->assertEqual($string55, $gf->truncate_string($string, 55, '...', true));
-			$this->assertEqual(55, strlen($gf->truncate_string($string, 55, '...', true)));
+			$this->assertEquals($string55, $gf->truncate_string($string, 55, '...', true));
+			$this->assertEquals(55, strlen($gf->truncate_string($string, 55, '...', true)));
 			
-			$this->assertEqual($string54, $gf->truncate_string($string, 54, '...', true));
-			$this->assertEqual(54, strlen($gf->truncate_string($string, 54, '...', true)));
+			$this->assertEquals($string54, $gf->truncate_string($string, 54, '...', true));
+			$this->assertEquals(54, strlen($gf->truncate_string($string, 54, '...', true)));
 		}
 		
 	}//end truncate_string()
@@ -372,8 +368,8 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 			$checkSql = $gf->create_list($checkSql, $str, ", ", 1);
 		}
 		
-		$this->assertEqual($checkNoSql, $noSqlRes);
-		$this->assertEqual($checkSql, $sqlRes);
+		$this->assertEquals($checkNoSql, $noSqlRes);
+		$this->assertEquals($checkSql, $sqlRes);
 		
 	}//end test_create_list()
 	//-------------------------------------------------------------------------
@@ -400,7 +396,7 @@ class TestOfCSGlobalFunctions extends UnitTestCase {
 				$expectThis = $cleanThis;
 			}
 			$actualOutput = $gf->clean_url($cleanThis);
-			$this->assertEqual($expectThis, $actualOutput, "failed test '". $testName ."', expected=(". $expectThis ."), actualOutput=(". $actualOutput .")");
+			$this->assertEquals($expectThis, $actualOutput, "failed test '". $testName ."', expected=(". $expectThis ."), actualOutput=(". $actualOutput .")");
 		}
 	}//end test_clean_url()
 	//-------------------------------------------------------------------------
