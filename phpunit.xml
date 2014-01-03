@@ -1,13 +1,14 @@
 <phpunit>
 	<testsuites>
-		<testsuite name="GenericPage">
-			<file>tests/testOfCSContent.php</file>
+		<testsuite name="basics">
+			<file>tests/testOfCSGlobalFunctions.php</file>
+			<file>tests/testOfCSVersionAbstract.php</file>
 		</testsuite>
 		<testsuite name="FileSystem">
 			<file>tests/testOfCSFileSystem.php</file>
 		</testsuite>
-		<testsuite name="basics">
-			<file>tests/testOfCSGlobalFunctions.php</file>
+		<testsuite name="GenericPage">
+			<file>tests/testOfCSContent.php</file>
 		</testsuite>
 	</testsuites>
 </phpunit>

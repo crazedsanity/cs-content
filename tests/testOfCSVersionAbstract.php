@@ -1,18 +1,16 @@
 <?php
 /*
  * Created on Jan 25, 2009
- * 
- * FILE INFORMATION:
- * 
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
  */
 
+require_once(dirname(__FILE__) .'/../__autoload.php');
+require_once(dirname(__FILE__) .'/../cs_genericPage.class.php');
+require_once(dirname(__FILE__) .'/../contentSystem.class.php');
 
-class testOfCSVersionAbstract extends UnitTestCase {
+//=============================================================================
+#class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
+
+class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 	
 	//--------------------------------------------------------------------------
 	function __construct() {
@@ -62,8 +60,8 @@ class testOfCSVersionAbstract extends UnitTestCase {
 			$ver = new middleTestClass();
 			$ver->set_version_file_location(dirname(__FILE__) .'/'. $fileName);
 			
-			$this->assertEqual($expectedArr[0], $ver->get_version(), "Failed to match string from file (". $fileName .")");
-			$this->assertEqual($expectedArr[1], $ver->get_project(), "Failed to match project from file (". $fileName .")");
+			$this->assertEquals($expectedArr[0], $ver->get_version(), "Failed to match string from file (". $fileName .")");
+			$this->assertEquals($expectedArr[1], $ver->get_project(), "Failed to match project from file (". $fileName .")");
 			
 			//now check that pulling the version as an array is the same...
 			$checkItArr = $ver->get_version(true);
@@ -108,12 +106,12 @@ class testOfCSVersionAbstract extends UnitTestCase {
 			
 			//rip apart & recreate first version to test against the expected...
 			$derivedFullVersion = $ver->build_full_version_string($ver->parse_version_string($checkData[0]));
-			$this->assertEqual($derivedFullVersion, $checkData[1], "TEST=(". $name ."): derived version " .
+			$this->assertEquals($derivedFullVersion, $checkData[1], "TEST=(". $name ."): derived version " .
 					"(". $derivedFullVersion .") doesn't match expected (". $checkData[1] .")");
 			
 			//now rip apart & recreate the expected version (second) and make sure it matches itself.
 			$derivedFullVersion = $ver->build_full_version_string($ver->parse_version_string($checkData[1]));
-			$this->assertEqual($derivedFullVersion, $checkData[1], "TEST=(". $name ."): derived version " .
+			$this->assertEquals($derivedFullVersion, $checkData[1], "TEST=(". $name ."): derived version " .
 					"(". $derivedFullVersion .") doesn't match expected (". $checkData[1] .")");
 		}
 		
