@@ -1,21 +1,14 @@
 <?php
 /*
  * Created on Jan 13, 2009
- *
- * 
- * FILE INFORMATION:
- * 
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
  */
 
-
+require_once(dirname(__FILE__) .'/../__autoload.php');
+require_once(dirname(__FILE__) .'/../cs_genericPage.class.php');
+require_once(dirname(__FILE__) .'/../contentSystem.class.php');
 
 //=============================================================================
-class TestOfCSFileSystem extends UnitTestCase {
+class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 	
 	//-------------------------------------------------------------------------
 	function __construct() {
@@ -32,7 +25,7 @@ class TestOfCSFileSystem extends UnitTestCase {
 		$filesDir = dirname(__FILE__) ."/files";
 		
 		$this->reader = new cs_fileSystem($filesDir);
-		$this->writer = new cs_fileSystem(constant('RWDIR'));
+		$this->writer = new cs_fileSystem($filesDir .'/rw');
 		
 		//make a directory to write into.
 		$this->writer->mkdir(__CLASS__);
@@ -55,26 +48,26 @@ class TestOfCSFileSystem extends UnitTestCase {
 	//-------------------------------------------------------------------------
 	function test_basic_rw() {
 		
-		$this->assertEqual($this->reader->root, dirname(__FILE__) .'/files');
+		$this->assertEquals($this->reader->root, dirname(__FILE__) .'/files');
 		
 		$outsideLs = $this->reader->ls("templates");
 		
 		$this->reader->cd("templates");
 		$insideLs = $this->reader->ls();
 		
-		$this->assertEqual($outsideLs, $insideLs);
+		$this->assertEquals($outsideLs, $insideLs);
 		
 		//okay, read all the files & make the writer create them.
 		$matchSize = array();
 		foreach($insideLs as $file=>$data) {
 			if($data['type'] == 'file') {
-				$this->assertEqual(1, $this->writer->create_file($file));
+				$this->assertEquals(1, $this->writer->create_file($file));
 				
-				$this->assertNotEqual($this->writer->realcwd, $this->reader->realcwd);
+				$this->assertNotEquals($this->writer->realcwd, $this->reader->realcwd);
 				
 				//now read data out of one & write into the other, make sure they're the same size.
 				$fileSize = $this->writer->write($this->reader->read($file), $file);
-				if(!$this->assertEqual($fileSize, $data['size'], "Invalid file size for '". $file ."' (". $fileSize ." != ". $data['size'] .")")) {
+				if(!$this->assertEquals($fileSize, $data['size'], "Invalid file size for '". $file ."' (". $fileSize ." != ". $data['size'] .")")) {
 					$this->gfObj->debug_print($this->writer->ls($file));
 					$this->gfObj->debug_print($this->reader->ls($file));
 					
@@ -115,8 +108,8 @@ class TestOfCSFileSystem extends UnitTestCase {
 		}
 		
 		//now lets read each file & see if they have the proper content...
-		$this->assertEqual($totalContent, $this->writer->read($testFilename_a));
-		$this->assertEqual($totalContent, $this->writer->read($testFilename_aplus));
+		$this->assertEquals($totalContent, $this->writer->read($testFilename_a));
+		$this->assertEquals($totalContent, $this->writer->read($testFilename_aplus));
 		
 		
 		//Test if it can create and then move around within a file properly
@@ -151,7 +144,7 @@ class TestOfCSFileSystem extends UnitTestCase {
 			$this->writer->closeFile();
 			
 			//now make sure the contents of the file are as expected...
-			$this->assertEqual($myContent, $this->writer->read($appendTestFile));
+			$this->assertEquals($myContent, $this->writer->read($appendTestFile));
 			
 			unset($myContent,$finalFileLines);
 			
@@ -165,13 +158,16 @@ class TestOfCSFileSystem extends UnitTestCase {
 				$this->writer->go_to_line($randomLine);
 				$lineContents = $this->writer->get_next_line();
 				
-				$this->assertTrue(preg_match('/^line #'. $randomLine .' /', $lineContents), 'Random line #'. $randomLine .' did not start with '. $randomLine .': ('. $lineContents .')');
+				$actualLine = $randomLine +1;
+				$regex = "line #$randomLine";
+				$error = "fetched line #$randomLine ($actualLine), should start with '$regex', but didn't... actual::: ". $lineContents;
+				$this->assertTrue((bool)preg_match('/^'. $regex .' /', $lineContents), $error); //'Random line test ('. $i .'/'. $linesToTest .')::: line #'. $randomLine .' did not start with '. $randomLine .': ('. $lineContents .')');
 			}
 			
 			$this->writer->go_to_last_line();
 			$this->writer->go_to_line(($this->writer->lineNum -2));//go back two lines because we're actually past the last line, gotta go 2 up so when we fetch "the next line", it is actually the last.
 			$lineContents = $this->writer->get_next_line();
-			$this->assertTrue(preg_match('/^line #'. ($this->writer->lineNum -1) .' /', $lineContents), " getting last line (#". $this->writer->lineNum ."), Line Contents::: ". $lineContents);
+			$this->assertTrue((bool)preg_match('/^line #'. ($this->writer->lineNum -1) .' /', $lineContents), " getting last line (#". $this->writer->lineNum ."), Line Contents::: ". $lineContents);
 			
 			$this->writer->closeFile();
 		}
@@ -187,7 +183,7 @@ class TestOfCSFileSystem extends UnitTestCase {
 		$tmp = $lsData[$appendTestFile];
 		unset($lsData[$appendTestFile]);
 		$lsData[$newName] = $tmp;
-		$this->assertEqual($newLsData, $lsData);
+		$this->assertEquals($newLsData, $lsData);
 		
 		
 		//now delete the files.
