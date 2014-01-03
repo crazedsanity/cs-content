@@ -1,0 +1,7 @@
+<phpunit>
+	<testsuites>
+		<testsuite name="GenericPage">
+			<file>tests/testOfCSContent.php</file>
+		</testsuite>
+	</testsuites>
+</phpunit>
