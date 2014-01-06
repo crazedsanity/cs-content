@@ -1,0 +1,20 @@
+{
+	"name":	"crazedsanity/cs-content",
+	"type": "library",
+	"description": "Web application framework, MVC/templating system for PHP",
+	"keywords": ["php", "mvc", "templating", "dry", "oaoo"],
+	"homepage": "https://github.com/crazedsanity/cs-content",
+	"license": "MIT",
+	"version": "1.2.5",
+	"authors": [
+		{
+			"name":	"Dan Falconer",
+			"email": "github@crazedsanity.com",
+			"homepage": "http://www.crazedsanity.com",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": ">=5.3.0"
+	}
+}
