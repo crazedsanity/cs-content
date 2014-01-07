@@ -4,8 +4,6 @@
  */
 
 require_once(dirname(__FILE__) .'/../__autoload.php');
-require_once(dirname(__FILE__) .'/../cs_genericPage.class.php');
-require_once(dirname(__FILE__) .'/../contentSystem.class.php');
 
 //=============================================================================
 #class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
