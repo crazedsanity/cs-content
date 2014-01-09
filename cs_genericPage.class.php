@@ -1,14 +1,6 @@
 <?php
-/*
- * FILE INFORMATION:
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
- */
 
-class cs_genericPage extends cs_contentAbstract {
+class cs_genericPage extends cs_version {
 	public $templateVars	= array();		//our copy of the global templateVars
 	public $templateFiles	= array();		//our list of template files...
 	public $templateRows	= array();		//array of block rows & their contents.

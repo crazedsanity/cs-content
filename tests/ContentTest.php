@@ -13,7 +13,6 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 	function __construct() {
 		
 		$this->gfObj = new cs_globalFunctions;
-		$this->gfObj->debugPrintOpt=1;
 		
 		$filesDir = dirname(__FILE__) ."/files";
 		if(!defined('TEST_FILESDIR')) {

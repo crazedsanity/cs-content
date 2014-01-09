@@ -13,8 +13,17 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 	//--------------------------------------------------------------------------
 	function __construct() {
 		$this->gfObj = new cs_globalFunctions;
-		$this->gfObj->debugPrintOpt=1;
 	}//end __construct()
+	//--------------------------------------------------------------------------
+	
+	
+	
+	//--------------------------------------------------------------------------
+	public function test_backwardCompabibility() {
+		//Just make sure we can actually 
+		$x = new _testBackCompat_1_2_6_or_less();
+		$this->assertTrue(is_object($x));
+	}
 	//--------------------------------------------------------------------------
 	
 	
@@ -55,7 +64,7 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 		);
 		
 		foreach($tests as $fileName=>$expectedArr) {
-			$ver = new middleTestClass();
+			$ver = new cs_version();
 			$ver->set_version_file_location(dirname(__FILE__) .'/'. $fileName);
 			
 			$this->assertEquals($expectedArr[0], $ver->get_version(), "Failed to match string from file (". $fileName .")");
@@ -65,6 +74,7 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 			$checkItArr = $ver->get_version(true);
 			$expectThis = $expectedArr[2];
 			$expectThis['version_string'] = $expectedArr[0];
+			$this->assertEquals($checkItArr, $expectThis);
 		}
 	}//end test_version_basics()
 	//--------------------------------------------------------------------------
@@ -85,13 +95,13 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 		);
 		
 		foreach($tests as $name=>$checkData) {
-			$ver = new middleTestClass;
+			$ver = new cs_version;
 			$this->assertTrue($ver->is_higher_version($checkData[1], $checkData[0]));
 			$this->assertFalse($ver->is_higher_version($checkData[0], $checkData[1]));
 		}
 		
 		//now check to ensure there's no problem with parsing equivalent versions.
-		$tests = array(
+		$tests2 = array(
 			'no suffix'				=> array('1.0', '1.0.0'),
 			'no maint + suffix'		=> array('1.0-ALPHA1', '1.0.0-ALPHA1'),
 			'no maint + BETA'		=> array('1.0-BETA5555', '1.0.0-BETA5555'),
@@ -99,18 +109,36 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 			'maint with space'		=> array('1.0-RC  33', '1.0.0-RC33'),
 			'extra spaces'			=> array(' 1.0   ', '1.0.0')
 		);
-		foreach($tests as $name=>$checkData) {
-			$ver = new middleTestClass;
+		foreach($tests2 as $name=>$checkData) {
+			$ver = new cs_version;
+			$bc = new _testBackCompat_1_2_6_or_less();
 			
 			//rip apart & recreate first version to test against the expected...
-			$derivedFullVersion = $ver->build_full_version_string($ver->parse_version_string($checkData[0]));
-			$this->assertEquals($derivedFullVersion, $checkData[1], "TEST=(". $name ."): derived version " .
-					"(". $derivedFullVersion .") doesn't match expected (". $checkData[1] .")");
+			{
+				$this->assertEquals(
+						$ver->build_full_version_string($ver->parse_version_string($checkData[0])),
+						$checkData[1]
+					);
+
+				//test backward compabitibility (for the above test)
+				$this->assertEquals(
+						$bc->build_full_version_string($bc->parse_version_string($checkData[0])), 
+						$checkData[1]
+					);
+			}
 			
 			//now rip apart & recreate the expected version (second) and make sure it matches itself.
-			$derivedFullVersion = $ver->build_full_version_string($ver->parse_version_string($checkData[1]));
-			$this->assertEquals($derivedFullVersion, $checkData[1], "TEST=(". $name ."): derived version " .
-					"(". $derivedFullVersion .") doesn't match expected (". $checkData[1] .")");
+			{
+				$this->assertEquals(
+						$ver->build_full_version_string($ver->parse_version_string($checkData[1])), 
+						$checkData[1]
+					);
+
+				//test backward compabitibility (for the above test)
+				$this->assertEquals($bc->build_full_version_string($bc->parse_version_string($checkData[1])), 
+						$checkData[1]
+					);
+			}
 		}
 		
 		
@@ -118,9 +146,9 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 	//--------------------------------------------------------------------------
 }
 
+class _testBackCompat_1_2_6_or_less extends cs_versionAbstract {
+	public function __construct() {
+		parent::__construct();
+	}
+}
 
-class middleTestClass extends cs_versionAbstract {
-	function __construct(){}
-} 
-
-?>

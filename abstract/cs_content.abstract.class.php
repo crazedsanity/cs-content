@@ -1,21 +1,12 @@
 <?php
-/*
- * Created on Jan 29, 2009
- * 
- * FILE INFORMATION:
- * 
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
- */
-
-
 
 abstract class cs_contentAbstract extends cs_versionAbstract {
 	
 	//-------------------------------------------------------------------------
+	/**
+	 * 
+	 * @codeCoverageIgnore
+	 */
     function __construct($makeGfObj=true) {
 		$this->set_version_file_location(dirname(__FILE__) . '/../VERSION');
 		$this->get_version();

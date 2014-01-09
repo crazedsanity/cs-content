@@ -9,7 +9,7 @@
  * $LastChangedRevision$
  */
 
-class cs_fileSystem extends cs_contentAbstract {
+class cs_fileSystem extends cs_version {
 
 	public $root;		//actual root directory.
 	public $cwd;		//current directory; relative to $this->root

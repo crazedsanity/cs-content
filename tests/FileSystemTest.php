@@ -11,7 +11,6 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 	//-------------------------------------------------------------------------
 	function __construct() {
 		$this->gfObj = new cs_globalFunctions;
-		$this->gfObj->debugPrintOpt=1;
 		
 	}//end __construct()
 	//-------------------------------------------------------------------------

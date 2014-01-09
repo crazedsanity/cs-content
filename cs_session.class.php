@@ -1,14 +1,6 @@
 <?php
-/*
- * FILE INFORMATION:
- * $HeadURL$
- * $Id$
- * $LastChangedDate$
- * $LastChangedBy$
- * $LastChangedRevision$
- */
 
-class cs_session extends cs_contentAbstract {
+class cs_session extends cs_version {
 
 	protected $uid;
 	protected $sid;

@@ -1,14 +1,7 @@
-<phpunit>
+<phpunit bootstrap="tests/bootstrap.php">
 	<testsuites>
-		<testsuite name="basics">
-			<file>tests/testOfCSGlobalFunctions.php</file>
-			<file>tests/testOfCSVersionAbstract.php</file>
-		</testsuite>
-		<testsuite name="FileSystem">
-			<file>tests/testOfCSFileSystem.php</file>
-		</testsuite>
-		<testsuite name="GenericPage">
-			<file>tests/testOfCSContent.php</file>
+		<testsuite name="all">
+			<directory>tests</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>
