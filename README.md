@@ -1,5 +1,7 @@
 # CS Content System (Templating / MVC Framework)
 
+[![Build Status](https://travis-ci.org/crazedsanity/cs-content.png)](https://travis-ci.org/crazedsanity/cs-content)
+
 Generic MVC-style framework designed to leverage the power of a templating system and PHP includes, all running through a single display script. Allows incredibly fast building of an intelligent website without having to write a script for every page. Separate HTML from code, intelligently build pages using path-based script and template inheritance.
 
 ##  HOW THE SYSTEM WORKS:::
