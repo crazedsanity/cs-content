@@ -6,7 +6,7 @@ class cs_version {
 	
 	
 	
-	private $versionFileLocation=null;
+	protected $versionFileLocation=null;
 	private $fullVersionString;
 	private $suffixList = array(
 		'ALPHA', 	//very unstable
@@ -86,20 +86,21 @@ class cs_version {
 	//=========================================================================
 	final public function get_project() {
 		$retval = NULL;
-		$this->auto_set_version_file();
+		//$this->auto_set_version_file();
 		if(file_exists($this->versionFileLocation)) {
-			$myMatches = array();
+			$matches = array();
 			$findIt = preg_match('/PROJECT: (.+)/', file_get_contents($this->versionFileLocation), $matches);
 			
 			if($findIt == 1 && count($matches) == 2 && strlen($matches[1])) {
 				$retval = $matches[1];
 			}
 			else {
-				throw new exception(__METHOD__ .": failed to retrieve project string");
+				throw new LengthException(__METHOD__ .": failed to retrieve project string");
 			}
 		}
 		else {
-			throw new exception(__METHOD__ .": failed to retrieve project information");
+			//this shouldn't happen, because other things shouldn't mess with versionFileLocation
+			throw new LogicException(__METHOD__ .": failed to retrieve project information");
 		}
 		
 		return($retval);
@@ -122,7 +123,11 @@ class cs_version {
 	
 	
 	//=========================================================================
-	protected function auto_set_version_file() {
+	/** 
+	 * // Testing this is difficult... so it is ignored.
+	 */
+	public function auto_set_version_file() {
+		//@codeCoverageIgnoreStart
 		if(!strlen($this->versionFileLocation)) {
 			$bt = debug_backtrace();
 			foreach($bt as $callNum=>$data) {
@@ -139,7 +144,7 @@ class cs_version {
 					}
 				}
 				else {
-					throw new exception(__METHOD__ .": failed to locate the calling class in backtrace");
+					throw new LogicException(__METHOD__ .": failed to locate the calling class in backtrace");
 				}
 			}
 			
@@ -150,9 +155,10 @@ class cs_version {
 				if(function_exists('cs_debug_backtrace')) {
 					cs_debug_backtrace(1);
 				}
-				throw new exception(__METHOD__ .": failed to automatically set version file (tried ". $dir ."/VERSION)");
+				throw new LogicException(__METHOD__ .": failed to automatically set version file (tried ". $dir ."/VERSION)");
 			}
 		}
+		//@codeCoverageIgnoreEnd
 	}//end auto_set_version_file()
 	//=========================================================================
 	

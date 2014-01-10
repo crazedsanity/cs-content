@@ -1,6 +1,9 @@
 <?php
 //Original script (now modified) from: http://jes.st/2011/phpunit-bootstrap-and-autoloading-classes/
 //TODO: make this non-static if possible.
+/**
+ * @codeCoverageIgnore
+ */
 class AutoLoader {
 	 
 	static private $classNames = array();

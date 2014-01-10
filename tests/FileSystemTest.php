@@ -64,13 +64,7 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 				
 				//now read data out of one & write into the other, make sure they're the same size.
 				$fileSize = $this->writer->write($this->reader->read($file), $file);
-				if(!$this->assertEquals($fileSize, $data['size'], "Invalid file size for '". $file ."' (". $fileSize ." != ". $data['size'] .")")) {
-					$this->gfObj->debug_print($this->writer->ls($file));
-					$this->gfObj->debug_print($this->reader->ls($file));
-					
-					$this->gfObj->debug_print($this->writer);
-					$this->gfObj->debug_print($this->reader);
-				}
+				$this->assertEquals($fileSize, $data['size']);
 				
 				//now get rid of the new file.
 				$this->writer->rm($file);
@@ -158,13 +152,13 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 				$actualLine = $randomLine +1;
 				$regex = "line #$randomLine";
 				$error = "fetched line #$randomLine ($actualLine), should start with '$regex', but didn't... actual::: ". $lineContents;
-				$this->assertTrue((bool)preg_match('/^'. $regex .' /', $lineContents), $error); //'Random line test ('. $i .'/'. $linesToTest .')::: line #'. $randomLine .' did not start with '. $randomLine .': ('. $lineContents .')');
+				$this->assertTrue((bool)preg_match('/^'. $regex .' /', $lineContents), $error);
 			}
 			
 			$this->writer->go_to_last_line();
 			$this->writer->go_to_line(($this->writer->lineNum -2));//go back two lines because we're actually past the last line, gotta go 2 up so when we fetch "the next line", it is actually the last.
 			$lineContents = $this->writer->get_next_line();
-			$this->assertTrue((bool)preg_match('/^line #'. ($this->writer->lineNum -1) .' /', $lineContents), " getting last line (#". $this->writer->lineNum ."), Line Contents::: ". $lineContents);
+			$this->assertTrue((bool)preg_match('/^line #'. ($this->writer->lineNum -1) .' /', $lineContents));
 			
 			$this->writer->closeFile();
 		}
@@ -185,7 +179,7 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 		
 		//now delete the files.
 		foreach($this->writer->ls() as $file=>$garbage) {
-			$this->writer->rm($file);
+			$this->assertTrue($this->writer->rm($file));
 		}
 	}//end test_basic_rw()
 	//-------------------------------------------------------------------------

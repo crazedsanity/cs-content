@@ -98,16 +98,20 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 			$ver = new cs_version;
 			$this->assertTrue($ver->is_higher_version($checkData[1], $checkData[0]));
 			$this->assertFalse($ver->is_higher_version($checkData[0], $checkData[1]));
+			
+			$this->assertFalse(is_array($ver->get_version()));
+			$this->assertFalse(is_array($ver->get_version(false)));
+			$this->assertTrue(is_array($ver->get_version(true)));
 		}
 		
 		//now check to ensure there's no problem with parsing equivalent versions.
 		$tests2 = array(
-			'no suffix'				=> array('1.0', '1.0.0'),
-			'no maint + suffix'		=> array('1.0-ALPHA1', '1.0.0-ALPHA1'),
-			'no maint + BETA'		=> array('1.0-BETA5555', '1.0.0-BETA5555'),
-			'no maint + RC'			=> array('1.0-RC33', '1.0.0-RC33'),
-			'maint with space'		=> array('1.0-RC  33', '1.0.0-RC33'),
-			'extra spaces'			=> array(' 1.0   ', '1.0.0')
+			'no suffix'				=> array('1.0', '1.0.0', ''),
+			'no maint + suffix'		=> array('1.0-ALPHA1', '1.0.0-ALPHA1', 'ALPHA1'),
+			'no maint + BETA'		=> array('1.0-BETA5555', '1.0.0-BETA5555', 'BETA5555'),
+			'no maint + RC'			=> array('1.0-RC33', '1.0.0-RC33', 'RC33'),
+			'maint with space'		=> array('1.0-RC  33', '1.0.0-RC33', 'RC33'),
+			'extra spaces'			=> array(' 1.0   ', '1.0.0', '')
 		);
 		foreach($tests2 as $name=>$checkData) {
 			$ver = new cs_version;
@@ -139,16 +143,82 @@ class testOfCSVersionAbstract extends PHPUnit_Framework_TestCase {
 						$checkData[1]
 					);
 			}
+			
+			// check the suffix.
+			{
+				$bits = $ver->parse_version_string($checkData[1]);
+				$this->assertEquals($bits['version_suffix'], $checkData[2]);
+			}
 		}
 		
 		
 	}//end test_check_higher()
 	//--------------------------------------------------------------------------
+	
+	
+	
+	//--------------------------------------------------------------------------
+	/**
+	 * @expectedException LogicException
+	 */
+	public function test_exceptionFileMissing() {
+		$ver = new _testExceptions();
+		$ver->set_versionFileLocation('/__invalid__/__path__');
+		$ver->get_project();
+	}
+	//--------------------------------------------------------------------------
+	
+	
+	
+//	//--------------------------------------------------------------------------
+//	/**
+//	 * @expectedException LengthException
+//	 */
+//	public function test_exceptionProjectMissing() {
+//		$ver = new cs_version();
+//		$projectInfo = $ver->set_version_file_location(dirname(__FILE__) .'/files/version4');
+//		
+//		$ver->gfObj->debug_print($projectInfo,1);
+//	}
+//	//--------------------------------------------------------------------------
+	
+	
+	//--------------------------------------------------------------------------
+	public function test_genericExceptionCatcher() {
+		$file = dirname(__FILE__) .'/files/version4';
+		$this->assertEquals(strlen(file_get_contents($file)), 0);
+		$this->assertTrue(file_exists($file));
+		$ver = new _testExceptions();
+		try {
+			$ver->set_versionFileLocation($file);
+		}
+		catch(Exception $ex) {
+			$this->assertTrue(is_object($ex));
+		}
+	}
+	//--------------------------------------------------------------------------
+	
+	
+	
+	//--------------------------------------------------------------------------
+	
 }
 
 class _testBackCompat_1_2_6_or_less extends cs_versionAbstract {
-	public function __construct() {
-		parent::__construct();
+	public function __construct($makeGfObj=true) {
+		parent::__construct($makeGfObj);
+	}
+}
+
+class _testExceptions extends cs_version {
+	public function __construct($makeGfObj=true) {
+		
+	}
+	public function set_versionFileLocation($location=null) {
+		$this->versionFileLocation = $location;
+	}
+	public function testAuto() {
+		parent::auto_set_version_file();
 	}
 }
 
