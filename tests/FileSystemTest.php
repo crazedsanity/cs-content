@@ -9,20 +9,30 @@ require_once(dirname(__FILE__) .'/../__autoload.php');
 class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 	
 	//-------------------------------------------------------------------------
-	function __construct() {
+	public function __construct() {
 		$this->gfObj = new cs_globalFunctions;
+		
+		//make sure it's all clean.
+		$this->_makeClasses();
+		$this->tearDown();
 		
 	}//end __construct()
 	//-------------------------------------------------------------------------
 	
 	
-	
 	//-------------------------------------------------------------------------
-	function setUp() {
+	protected function _makeClasses() {
 		$filesDir = dirname(__FILE__) ."/files";
-		
 		$this->reader = new cs_fileSystem($filesDir);
 		$this->writer = new cs_fileSystem($filesDir .'/rw');
+	}//end _makeClasses()
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function setUp() {
+		$this->_makeClasses();
 		
 		//make a directory to write into.
 		$this->writer->mkdir(__CLASS__);
@@ -33,17 +43,78 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 	
 	
 	//-------------------------------------------------------------------------
-	function tearDown() {
+	public function tearDown() {
 		//TODO: this should be able to RECURSIVELY delete files & folders.
 		$this->writer->cd('/');
-		$this->writer->rmdir(__CLASS__);
+		@$this->writer->rmdir(__CLASS__);
 	}//end tearDown()
 	//-------------------------------------------------------------------------
 	
 	
 	
 	//-------------------------------------------------------------------------
-	function test_basic_rw() {
+	public function test_basics() {
+		$fs = new _fs_testProtectedMethods(dirname(__FILE__));
+		
+		$this->assertEquals('/', $fs->cwd);
+		$this->assertEquals(dirname(__FILE__), $fs->realcwd);
+		
+		
+		// check that specifying a valid current working directory (cwd) works
+		{
+			//use a leading slash in CWD
+			$validCwd2 = new cs_fileSystem(dirname(__FILE__), '/files');
+			$this->assertEquals(dirname(__FILE__) .'/files', $validCwd2->realcwd);
+			$this->assertEquals('/files', $validCwd2->cwd);
+			
+			// just the directory name for CWD (no leading slash)
+			$validCwd = new cs_fileSystem(dirname(__FILE__), 'files');
+			$this->assertEquals(dirname(__FILE__) .'/files', $validCwd->realcwd);
+			$this->assertEquals('files', $validCwd->cwd);
+		}
+		
+		//make sure specifying an invalid CWD works as expected
+		{
+			$invalidCwd = new cs_fileSystem(dirname(__FILE__), '/xDoEsn0tEx15t');
+			$this->assertEquals('/', $invalidCwd->cwd);
+			$this->assertEquals(dirname(__FILE__), $invalidCwd->realcwd);
+			$this->assertEquals($invalidCwd->root, $invalidCwd->realcwd);
+		}
+		
+		//test that it fixes invalid modes.
+		{
+			$validModes = array('r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+');
+			$invalidModes = array('b', 'b+', 'd', 'd+', 'e', 'e+');
+
+			foreach($validModes as $x) {
+				$testMe = new cs_fileSystem(dirname(__FILE__), null, $x);
+				$this->assertEquals($x, $testMe->mode);
+			}
+
+			foreach($invalidModes as $x) {
+				$testMe = new cs_fileSystem(dirname(__FILE__), null, $x);
+				$this->assertNotEquals($x, $testMe->mode);
+				$this->assertEquals('r+', $testMe->mode);
+			}
+		}
+	}
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	/**
+	 * @expectedException InvalidArgumentException
+	 */
+	public function test_exception_invalidRoot() {
+		new cs_fileSystem(null);
+	}
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function test_readWrite() {
 		
 		$this->assertEquals($this->reader->root, dirname(__FILE__) .'/files');
 		
@@ -55,7 +126,6 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($outsideLs, $insideLs);
 		
 		//okay, read all the files & make the writer create them.
-		$matchSize = array();
 		foreach($insideLs as $file=>$data) {
 			if($data['type'] == 'file') {
 				$this->assertEquals(1, $this->writer->create_file($file));
@@ -80,7 +150,6 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 		$totalSize = 0;
 		$totalContent = "";
 		$loop=0;
-		$fileList = "";
 		foreach($insideLs as $file=>$data) {
 			$totalSize += $data['size'];
 			
@@ -181,11 +250,98 @@ class TestOfCSFileSystem extends PHPUnit_Framework_TestCase {
 		foreach($this->writer->ls() as $file=>$garbage) {
 			$this->assertTrue($this->writer->rm($file));
 		}
-	}//end test_basic_rw()
+	}//end test_readWrite()
 	//-------------------------------------------------------------------------
 	
 	
 	
+	//-------------------------------------------------------------------------
+	public function test_navigationAndLs() {
+		$fs = new cs_fileSystem(dirname(__FILE__));
+		
+		$thisFile = basename(__FILE__);
+		
+		$list = $fs->ls();
+		
+		$this->assertTrue(isset($thisFile, $list));
+		$this->assertTrue(is_array($list[$thisFile]));
+		$this->assertEquals($list[$thisFile]['type'], 'file');
+		
+		$this->assertTrue(isset($list['files']));
+		$this->assertEquals($list['files']['type'], 'dir');
+		
+		$this->assertTrue((bool)$fs->cd('files'));
+		
+		$this->assertEquals($fs->cwd, '/files');
+		$this->assertEquals($fs->realcwd, dirname(__FILE__) .'/files');
+		
+		
+		$this->assertTrue($fs->cdup());
+		$this->assertEquals($fs->cwd, '/');
+		$this->assertEquals(preg_replace('~/$~', '', $fs->realcwd), dirname(__FILE__));
+		
+		//this should fail, because it's higher than allowed.
+		$this->assertFalse($fs->cdup());
+		$this->assertEquals($fs->cwd, '/');
+		$this->assertEquals(preg_replace('~/$~', '', $fs->realcwd), dirname(__FILE__));
+		
+		$this->assertTrue((bool)$fs->cd('/'));
+		$this->assertEquals($fs->cwd, '/');
+		$this->assertEquals(preg_replace('~/$~', '', $fs->realcwd), dirname(__FILE__));
+		
+		//make sure we can still find just this file.
+		$fileInfo = $fs->ls(basename(__FILE__));
+		$this->assertTrue(is_array($fileInfo));
+		
+		$this->assertEquals(count($fileInfo), 1, "too many files in the array...");
+		$this->assertTrue(isset($fileInfo[basename(__FILE__)]));
+		$this->assertTrue(isset($fileInfo[basename(__FILE__)]['type']), "malformed array, should ONLY contain info about this file::: ". $this->gfObj->debug_print($fileInfo,0));
+	}
+	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public function test_pathFixing() {
+		$fs = new _fs_testProtectedMethods(dirname(__FILE__));
+		
+		
+		$this->assertEquals($fs->root, dirname(__FILE__));
+		
+		//make sure it comes up with the REAL path when there's dots involved...
+		$this->assertEquals(
+				'/real/path/to/file',
+				$fs->resolve_path_with_dots('/path/../real/fake/../path/from/../to/./file')
+		);
+		
+		
+		$this->assertEquals(__FILE__, $fs->_2absolute('/'. basename(__FILE__)));
+	}
+	//-------------------------------------------------------------------------
+	
+	
+	/**
+	 * @expectedException InvalidArgumentException
+	 */
+	public function test_resolvePathException() {
+		$fs = new _fs_testProtectedMethods(dirname(__FILE__));
+		
+		$fs->resolve_path_with_dots(NULL);
+	}
+	
+	
 }//end TestOfCSFileSystem
+//=============================================================================
+
+
+//=============================================================================
+class _fs_testProtectedMethods extends cs_fileSystem {
+	public function __construct($rootDir=NULL, $cwd=NULL, $initialMode=NULL) {
+		parent::__construct($rootDir, $cwd, $initialMode);
+	}
+	public function _2absolute($filename) {
+		return(parent::filename2absolute($filename));
+	}
+}//end _fs_testProtectedMethods
 //=============================================================================
 ?>

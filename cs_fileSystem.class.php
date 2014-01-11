@@ -24,44 +24,41 @@ class cs_fileSystem extends cs_version {
 	/**
 	 * The constructor.
 	 */
-	public function __construct($rootDir=NULL, $cwd=NULL, $initialMode=NULL) {
+	public function __construct($rootDir, $cwd=NULL, $initialMode=NULL) {
 		//set the root directory that we'll be using; this is considered just like "/" in 
 		//	linux.  Directories above it are considered non-existent.
-		if(($rootDir) AND (is_dir($rootDir))) {
-			// yup... use it.
-			$this->root = $rootDir;
-		} elseif(($GLOBALS['SITE_ROOT']) AND (is_dir($GLOBALS['SITE_ROOT']))) {
-			//not set, but SITE_ROOT is... use it.
-			$this->root = $GLOBALS['SITE_ROOT'];
-		} else {
-			//nothing useable... die.
-			exit("UNUSEABLE ROOT: $rootDir");
+		if(!is_null($rootDir)) {
+
+			parent::__construct(true);
+
+			$this->root = $this->resolve_path_with_dots($rootDir);
+
+			//set the CURRENT working directory... this should be a RELATIVE path to $this->root.
+			if(($cwd) AND (is_dir($rootDir .'/'. $cwd)) AND (!ereg($this->root, $cwd))) {
+				//looks good.  Use it.
+				$this->cwd = $cwd;
+				$this->realcwd = $this->root .'/'. $cwd;
+			} else {
+				//no dice.  Use the root.
+				$this->cwd = '/';
+				$this->realcwd = $this->root ;
+			}
+			$this->realcwd = preg_replace('~/{2,}~', '/', $this->realcwd);
+			
+			chdir($this->realcwd);
+
+			//check for the initialMode...
+			$useableModes = array('r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+');
+			if(($initialMode) AND (in_array($initialMode, $useableModes))) {
+				//
+				$this->mode = $initialMode;
+			} else {
+				//define the DEFAULT mode.
+				$this->mode = "r+";
+			}
 		}
-		
-		parent::__construct();
-		
-		$this->root = $this->resolve_path_with_dots($this->root);
-		
-		//set the CURRENT working directory... this should be a RELATIVE path to $this->root.
-		if(($cwd) AND (is_dir($rootDir .'/'. $cwd)) AND (!ereg($this->root, $cwd))) {
-			//looks good.  Use it.
-			$this->cwd = $cwd;
-			$this->realcwd = $this->root .'/'. $cwd;
-		} else {
-			//no dice.  Use the root.
-			$this->cwd = '/';
-			$this->realcwd = $this->root ;
-		}
-		chdir($this->realcwd);
-		
-		//check for the initialMode...
-		$useableModes = array('r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+');
-		if(($initialMode) AND (in_array($initialMode, $useableModes))) {
-			//
-			$this->mode = $initialMode;
-		} else {
-			//define the DEFAULT mode.
-			$this->mode = "r+";
+		else {
+			throw new InvalidArgumentException(__METHOD__ .": invalid root directory (". $rootDir .")");
 		}
 		
 	}//end __construct()
@@ -142,6 +139,7 @@ class cs_fileSystem extends cs_version {
 		$this->dh = opendir($this->realcwd);
 		clearstatcache();
 		if(is_string($filename)) {
+			
 			//check to make sure the file exists.
 			$tFile=$this->filename2absolute($filename);
 			if(file_exists($tFile)) {
@@ -162,7 +160,7 @@ class cs_fileSystem extends cs_version {
 				}
 			} else {
 				//stupid!
-				$retval[$filename] = "FILE NOT FOUND.";
+				$retval[$filename] = "FILE NOT FOUND";
 			}
 		} else {
 			//array if file/directory names to ignore if matched exactly.
@@ -170,13 +168,7 @@ class cs_fileSystem extends cs_version {
 			while (($file = readdir($this->dh)) !== false) {
 				if(!in_array($file, $ignoreArr)) {
 					$tFile = $this->realcwd .'/'. $file;
-					$tType = filetype($tFile);
 					$retval[$file] = $this->get_fileinfo($tFile);
-					if(!$tType) {
-						debug_print("FILE: $tFile || TYPE: $tType || is_file(): ". is_file($tFile) ."is_dir(): ". is_dir($tFile));
-						exit;
-					}
-					unset($tType);
 				}
 			}
 		}
@@ -349,7 +341,7 @@ class cs_fileSystem extends cs_version {
 			}
 			$this->mode = $mode;
 			
-			if(in_array($this->mode, array("r+", "w", "w+", "a", "a+", "x", "x+")) && !$this->is_writable($filename)) {
+			if(in_array($this->mode, array("r+", "w", "w+", "a", "a+", "x", "x+", "c", "c+")) && !$this->is_writable($filename)) {
 				throw new exception(__METHOD__ .": file is not writable (". $filename .") (". $this->is_writable($filename) ."), mode=(". $this->mode .")");
 			}
 			
@@ -392,7 +384,7 @@ class cs_fileSystem extends cs_version {
 		$this->filename = $filename;
 		
 		//open the file...
-		$openResult = $this->openFile($this->filename, $this->mode);
+		$this->openFile($this->filename, $this->mode);
 		
 		//looks like we made it... 
 		$retval = fwrite($this->fh, $content, strlen($content));
@@ -408,7 +400,7 @@ class cs_fileSystem extends cs_version {
 	 * Takes the given filename & returns the ABSOLUTE pathname: checks to see if the given
 	 * 	string already has the absolute path in it.
 	 */
-	private function filename2absolute($filename) {
+	protected function filename2absolute($filename) {
 		
 		clearstatcache();
 		
@@ -782,39 +774,48 @@ class cs_fileSystem extends cs_version {
 	 */
 	public function resolve_path_with_dots($path) {
 		
-		while(preg_match('/\/\//', $path)) {
-			$path = preg_replace('/\/\//', '/', $path);
+		if(!is_null($path) && is_string($path) && strlen($path)) {
+			while(preg_match('/\/\//', $path)) {
+				$path = preg_replace('/\/\//', '/', $path);
+			}
+			$retval = $path;
+			if(preg_match('/\./', $path)) {
+
+				$isAbsolute = FALSE;
+				if(preg_match('/^\//', $path)) {
+					$isAbsolute = TRUE;
+					$path = preg_replace('/^\//', '', $path);
+				}
+				$pieces = explode('/', $path);
+
+				$finalPieces = array();
+				for($i=0; $i < count($pieces); $i++) {
+					$dirName = $pieces[$i];
+					if($dirName == '.') {
+						//do nothing; don't bother appending.
+					}
+					elseif($dirName == '..') {
+						array_pop($finalPieces);
+					}
+					else {
+						$finalPieces[] = $dirName;
+					}
+				}
+
+				//$retval = $this->gfObj->string_from_array($finalPieces, NULL, '/');
+				$retval = implode('/', $finalPieces);
+				if($isAbsolute) {
+					$retval = '/'. $retval;
+				}
+			}
 		}
-		$retval = $path;
-		if(strlen($path) && preg_match('/\./', $path)) {
-			
-			$isAbsolute = FALSE;
-			if(preg_match('/^\//', $path)) {
-				$isAbsolute = TRUE;
-				$path = preg_replace('/^\//', '', $path);
-			}
-			$pieces = explode('/', $path);
-			
-			$finalPieces = array();
-			for($i=0; $i < count($pieces); $i++) {
-				$dirName = $pieces[$i];
-				if($dirName == '.') {
-					//do nothing; don't bother appending.
-				}
-				elseif($dirName == '..') {
-					$rippedIndex = array_pop($finalPieces);
-				}
-				else {
-					$finalPieces[] = $dirName;
-				}
-			}
-			
-			$retval = $this->gfObj->string_from_array($finalPieces, NULL, '/');
-			if($isAbsolute) {
-				$retval = '/'. $retval;
-			}
+		else {
+			throw new InvalidArgumentException(__METHOD__ .": invalid path (". $path .")");
 		}
 		
+		if(is_null($retval)) {
+			throw new LogicException(__METHOD__ .": returning NULL for path (". $path .")");
+		}
 		return($retval);
 	}//end resolve_path_with_dots()
 	//========================================================================================
@@ -838,7 +839,7 @@ class cs_fileSystem extends cs_version {
 		if($rootPieces[0] == '') {
 			array_shift($rootPieces);
 		}
-		if($rootPieces[(count($rootPieces) -1)] == '') {
+		if(count($rootPieces) > 1 && $rootPieces[(count($rootPieces) -1)] == '') {
 			array_pop($rootPieces);
 		}
 		if($pathPieces[0] == '') {
