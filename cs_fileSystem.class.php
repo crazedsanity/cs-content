@@ -34,7 +34,7 @@ class cs_fileSystem extends cs_version {
 			$this->root = $this->resolve_path_with_dots($rootDir);
 
 			//set the CURRENT working directory... this should be a RELATIVE path to $this->root.
-			if(($cwd) AND (is_dir($rootDir .'/'. $cwd)) AND (!ereg($this->root, $cwd))) {
+			if(!is_null($cwd) AND (is_dir($rootDir .'/'. $cwd)) AND (!preg_match('~'. $cwd .'~', $this->root))) {
 				//looks good.  Use it.
 				$this->cwd = $cwd;
 				$this->realcwd = $this->root .'/'. $cwd;
