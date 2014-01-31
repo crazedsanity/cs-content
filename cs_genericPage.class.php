@@ -106,6 +106,10 @@ class cs_genericPage extends cs_version {
 	 * Should just check to see if they've authenticated.  In reality, this 
 	 * just performs blind redirection if $restrictedAccess is set (and if 
 	 * redirecting is allowed).
+	 * 
+	 * TODO: should be a simple check, returning true/false
+	 * TODO: ability to specify location of login (unambiguously)
+	 * TODO: specify location to redirect to, instead of accessing $_GET
 	 */
 	public function check_login($restrictedAccess) {
 		if($restrictedAccess) {

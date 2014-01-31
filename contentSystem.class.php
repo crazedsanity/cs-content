@@ -89,10 +89,6 @@ class contentSystem extends cs_contentAbstract {
 			$includeBaseDir = $root .'/includes';
 		}
 		
-		//build the templating engine: this may cause an immediate redirect, if they need to be logged-in.
-		//TODO: find a way to define this on a per-page basis.  Possibly have templateObj->check_login()
-		//	run during the "finish" stage... probably using GenericPage{}->check_login().
-		
 		if(!is_null($siteRoot) && is_dir($siteRoot)) {
 			$root = $siteRoot;
 		}
@@ -324,8 +320,6 @@ class contentSystem extends cs_contentAbstract {
 	/**
 	 * Ensures the page we're on would actually load, so other methods don't have to do
 	 * 	so much extra checking.
-	 * 
-	 * TODO: the if & else should be consolidated as much as possible...
 	 */
 	private function validate_page() {
 		
