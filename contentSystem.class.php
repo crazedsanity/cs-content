@@ -31,6 +31,7 @@ class contentSystem extends cs_contentAbstract {
 	
 	private $injectVars=array();
 	public $templateSource = array();
+	public $db;
 	
 	//------------------------------------------------------------------------
 	/**
@@ -59,8 +60,16 @@ class contentSystem extends cs_contentAbstract {
 		//create a session that gets stored in a database if they so desire...
 		if(defined('SESSION_DBSAVE')) {
 			ini_set('session.save_handler', 'user');
-			$this->session = new cs_sessionDB();
-			$this->handle_session($this->session);
+			
+			//constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD')
+			if(defined('DB_DSN') && defined('DB_USERNAME') && defined('DB_PASSWORD')) {
+				$this->db = new cs_phpDB(constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD'));
+				$this->session = new cs_sessionDB(false, $this->db);
+				$this->handle_session($this->session);
+			}
+			else {
+				throw new exception(__METHOD__ .": cannot instantiate Session DB: no database connection values defined");
+			}
 		}
 		
 		$templateBaseDir = "templates";
