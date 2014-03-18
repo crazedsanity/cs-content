@@ -363,7 +363,7 @@ class cs_genericPage extends cs_version {
 	 * content & returns it.
 	 */
 	public function file_to_string($templateFileName) {
-		
+		$retval = null;
 		if(preg_match('/templates/', $templateFileName)) {
 			$bits = explode('templates', $templateFileName);
 			if(count($bits) == 2) {
