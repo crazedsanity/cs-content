@@ -451,6 +451,7 @@ class cs_genericPage extends cs_version {
 			$type = $arrayKeys[0];
 		}
 		
+		$redirectText = null;
 		if(strlen($linkURL)) {
 			if(!strlen($linkText) || is_null($linkText)) {
 				$linkText = "Link";
@@ -472,7 +473,7 @@ class cs_genericPage extends cs_version {
 		if(!in_array($type, array_keys($priorityArr))) {
 			//invalid type.
 			$retval = FALSE;
-		} elseif($_SESSION['message']) {
+		} elseif(isset($_SESSION['message'])) {
 			//there's already a message... check if the new one should overwrite the existing.
 			if((!$overwriteSame) AND ($priorityArr[$_SESSION['message']['type']] == $priorityArr[$type])) {
 				//no overwriting.
