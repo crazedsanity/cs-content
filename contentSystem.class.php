@@ -583,7 +583,6 @@ class contentSystem extends cs_contentAbstract {
 	 * Called when something is broken.
 	 */
 	private function die_gracefully($details=NULL) {
-		cs_debug_backtrace(1);
 		if($this->templateObj->template_file_exists('system/404.shared.tmpl')) {
 			if(isset($_SERVER['SERVER_PROTOCOL'])) {
 				header('HTTP/1.0 404 Not Found');
