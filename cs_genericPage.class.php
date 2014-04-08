@@ -8,11 +8,13 @@ class cs_genericPage extends cs_version {
 	public $unhandledVars=array();
 	public $printOnFinish=true;
 	
-	private $tmplDir;
-	private $libDir;
-	private $siteRoot;
+	protected $tmplDir;
+	protected $libDir;
+	protected $siteRoot;
 	
-	private $allowInvalidUrls=NULL;
+	protected $allowInvalidUrls=NULL;
+	
+	protected $_hasFatalError = false;
 	
 	//---------------------------------------------------------------------------------------------
 	/**
@@ -264,7 +266,14 @@ class cs_genericPage extends cs_version {
 	public function print_page($stripUndefVars=1) {
 		$this->unhandledVars = array();
 		//Show any available messages.
-		$this->process_set_message();
+		$errorBox = $this->process_set_message();
+		
+		if($this->_hasFatalError) {
+			$this->change_content($errorBox);
+		}
+		else {
+			$this->add_template_var("error_msg", $errorBox);
+		}
 		
 		if(isset($this->templateVars['main'])) {
 			//this is done to simulate old behaviour (the "main" templateVar could overwrite the entire main template).
@@ -328,31 +337,78 @@ class cs_genericPage extends cs_version {
 	 * Handles a message that was set into the session.
 	 */
 	public function process_set_message() {
-		//if there's not a message set, skip.
-		$errorBox = "";
-		if(isset($_SESSION['message']) && is_array($_SESSION['message'])) {
-			$errorBox = $this->file_to_string("system/message_box.tmpl");
-			//let's make sure the "type" value is *lowercase*.
-			$_SESSION['message']['type'] = strtolower($_SESSION['message']['type']);
-			
-			//WARNING::: if you give it the wrong type, it'll STILL be parsed. Otherwise 
-			//	this has to match set_message() FAR too closely. And it's a pain.
-			$_SESSION['message']['messageType'] = $_SESSION['message']['type'];
-			$errorBox = $this->gfObj->mini_parser($errorBox, $_SESSION['message'], '{', '}');
-			if($_SESSION['message']['type'] == "fatal") {
-				//replace content of the page with our error.
-				$this->change_content($errorBox);
-			} else {
-				//Non-fatal: put it into a template var.
-				$this->add_template_var("error_msg", $errorBox);
+//cs_debug_backtrace(1);
+		
+		$retval = null;
+		if(isset($_SESSION['messages']) && is_array($_SESSION['messages'])) {
+			$retval = "";
+			if(isset($_SESSION['messages']['fatal']) && is_array($_SESSION['messages']['fatal']) && count($_SESSION['messages']['fatal']) > 0) {
+				$this->_hasFatalError = count($_SESSION['messages']['fatal']);
 			}
-	
-			//now that we're done displaying the message, let's get it out of the session (otherwise
-			//	they'll never get past this point).
-			unset($_SESSION['message']);
+			
+			$processOrder = array('fatal', 'error', 'status', 'notice');
+			
+			$lastType = null;
+			foreach($processOrder as $type) {
+				$lastType = $type;
+				if(isset($_SESSION['messages'][$type])) {
+					foreach($_SESSION['messages'][$type] as $k=>$v) {
+						$retval .= $this->_process_single_session_message($type, $v);
+					}
+					unset($_SESSION['messages'][$type]);
+				}
+			}
+			if(count($_SESSION['messages']) > 0) {
+				foreach($_SESSION['messages'] as $k=>$subData) {
+					foreach($subData as $n=>$msg) {
+						$retval .= $this->_process_single_session_message($lastType, $msg);
+					}
+					unset($_SESSION['messages'][$k]);
+				}
+			}
+//			$_SESSION['messages'] = array();
 		}
-		return($errorBox);
+		
+//		//if there's not a message set, skip.
+//		$errorBox = "";
+//		if(isset($_SESSION['message']) && is_array($_SESSION['message'])) {
+//			$errorBox = $this->file_to_string("system/message_box.tmpl");
+//			//let's make sure the "type" value is *lowercase*.
+//			$_SESSION['message']['type'] = strtolower($_SESSION['message']['type']);
+//			
+//			//WARNING::: if you give it the wrong type, it'll STILL be parsed. Otherwise 
+//			//	this has to match set_message() FAR too closely. And it's a pain.
+//			$_SESSION['message']['messageType'] = $_SESSION['message']['type'];
+//			$errorBox = $this->gfObj->mini_parser($errorBox, $_SESSION['message'], '{', '}');
+//			if($_SESSION['message']['type'] == "fatal") {
+//				//replace content of the page with our error.
+//				$this->change_content($errorBox);
+//			} else {
+//				//Non-fatal: put it into a template var.
+//				$this->add_template_var("error_msg", $errorBox);
+//			}
+//	
+//			//now that we're done displaying the message, let's get it out of the session (otherwise
+//			//	they'll never get past this point).
+//			unset($_SESSION['message']);
+//		}
+//		return($errorBox);
+		return $retval;
 	}//end of process_set_message()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
+	public function _process_single_session_message($type, array $data) {
+		$tmpl = $this->file_to_string("system/message_box.tmpl");
+		$data['messageType'] = strtolower($type);
+		$data['type'] = $type;
+		
+		$errorBox = cs_global::mini_parser($tmpl, $data, '{', '}');
+		
+		return $errorBox;
+	}
 	//---------------------------------------------------------------------------------------------
 	
 	
@@ -425,87 +481,76 @@ class cs_genericPage extends cs_version {
 	 * 								it's importance.  Generally, fatal messages 
 	 * 								cause only the message to be shown.
 	 * @param $linkText			(str,optional) text that the link wraps.
-	 * @param $overwriteSame	(bool,optional) whether setting a message which has
-	 * 								the same type as an already set message will
-	 * 								overwite the previous.  More important messages 
-	 * 								always overwrite lesser ones.
-	 * @param $priority			(int,optional) specify the message's priority.
-	 * 
-	 * @return (bool)			Indicates pass (true)/fail (false)
 	 */
-	function set_message($title=NULL, $message=NULL, $linkURL=NULL, $type=NULL, $linkText=NULL, $overwriteSame=NULL, $priority=NULL) {
-		if(!isset($overwriteSame)) {
-			$overwriteSame = 1;
-		}
-	
-		//defines the importance level of each type of message: the higher the value, the more important it is.
-		$priorityArr = array(
-			'notice' => 10,
-			'status' => 20,
-			'error'  => 30,
-			'fatal'  => 100
-		);
-		if(!isset($type) || !isset($priorityArr[$type])) {
-			//set a default type.
-			$arrayKeys = array_keys($priorityArr);
-			$type = $arrayKeys[0];
+	public static function set_message($title=NULL, $message=NULL, $linkURL=NULL, $type=NULL, $linkText=NULL) {
+		if(is_null($type) || !strlen($type)) {
+			$type = 'notice';
 		}
 		
-		$redirectText = null;
+		if(!array_key_exists('messages', $_SESSION)) {
+			$_SESSION['messages'] = array();
+		}
+		if(!array_key_exists($type, $_SESSION['messages'])) {
+			$_SESSION['messages'][$type] = array();
+		}
+		
+		$setThis = array(
+			"title"		=> $title,
+			"message"	=> $message,
+			"type"		=> $type,
+		);
+		
 		if(strlen($linkURL)) {
 			if(!strlen($linkText) || is_null($linkText)) {
 				$linkText = "Link";
 			}
-			$redirectText = '<a href="'. $linkURL .'">'. $linkText .'</a>';
+			$setThis['redirect'] = '<a href="'. $linkURL .'">'. $linkText .'</a>';
 		}
 		
-		//Create the array.
-		$myArr = array(
-			"title"		=> $title,
-			"message"	=> $message,
-			"redirect"	=> $redirectText,
-			"type"		=> $type,
-			"priority"	=> $priority
-			
-		);
-		
-		//make sure the message type is IN the priority array...
-		if(!in_array($type, array_keys($priorityArr))) {
-			//invalid type.
-			$retval = FALSE;
-		} elseif(isset($_SESSION['message'])) {
-			//there's already a message... check if the new one should overwrite the existing.
-			if((!$overwriteSame) AND ($priorityArr[$_SESSION['message']['type']] == $priorityArr[$type])) {
-				//no overwriting.
-				$retval = FALSE;
-			} elseif($priorityArr[$_SESSION['message']['type']] <= $priorityArr[$type]) {
-				// the existing message is less important.  Overwrite it.
-				$_SESSION['message'] = $myArr;
-			}
-		}
-		else {
-			$_SESSION['message'] = $myArr;
-			$retval = TRUE;
-		}
-		
-		return($retval);
-		
+		$_SESSION['messages'][$type][] = $setThis;
 	} // end of set_message()
 	//---------------------------------------------------------------------------------------------
 	
 	
 	
 	//---------------------------------------------------------------------------------------------
-	public function set_message_wrapper($array) {
-		@$this->set_message(
-			$array['title'], 
-			$array['message'], 
-			$array['linkURL'], 
-			$array['type'], 
-			$array['linkText'], 
-			$array['overwriteSame'],
-			$array['priority']
-		);
+	/**
+	 * 
+	 * @param array $array	Key=>value pairs for use with self::set_message()
+	 */
+	public static function set_message_wrapper(array $array) {
+		$title = null;
+		$message = null;
+		$linkUrl = null;
+		$type = null;
+		$linkText = null;
+		
+		
+		foreach($array as $k=>$v) {
+			switch(strtolower($k)) {
+				case 'title':
+					$title = $v;
+					break;
+				
+				case 'message':
+					$message = $v;
+					break;
+				
+				case 'linkurl':
+					$linkUrl = $v;
+					break;
+				
+				case 'type':
+					$type = $v;
+					break;
+				
+				case 'linktext':
+					$linkText = $v;
+					break;
+			}
+		}
+		
+		self::set_message($title, $message, $linkUrl, $type, $linkText);
 	}//end set_message_wrapper()
 	//---------------------------------------------------------------------------------------------
 	
