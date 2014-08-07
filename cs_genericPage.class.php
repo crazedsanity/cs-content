@@ -514,6 +514,14 @@ class cs_genericPage extends cs_version {
 	
 	
 	//---------------------------------------------------------------------------------------------
+	public static function add_message($title, $message, $type="notice", $linkUrl=null, $linkText="Link") {
+		self::set_message($title, $message, $linkUrl, $type, $linkText);
+	}// end of add_message()
+	//---------------------------------------------------------------------------------------------
+	
+	
+	
+	//---------------------------------------------------------------------------------------------
 	/**
 	 * 
 	 * @param array $array	Key=>value pairs for use with self::set_message()
