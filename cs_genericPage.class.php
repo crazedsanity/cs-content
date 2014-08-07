@@ -16,6 +16,12 @@ class cs_genericPage extends cs_version {
 	
 	protected $_hasFatalError = false;
 	
+	
+	const MSGTYPE_NOTICE = "notice";
+	const MSGTYPE_STATUS = "status";
+	const MSGTYPE_ERROR = "error";
+	const MSGTYPE_FATAL = "fatal";
+	
 	//---------------------------------------------------------------------------------------------
 	/**
 	 * The constructor.
@@ -513,8 +519,18 @@ class cs_genericPage extends cs_version {
 	
 	
 	
+	
 	//---------------------------------------------------------------------------------------------
-	public static function add_message($title, $message, $type="notice", $linkUrl=null, $linkText="Link") {
+	/**
+	 * Add a message to the queue.
+	 * 
+	 * @param type $title		Title of the message.
+	 * @param type $message		Contents of the message.
+	 * @param type $type		Type, default is "notice" []
+	 * @param type $linkUrl
+	 * @param type $linkText
+	 */
+	public static function add_message($title, $message, $type=selfMSGTYPE_NOTICE, $linkUrl=null, $linkText="Link") {
 		self::set_message($title, $message, $linkUrl, $type, $linkText);
 	}// end of add_message()
 	//---------------------------------------------------------------------------------------------
