@@ -5,7 +5,6 @@
 	"keywords": ["php", "mvc", "templating", "dry", "oaoo"],
 	"homepage": "https://github.com/crazedsanity/cs-content",
 	"license": "MIT",
-	"version": "1.2.19",
 	"authors": [
 		{
 			"name":	"Dan Falconer",
