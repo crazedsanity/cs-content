@@ -4,6 +4,14 @@
 
 Generic MVC-style framework designed to leverage the power of a templating system and PHP includes, all running through a single display script. Allows incredibly fast building of an intelligent website without having to write a script for every page. Separate HTML from code, intelligently build pages using path-based script and template inheritance.
 
+## NOTICE
+
+CS-Content is being broken down into a series of smaller libraries, installable via Composer + Packagist.  Teh list of packages:
+
+ * Template [![Build Status](https://travis-ci.org/crazedsanity/template.svg?branch=master)](https://travis-ci.org/crazedsanity/template)
+ * Version  [![Build Status](https://travis-ci.org/crazedsanity/version.svg?branch=master)](https://travis-ci.org/crazedsanity/version)
+ * (more to come)
+
 ##  HOW THE SYSTEM WORKS:::
 
 
