@@ -9,6 +9,7 @@ Generic MVC-style framework designed to leverage the power of a templating syste
 CS-Content is being broken down into a series of smaller libraries, installable via Composer + Packagist.  The list of packages:
 
  * FileSystem: 	[![Build Status](https://travis-ci.org/crazedsanity/filesystem.svg?branch=master)](https://travis-ci.org/crazedsanity/filesystem)
+ * Session: [![Build Status](https://travis-ci.org/crazedsanity/session.svg?branch=master)](https://travis-ci.org/crazedsanity/session)
  * Template: [![Build Status](https://travis-ci.org/crazedsanity/template.svg?branch=master)](https://travis-ci.org/crazedsanity/template)
  * Version: [![Build Status](https://travis-ci.org/crazedsanity/version.svg?branch=master)](https://travis-ci.org/crazedsanity/version)
  * (more to come)
