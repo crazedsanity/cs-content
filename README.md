@@ -35,15 +35,15 @@ All pages load the base set of "shared" templates, which are in the form "<secti
 For any subsection, it inherits a previous section's templates in the following manner (any "content" templates are ignored for inheritance, as they're require for page load).
 
 
- 				/content							---> /templates/content/index.*.tmpl
-	 
- 				/content/members					|--> /templates/content/index.*.tmpl
- 													`--> /templates/content/members.*.tmpl
-	 
- 				/content/members/test				|--> /templates/content/index.*.tmpl
- 													|--> /templates/content/members.*.tmpl
- 													|--> /templates/content/members/index.*.tmpl
- 													`--> /templates/content/members/test.*.tmpl
+ 	/content							---> /templates/content/index.*.tmpl
+
+	/content/members					|--> /templates/content/index.*.tmpl
+ 										`--> /templates/content/members.*.tmpl
+
+	/content/members/test				|--> /templates/content/index.*.tmpl
+ 										|--> /templates/content/members.*.tmpl
+ 										|--> /templates/content/members/index.*.tmpl
+ 										`--> /templates/content/members/test.*.tmpl
 ### AUTOMATIC INCLUDES:
 
 Much in the same way templates are included, so are scripts, from the /includes directory, though the logic is decidedly simpler: all scripts must have the extension of ".inc", and must have either the section's name as the first part of the filename, or "shared".  Shared scripts will be loaded for ALL subsections.
