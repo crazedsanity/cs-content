@@ -13,7 +13,14 @@
 			"role": "Developer"
 		}
 	],
+	"autoload": {
+		"classmap": ["src/"]
+	},
 	"require": {
-		"php": ">=5.3.0"
+		"php": ">=5.3.0",
+		"crazedsanity/version": "^0.1.0",
+		"crazedsanity/filesystem": "^0.2.0",
+		"crazedsanity/session": "^0.1.0",
+		"crazedsanity/template": "^0.2.1"
 	}
 }

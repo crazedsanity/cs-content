@@ -1,6 +1,12 @@
 <?php
 
-class contentSystem extends cs_contentAbstract {
+namespace crazedsanity\cs_content;
+
+use crazedsanity\filesystem\FileSystem;
+use crazedsanity\cs_content\GenericPage;
+use crazedsanity\core\ToolBox;
+
+class ContentSystem {
 	
 	protected $baseDir			= NULL;			//base directory for templates & includes.			
 	protected $section			= NULL;			//section string, derived from the URL.		
@@ -41,7 +47,7 @@ class contentSystem extends cs_contentAbstract {
 		parent::__construct();
 		
 		if(is_null($section)) {
-			$section = @$_SERVER['REQUEST_URI'];
+			$section = $_SERVER['REQUEST_URI'];
 		}
 		$this->section = $this->clean_url($section);
 		
@@ -57,20 +63,20 @@ class contentSystem extends cs_contentAbstract {
 	 */
 	private function initialize_locals($siteRoot=null) {
 		
-		//create a session that gets stored in a database if they so desire...
-		if(defined('SESSION_DBSAVE')) {
-			ini_set('session.save_handler', 'user');
-			
-			//constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD')
-			if(defined('DB_DSN') && defined('DB_USERNAME') && defined('DB_PASSWORD')) {
-				$this->db = new cs_phpDB(constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD'));
-				$this->session = new cs_sessionDB(false, $this->db);
-				$this->handle_session($this->session);
-			}
-			else {
-				throw new exception(__METHOD__ .": cannot instantiate Session DB: no database connection values defined");
-			}
-		}
+//		//create a session that gets stored in a database if they so desire...
+//		if(defined('SESSION_DBSAVE')) {
+//			ini_set('session.save_handler', 'user');
+//			
+//			//constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD')
+//			if(defined('DB_DSN') && defined('DB_USERNAME') && defined('DB_PASSWORD')) {
+//				$this->db = new Database(constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD'));
+//				$this->session = new cs_sessionDB(false, $this->db);
+//				$this->handle_session($this->session);
+//			}
+//			else {
+//				throw new exception(__METHOD__ .": cannot instantiate Session DB: no database connection values defined");
+//			}
+//		}
 		
 		$templateBaseDir = "templates";
 		$includeBaseDir = "includes";
@@ -107,13 +113,13 @@ class contentSystem extends cs_contentAbstract {
 		
 		
 		//create a fileSystem object for templates.
-		$this->tmplFs = new cs_fileSystem(preg_replace('~/+~', '/', $templateBaseDir));
+		$this->tmplFs = new FileSystem(preg_replace('~/+~', '/', $templateBaseDir));
 		
 		
 		//create a fileSystem object for includes
-		$this->incFs = new cs_fileSystem(preg_replace('~/+~', '/', $includeBaseDir));
+		$this->incFs = new FileSystem(preg_replace('~/+~', '/', $includeBaseDir));
 		
-		$this->templateObj = new cs_genericPage(FALSE, $this->tmplFs->root ."/main.shared.tmpl");
+		$this->templateObj = new GenericPage(FALSE, $this->tmplFs->root ."/main.shared.tmpl");
 		
 		//setup some default template vars.
 		$defaultVars = array(
@@ -171,7 +177,7 @@ class contentSystem extends cs_contentAbstract {
 						if(strlen($destinationArg)) {
 							$redirectToUrl .= '?'. $destinationArg .'='. urlencode($_SERVER['REQUEST_URI']);
 						}
-						$this->gfObj->conditional_header($redirectToUrl, TRUE);
+						ToolBox::conditional_header($redirectToUrl, TRUE);
 					}
 				}
 				else {
@@ -252,7 +258,7 @@ class contentSystem extends cs_contentAbstract {
 		//make sure we've still got something valid to work with.
 		if(strlen($section)) {
 			try {
-				$section = $this->gfObj->clean_url($section);
+				$section = ToolBox::clean_url($section);
 			}
 			catch(Exception $e) {
 				//hide the exception and allow it to return NULL.
@@ -421,8 +427,8 @@ class contentSystem extends cs_contentAbstract {
 						$filename = preg_replace('/^\/\//', '/', $filename);
 						//call another method to rip the filename apart properly, then arrange things as needed.
 						$pieces = $this->parse_filename($index);
-						$myPriIndex = @$pieces[$primaryIndex];
-						$mySecIndex = @$pieces[$secondaryIndex];
+						$myPriIndex = $pieces[$primaryIndex];
+						$mySecIndex = $pieces[$secondaryIndex];
 						if(strlen($myPriIndex) && strlen($mySecIndex)) {
 							//only load if it's got BOTH parts of the filename.
 							$arrangedArr[$myPriIndex][$mySecIndex] = $filename;
@@ -798,4 +804,3 @@ class contentSystem extends cs_contentAbstract {
 	
 	
 }//end contentSystem{}
-?>

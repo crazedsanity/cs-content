@@ -3,8 +3,8 @@
  * Created on Jan 13, 2009
  */
 
-
-require_once(dirname(__FILE__) .'/../__autoload.php');
+use crazedsanity\cs_content\genericPage;
+use crazedsanity\filesystem\FileSystem;
 
 //=============================================================================
 class TestOfCSContent extends PHPUnit_Framework_TestCase {
@@ -12,7 +12,7 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 	//-------------------------------------------------------------------------
 	function __construct() {
 		
-		$this->gfObj = new cs_globalFunctions;
+		$this->gfObj = new \crazedsanity\core\ToolBox;
 		
 		$filesDir = dirname(__FILE__) ."/files";
 		if(!defined('TEST_FILESDIR')) {
@@ -30,7 +30,7 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 		$mainTemplateFullUrl = $filesDir .'/templates/main.shared.tmpl';
 		$mainTemplate = 'main.shared.tmpl';
 		
-		$page = new cs_genericPage(false, $mainTemplateFullUrl);
+		$page = new genericPage(false, $mainTemplateFullUrl);
 		
 		//NOTE::: this test FAILS with cs_genericPage.class.php@455 (or any revision less than 455)
 		$this->assertEquals($mainTemplateFullUrl, $page->template_file_exists($mainTemplate));
@@ -39,7 +39,7 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 		
 		
 		
-		$fs = new cs_fileSystem($filesDir .'/templates');
+		$fs = new FileSystem($filesDir .'/templates');
 		
 		$lsData = $fs->ls();
 		
@@ -103,7 +103,7 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 		
 		//make sure stripping undefined vars works properly (see issue #237)
 		{
-			$page = new cs_genericPage(false, $mainTemplateFullUrl);
+			$page = new GenericPage(false, $mainTemplateFullUrl);
 			$this->assertEquals($fs->read($mainTemplate), $page->return_printed_page(0));
 			$this->assertNotEquals($fs->read($mainTemplate), $page->return_printed_page(1));
 			
@@ -127,10 +127,10 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 		
 		//Test if ripping out all the block rows works as intended (also related to issue #237)
 		{
-			$page = new cs_genericPage(false, $mainTemplateFullUrl);
+			$page = new GenericPage(false, $mainTemplateFullUrl);
 			$page->add_template_var('blockRowTestVal', 3);
 			
-			$fs = new cs_fileSystem($filesDir .'/templates');
+			$fs = new FileSystem($filesDir .'/templates');
 			$lsData = $fs->ls();
 			foreach($lsData as $index=>$value) {
 				$filenameBits = explode('.', $index);

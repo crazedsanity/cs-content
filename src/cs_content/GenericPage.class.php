@@ -1,6 +1,12 @@
 <?php
 
-class cs_genericPage extends cs_version {
+namespace crazedsanity\cs_content;
+
+use crazedsanity\core\ToolBox;
+use crazedsanity\filesystem\FileSystem;
+use Exception;
+
+class GenericPage {
 	public $templateVars	= array();		//our copy of the global templateVars
 	public $templateFiles	= array();		//our list of template files...
 	public $templateRows	= array();		//array of block rows & their contents.
@@ -27,9 +33,6 @@ class cs_genericPage extends cs_version {
 	 * The constructor.
 	 */
 	public function __construct($restrictedAccess=TRUE, $mainTemplateFile=NULL) {
-		
-		//initialize stuff from our parent...
-		parent::__construct();
 		
 		//initialize some internal stuff.
 		$this->initialize_locals($mainTemplateFile);
@@ -75,8 +78,9 @@ class cs_genericPage extends cs_version {
 		else {
 			throw new exception(__METHOD__ .": cannot locate siteRoot from main template file (". $mainTemplateFile .")");
 		}
-		$fs = new cs_fileSystem(dirname(__FILE__));
-		$this->siteRoot = $fs->resolve_path_with_dots($this->siteRoot);
+		$fs = new FileSystem(dirname(__FILE__));
+//		$this->siteRoot = $fs->resolve_path_with_dots($this->siteRoot);
+		$this->siteRoot = ToolBox::resolve_path_with_dots($this->siteRoot);
 		$this->tmplDir = $this->siteRoot .'/templates';
 		if(defined('CS_TEMPLATE_BASE_DIR')) {
 			$this->tmplDir = constant('CS_TEMPLATE_BASE_DIR');
@@ -84,7 +88,7 @@ class cs_genericPage extends cs_version {
 		$this->libDir = $this->siteRoot .'/lib';
 		
 		if(!is_dir($this->tmplDir)) {
-			throw new exception(__METHOD__ .": invalid templates folder (". $this->tmplDir ."), siteRoot=(". $this->siteRoot .")");
+			throw new Exception(__METHOD__ .": invalid templates folder (". $this->tmplDir ."), siteRoot=(". $this->siteRoot .")");
 		}
 		
 		//if there have been some global template vars (or files) set, read 'em in here.
@@ -130,7 +134,7 @@ class cs_genericPage extends cs_version {
 			if(is_array($myGetArr) && count($myGetArr) > 0) {
 				unset($myGetArr['PHPSESSID']);
 				unset($myGetArr[CS-CONTENT_SESSION_NAME]);
-				$myUrlString = string_from_array($myGetArr, NULL, 'url');
+				$myUrlString = ToolBox::string_from_array($myGetArr, NULL, 'url');
 			}
 			
 			//TODO: make the redirectHere variable dynamic--an argument, methinks.
@@ -138,7 +142,7 @@ class cs_genericPage extends cs_version {
 			$redirectHere = '/login.php?destination='. $myUrlString;
 				
 			//Not exitting after conditional_header() is... bad, m'kay?
-			$this->conditional_header($redirectHere, TRUE);
+			ToolBox::conditional_header($redirectHere, TRUE);
 			exit;
 		}
 	}//end check_login()
@@ -254,7 +258,7 @@ class cs_genericPage extends cs_version {
 	 * @param $e			(str,optional) ending delimiter.
 	 */
 	public function mini_parser($template, $repArr, $b='%%', $e='%%') {
-		return($this->gfObj->mini_parser($template, $repArr, $b, $e));
+		return(ToolBox::mini_parser($template, $repArr, $b, $e));
 	}//end mini_parser()
 	//---------------------------------------------------------------------------------------------
 
@@ -298,7 +302,7 @@ class cs_genericPage extends cs_version {
 		$numLoops = 0;
 		$tags = array();
 		while(preg_match_all('/\{.\S+?\}/', $out, $tags) && $numLoops < 10) {
-			$out = $this->gfObj->mini_parser($out, $this->templateVars, '{', '}');
+			$out = ToolBox::mini_parser($out, $this->templateVars, '{', '}');
 			$numLoops++;
 		}
 		
@@ -372,33 +376,7 @@ class cs_genericPage extends cs_version {
 					unset($_SESSION['messages'][$k]);
 				}
 			}
-//			$_SESSION['messages'] = array();
 		}
-		
-//		//if there's not a message set, skip.
-//		$errorBox = "";
-//		if(isset($_SESSION['message']) && is_array($_SESSION['message'])) {
-//			$errorBox = $this->file_to_string("system/message_box.tmpl");
-//			//let's make sure the "type" value is *lowercase*.
-//			$_SESSION['message']['type'] = strtolower($_SESSION['message']['type']);
-//			
-//			//WARNING::: if you give it the wrong type, it'll STILL be parsed. Otherwise 
-//			//	this has to match set_message() FAR too closely. And it's a pain.
-//			$_SESSION['message']['messageType'] = $_SESSION['message']['type'];
-//			$errorBox = $this->gfObj->mini_parser($errorBox, $_SESSION['message'], '{', '}');
-//			if($_SESSION['message']['type'] == "fatal") {
-//				//replace content of the page with our error.
-//				$this->change_content($errorBox);
-//			} else {
-//				//Non-fatal: put it into a template var.
-//				$this->add_template_var("error_msg", $errorBox);
-//			}
-//	
-//			//now that we're done displaying the message, let's get it out of the session (otherwise
-//			//	they'll never get past this point).
-//			unset($_SESSION['message']);
-//		}
-//		return($errorBox);
 		return $retval;
 	}//end of process_set_message()
 	//---------------------------------------------------------------------------------------------
@@ -411,7 +389,7 @@ class cs_genericPage extends cs_version {
 		$data['messageType'] = strtolower($type);
 		$data['type'] = $type;
 		
-		$errorBox = cs_global::mini_parser($tmpl, $data, '{', '}');
+		$errorBox = ToolBox::mini_parser($tmpl, $data, '{', '}');
 		
 		return $errorBox;
 	}
@@ -585,7 +563,10 @@ class cs_genericPage extends cs_version {
 	 * Performs redirection, provided it is allowed.
 	 */
 	function conditional_header($url, $exitAfter=TRUE,$isPermRedir=FALSE) {
-		$this->gfObj->conditional_header($url, $exitAfter, $isPermRedir);
+		ToolBox::conditional_header($url, $isPermRedir);
+		if($exitAfter) {
+			exit;
+		}
 	}//end conditional_header()
 	//---------------------------------------------------------------------------------------------
 	
@@ -792,5 +773,4 @@ class cs_genericPage extends cs_version {
 	}//end __set()
 	//-------------------------------------------------------------------------
 
-}//end cs_genericPage{}
-?>
+}//end cs_genericPage{}?>

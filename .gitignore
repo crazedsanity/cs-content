@@ -1,2 +1,4 @@
 tests/files/rw/*
 /nbproject/
+/vendor/
+/composer.lock
