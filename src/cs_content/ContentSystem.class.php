@@ -47,8 +47,6 @@ class ContentSystem {
 	 * The CONSTRUCTOR.  Duh.
 	 */
 	public function __construct($siteRoot=null, $section=null) {
-		parent::__construct();
-		
 		if(is_null($section)) {
 			$section = $_SERVER['REQUEST_URI'];
 		}
