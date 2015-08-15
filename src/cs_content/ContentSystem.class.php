@@ -5,6 +5,9 @@ namespace crazedsanity\cs_content;
 use crazedsanity\filesystem\FileSystem;
 use crazedsanity\cs_content\GenericPage;
 use crazedsanity\core\ToolBox;
+use crazedsanity\dbsession\DBSession;
+use crazedsanity\database\Database;
+use Exception;
 
 class ContentSystem {
 	
@@ -63,20 +66,20 @@ class ContentSystem {
 	 */
 	private function initialize_locals($siteRoot=null) {
 		
-//		//create a session that gets stored in a database if they so desire...
-//		if(defined('SESSION_DBSAVE')) {
-//			ini_set('session.save_handler', 'user');
-//			
-//			//constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD')
-//			if(defined('DB_DSN') && defined('DB_USERNAME') && defined('DB_PASSWORD')) {
-//				$this->db = new Database(constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD'));
-//				$this->session = new cs_sessionDB(false, $this->db);
-//				$this->handle_session($this->session);
-//			}
-//			else {
-//				throw new exception(__METHOD__ .": cannot instantiate Session DB: no database connection values defined");
-//			}
-//		}
+		//create a session that gets stored in a database if they so desire...
+		if(defined('SESSION_DBSAVE')) {
+			ini_set('session.save_handler', 'user');
+			
+			//constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD')
+			if(defined('DB_DSN') && defined('DB_USERNAME') && defined('DB_PASSWORD')) {
+				$this->db = new Database(constant('DB_DSN'), constant('DB_USERNAME'), constant('DB_PASSWORD'));
+				$this->session = new DBSession(false, $this->db);
+				$this->handle_session($this->session);
+			}
+			else {
+				throw new exception(__METHOD__ .": cannot instantiate Session DB: no database connection values defined");
+			}
+		}
 		
 		$templateBaseDir = "templates";
 		$includeBaseDir = "includes";
