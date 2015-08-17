@@ -7,6 +7,9 @@ php:
 
 script: phpunit --coverage-text
 
+install:
+    - composer install
+
 notifications:
   email:
     - github@crazedsanity.com
