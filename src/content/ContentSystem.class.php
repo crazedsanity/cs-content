@@ -1,6 +1,6 @@
 <?php
 
-namespace crazedsanity\cs_content;
+namespace crazedsanity\content;
 
 use crazedsanity\filesystem\FileSystem;
 use crazedsanity\cs_content\GenericPage;

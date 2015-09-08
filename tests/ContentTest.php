@@ -3,7 +3,7 @@
  * Created on Jan 13, 2009
  */
 
-use crazedsanity\cs_content\genericPage;
+use crazedsanity\content\GenericPage;
 use crazedsanity\filesystem\FileSystem;
 
 //=============================================================================
@@ -30,7 +30,7 @@ class TestOfCSContent extends PHPUnit_Framework_TestCase {
 		$mainTemplateFullUrl = $filesDir .'/templates/main.shared.tmpl';
 		$mainTemplate = 'main.shared.tmpl';
 		
-		$page = new genericPage(false, $mainTemplateFullUrl);
+		$page = new GenericPage(false, $mainTemplateFullUrl);
 		
 		//NOTE::: this test FAILS with cs_genericPage.class.php@455 (or any revision less than 455)
 		$this->assertEquals($mainTemplateFullUrl, $page->template_file_exists($mainTemplate));

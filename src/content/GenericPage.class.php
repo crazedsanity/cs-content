@@ -1,6 +1,6 @@
 <?php
 
-namespace crazedsanity\cs_content;
+namespace crazedsanity\content;
 
 use crazedsanity\core\ToolBox;
 use crazedsanity\filesystem\FileSystem;
