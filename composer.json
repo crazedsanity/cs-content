@@ -22,6 +22,6 @@
 		"crazedsanity/filesystem": "^0.2.0",
 		"crazedsanity/session": "^0.1.0",
 		"crazedsanity/template": "^0.2.1",
-		"crazedsanity/dbsession": "^0.1.0"
+		"crazedsanity/dbsession": "^0.1"
 	}
 }
