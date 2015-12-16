@@ -18,10 +18,10 @@
 	},
 	"require": {
 		"php": ">=5.3.0",
-		"crazedsanity/version": "^0.1.0",
-		"crazedsanity/filesystem": "^0.2.0",
-		"crazedsanity/session": "^0.1.0",
-		"crazedsanity/template": "^0.2.1",
+		"crazedsanity/version": "~0.1",
+		"crazedsanity/filesystem": "~0.2",
+		"crazedsanity/session": "~0.1",
+		"crazedsanity/template": "~0.4",
 		"crazedsanity/dbsession": "~0.1"
 	}
 }
