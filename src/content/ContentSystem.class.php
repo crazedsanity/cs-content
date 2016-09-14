@@ -3,7 +3,7 @@
 namespace crazedsanity\content;
 
 use crazedsanity\filesystem\FileSystem;
-use crazedsanity\cs_content\GenericPage;
+use crazedsanity\content\GenericPage;
 use crazedsanity\core\ToolBox;
 use crazedsanity\dbsession\DBSession;
 use crazedsanity\database\Database;
