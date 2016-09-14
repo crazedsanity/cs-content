@@ -19,7 +19,7 @@
 	"require": {
 		"php": ">=5.3.0",
 		"crazedsanity/version": "~0.2",
-		"crazedsanity/filesystem": "~0.2",
+		"crazedsanity/filesystem": "~0.3",
 		"crazedsanity/session": "~0.1",
 		"crazedsanity/template": "~0.4",
 		"crazedsanity/dbsession": "~0.1"
