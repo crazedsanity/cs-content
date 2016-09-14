@@ -208,7 +208,7 @@ class ContentSystem {
 		}
 		else {
 			//use our own session handler.
-			$this->session = new cs_session;
+			$this->session = new Session;
 		}
 		
 		if(!method_exists($this->session, 'is_authenticated')) {
@@ -415,7 +415,7 @@ class ContentSystem {
 	 * 	name, or vice-versa.
 	 */
 	private function arrange_directory_contents($dir, $primaryIndex='section', $secondaryIndex='name') {
-		$fsObj = new cs_fileSystem($this->tmplFs->root);
+		$fsObj = new FileSystem($this->tmplFs->root);
 		if($fsObj->cd($dir)) {
 			$directoryInfo = $fsObj->ls(null,false);
 			$arrangedArr = array();
