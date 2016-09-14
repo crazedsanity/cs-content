@@ -423,7 +423,7 @@ class ContentSystem {
 				foreach($directoryInfo as $index=>$data) {
 					$myType = $data['type'];
 					if(($myType == 'file') && !in_array($index, $this->ignoredList[$myType])) {
-						$filename = $this->gfObj->create_list($fsObj->cwd, $index, '/');
+						$filename = ToolBox::create_list($fsObj->cwd, $index, '/');
 						$filename = preg_replace('/^\/templates/', '', $filename);
 						$filename = preg_replace('/^\/\//', '/', $filename);
 						//call another method to rip the filename apart properly, then arrange things as needed.
@@ -664,8 +664,8 @@ class ContentSystem {
 		}
 		$fullSectionArr = $this->fullSectionArr;
 		array_unshift($sectionArr, $this->baseDir);
-		$finalURL = $this->gfObj->string_from_array($sectionArr, NULL, '/');
-		$this->templateObj->add_template_var('PHP_SELF', '/'. $this->gfObj->string_from_array($sectionArr, NULL, '/'));
+		$finalURL = ToolBox::string_from_array($sectionArr, NULL, '/');
+		$this->templateObj->add_template_var('PHP_SELF', '/'. ToolBox::string_from_array($sectionArr, NULL, '/'));
 		
 		
 		$page = $this->templateObj;

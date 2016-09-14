@@ -293,9 +293,9 @@ class GenericPage {
 			$out = $this->file_to_string($this->mainTemplate);
 		}
 		if(!strlen($out)) {
-			$this->gfObj->debug_print($out);
-			$this->gfObj->debug_print($this->mainTemplate);
-			$this->gfObj->debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->mainTemplate)));
+			ToolBox::debug_print($out);
+			ToolBox::debug_print($this->mainTemplate);
+			ToolBox::debug_print("MANUAL FILE CONTENTS::: ". htmlentities(file_get_contents($this->mainTemplate)));
 			exit(__METHOD__ .": mainTemplate (". $this->mainTemplate .") was empty...?");
 		}
 		
