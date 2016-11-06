@@ -772,5 +772,14 @@ class GenericPage {
 		$this->$var = $val;
 	}//end __set()
 	//-------------------------------------------------------------------------
+	
+	
+	
+	//-------------------------------------------------------------------------
+	public static function get_version() {
+		$v = new \crazedsanity\version\Version(__DIR__ .'/../../VERSION');
+		return $v->get_version();
+	}
+	//-------------------------------------------------------------------------
 
 }//end cs_genericPage{}?>
