@@ -23,5 +23,9 @@
 		"crazedsanity/session": "~0.1",
 		"crazedsanity/template": "~0.4",
 		"crazedsanity/dbsession": "~0.1"
-	}
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^4.6 || ^5.0"
+    },
+	"minimum-stability": "dev"
 }
